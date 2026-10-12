@@ -1,0 +1,8 @@
+openwrt/
+artifacts/
+*.img
+*.img.gz
+*.qcow2
+*.vmdk
+
+

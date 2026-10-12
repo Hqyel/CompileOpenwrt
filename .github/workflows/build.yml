@@ -1,0 +1,160 @@
+name: Build custom OpenWrt x86_64
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: ImmortalWrt branch, tag, or commit
+        required: true
+        default: openwrt-25.12
+        type: string
+      publish_release:
+        description: Publish firmware as a GitHub Release
+        required: true
+        default: true
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build.yml
+      - configs/**
+      - files/**
+      - scripts/**
+
+permissions:
+  contents: write
+
+concurrency:
+  group: openwrt-x86-64-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SOURCE_REPOSITORY: immortalwrt/immortalwrt
+  DEFAULT_SOURCE_REF: openwrt-25.12
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    name: Build x86_64 EFI and BIOS images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Check out build configuration
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet
+          sudo rm -rf /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Install build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            ack antlr3 asciidoc autoconf automake autopoint binutils \
+            bison build-essential bzip2 ccache clang cmake cpio curl \
+            device-tree-compiler fastjar flex gawk gettext gcc-multilib \
+            g++-multilib git gperf haveged help2man intltool jq libelf-dev \
+            libglib2.0-dev libncurses5-dev libssl-dev libtool lrzsz mkisofs \
+            msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
+            python3-docutils python3-packaging python3-pip python3-ply \
+            python3-pyelftools python3-setuptools python3-yaml qemu-utils \
+            re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+            unzip upx-ucl vim wget xmlto xxd xsltproc zlib1g-dev zstd
+
+      - name: Clone ImmortalWrt source
+        env:
+          INPUT_SOURCE_REF: ${{ inputs.source_ref }}
+        run: |
+          source_ref="${INPUT_SOURCE_REF:-$DEFAULT_SOURCE_REF}"
+          git clone --depth 1 --branch "$source_ref" \
+            "https://github.com/$SOURCE_REPOSITORY.git" openwrt
+          git -C openwrt rev-parse HEAD | tee source-commit.txt
+
+      - name: Add pinned custom packages
+        run: ./scripts/prepare-source.sh openwrt
+
+      - name: Update and install feeds
+        working-directory: openwrt
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Load firmware configuration
+        run: |
+          cp configs/x86_64.config openwrt/.config
+          rsync -a files/ openwrt/files/
+          make -C openwrt defconfig
+          cp openwrt/.config build.config
+
+      - name: Cache downloads and compiler output
+        uses: actions/cache@v4
+        with:
+          path: |
+            openwrt/dl
+            openwrt/.ccache
+          key: openwrt-${{ runner.os }}-${{ hashFiles('source-commit.txt', 'build.config', 'scripts/prepare-source.sh') }}
+          restore-keys: |
+            openwrt-${{ runner.os }}-
+
+      - name: Download source archives
+        working-directory: openwrt
+        run: |
+          make download -j"$(nproc)"
+          find dl -type f -size -1024c -print -delete
+
+      - name: Build firmware
+        working-directory: openwrt
+        run: |
+          if ! make -j"$(nproc)"; then
+            echo "Parallel build failed; retrying serially with verbose output."
+            make -j1 V=s
+          fi
+
+      - name: Verify required packages
+        run: ./scripts/verify-build.sh openwrt
+
+      - name: Collect firmware and manifests
+        run: |
+          mkdir -p artifacts
+          target_dir="$(find openwrt/bin/targets/x86/64 \
+            -mindepth 0 -maxdepth 0 -type d -print -quit)"
+          find "$target_dir" -maxdepth 1 -type f \
+            \( -name '*.img.gz' -o -name '*.qcow2' \
+            -o -name '*.qcow2.gz' -o -name '*.vmdk' \
+            -o -name '*.vmdk.gz' -o -name 'sha256sums' \
+            -o -name '*.manifest' -o -name '*.buildinfo' \) \
+            -exec cp -v {} artifacts/ \;
+          cp build.config source-commit.txt artifacts/
+          git -C openwrt status --short > artifacts/source-status.txt
+          sha256sum artifacts/* > artifacts/CUSTOM-SHA256SUMS
+          ls -lh artifacts
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: custom-openwrt-x86_64-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish GitHub Release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="openwrt-$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}"
+          source_commit="$(cat source-commit.txt)"
+          gh release create "$tag" artifacts/* \
+            --title "Custom OpenWrt x86_64 $(date +'%Y-%m-%d')" \
+            --notes "ImmortalWrt source: $source_commit
+
+          Target: x86/64 for PVE, EFI and BIOS images.
+          Verify downloads with CUSTOM-SHA256SUMS before importing."
+
+

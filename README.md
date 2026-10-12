@@ -1,44 +1,53 @@
-**English** | [中文](https://p3terx.com/archives/build-openwrt-with-github-actions.html)
+# HomeWrt x86_64
 
-# Actions-OpenWrt
+这是为以下网络结构准备的精简 OpenWrt 构建：
 
-[![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square&label=LICENSE)](https://github.com/P3TERX/Actions-OpenWrt/blob/master/LICENSE)
-![GitHub Stars](https://img.shields.io/github/stars/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Stars&logo=github)
-![GitHub Forks](https://img.shields.io/github/forks/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Forks&logo=github)
+- PVE 8 上的 x86_64 虚拟机，宿主机为 Intel N5105。
+- iKuai `10.10.10.1` 是主路由、IPv4 DHCP 和 IPv6 RA/DHCPv6 服务端。
+- OpenWrt `10.10.10.2` 是单臂旁路由、PassWall、Docker 和 WireGuard
+  服务端。
+- 客户端只有在需要经过 OpenWrt 时，才手动把网关和 DNS 指向
+  `10.10.10.2`。
 
-A template for building OpenWrt with GitHub Actions
+## 构建基础
 
-## Usage
+- 源码：ImmortalWrt `openwrt-25.12` 维护分支。
+- 目标：`x86/64 generic`。
+- 输出：EFI、传统 BIOS、ext4、squashfs、QCOW2 和 VMDK 镜像。
+- 根分区：4 GiB，可在 PVE 中继续扩容。
+- UU 加速器：固定到 `fengqi/luci-app-uugamebooster` 的
+  `1065ef4ee242dc1b8abfc724b1bb3b7997ac5a1f` 提交（v14.0.6，原生
+  x86_64）。
 
-- Click the [Use this template](https://github.com/P3TERX/Actions-OpenWrt/generate) button to create a new repository.
-- Generate `.config` files using [Lean's OpenWrt](https://github.com/coolsnowwolf/lede) source code. ( You can change it through environment variables in the workflow file. )
-- Push `.config` file to the GitHub repository.
-- Select `Build OpenWrt` on the Actions page.
-- Click the `Run workflow` button.
-- When the build is complete, click the `Artifacts` button in the upper right corner of the Actions page to download the binaries.
+GitHub Actions 会记录完整 `.config`、源码提交、包清单和 SHA-256，构建
+完成后可从 Actions Artifact 或 Release 下载。
 
-## Tips
+## 内置功能
 
-- It may take a long time to create a `.config` file and build the OpenWrt firmware. Thus, before create repository to build your own firmware, you may check out if others have already built it which meet your needs by simply [search `Actions-Openwrt` in GitHub](https://github.com/search?q=Actions-openwrt).
-- Add some meta info of your built firmware (such as firmware architecture and installed packages) to your repository introduction, this will save others' time.
+- PassWall：Xray、Sing-box、Shadowsocks Rust 客户端、Haproxy 和 Geoview。
+- Docker：Docker Engine、Dockerman 和 Compose 依赖。
+- 网易 UU 游戏加速器（x86_64）。
+- KMS：`vlmcsd` 和 LuCI 页面；服务默认关闭，仅限合法批量许可环境使用。
+- WireGuard、Cloudflare DDNS 和 DDNS-Go。
+- Argon、Material、Bootstrap/Bootstrap Dark/Bootstrap Light 主题。
+- PVE QEMU Guest Agent、磁盘扩容工具、TTyd、Watchcat、网络唤醒和常用诊断
+  工具。
 
-## Credits
+为了减少 DNS、防火墙和透明代理冲突，固件不包含 OpenClash、SSR Plus、
+HomeProxy、AdGuard Home、MosDNS、MWAN3 和 UPnP。
 
-- [Microsoft Azure](https://azure.microsoft.com)
-- [GitHub Actions](https://github.com/features/actions)
-- [OpenWrt](https://github.com/openwrt/openwrt)
-- [Lean's OpenWrt](https://github.com/coolsnowwolf/lede)
-- [tmate](https://github.com/tmate-io/tmate)
-- [mxschmitt/action-tmate](https://github.com/mxschmitt/action-tmate)
-- [csexton/debugger-action](https://github.com/csexton/debugger-action)
-- [Cowtransfer](https://cowtransfer.com)
-- [WeTransfer](https://wetransfer.com/)
-- [Mikubill/transfer](https://github.com/Mikubill/transfer)
-- [softprops/action-gh-release](https://github.com/softprops/action-gh-release)
-- [ActionsRML/delete-workflow-runs](https://github.com/ActionsRML/delete-workflow-runs)
-- [dev-drprasad/delete-older-releases](https://github.com/dev-drprasad/delete-older-releases)
-- [peter-evans/repository-dispatch](https://github.com/peter-evans/repository-dispatch)
+## 首次构建
 
-## License
+1. 打开 GitHub 仓库的 **Actions** 页面。
+2. 选择 **Build custom OpenWrt x86_64**。
+3. 点击 **Run workflow**，保持 `openwrt-25.12` 和发布 Release 为启用。
+4. 构建完成后，下载 `.qcow2` 或 `combined-efi-ext4.img.gz`。
 
-[MIT](https://github.com/P3TERX/Actions-OpenWrt/blob/main/LICENSE) © [**P3TERX**](https://p3terx.com)
+详细安装与迁移步骤见 [PVE 安装说明](docs/PVE_INSTALL.md)。
+
+## 安全说明
+
+固件不内置密码、WireGuard 私钥、Cloudflare Token 或代理订阅。首次启动后
+必须立即设置 root 密码。不要把上述密钥提交到公开仓库。
+
+
