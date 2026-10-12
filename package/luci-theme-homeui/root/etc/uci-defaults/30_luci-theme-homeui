@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if ! uci -q get luci.themes.HomeUI >/dev/null; then
+  uci set luci.themes.HomeUI='/luci-static/homeui'
+  uci commit luci
+fi
+
+exit 0

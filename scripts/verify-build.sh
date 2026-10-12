@@ -22,6 +22,7 @@ required_packages=(
   luci-app-vlmcsd
   luci-proto-wireguard
   luci-theme-argon
+  luci-theme-homeui
   qemu-ga
   uugamebooster
   wireguard-tools
@@ -35,5 +36,4 @@ for package in "${required_packages[@]}"; do
 done
 
 echo "All required packages are present in $manifest"
-
 

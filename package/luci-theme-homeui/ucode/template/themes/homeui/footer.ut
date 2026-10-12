@@ -1,0 +1,16 @@
+    {% if (!blank_page): %}
+      </div>
+      <footer class="homeui-footer">
+        <span>
+          {{ version.distname }} {{ version.distversion }}
+          · {{ version.luciname }} {{ version.luciversion }}
+        </span>
+        {% if (lua_active): %}
+          <span>{{ _('Lua compatibility mode active') }}</span>
+        {% endif %}
+      </footer>
+      <script>L.require('menu-homeui')</script>
+      <script src="{{ media }}/main.js"></script>
+    {% endif %}
+  </body>
+</html>

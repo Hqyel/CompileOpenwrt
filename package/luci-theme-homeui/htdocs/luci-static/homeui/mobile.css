@@ -1,0 +1,234 @@
+@media screen and (max-width: 900px) {
+  :root {
+    --homeui-mobile-top: 58px;
+    --homeui-mobile-sub: 48px;
+  }
+
+  body,
+  :root.homeui-collapsed body {
+    padding: calc(
+      var(--homeui-mobile-top) + var(--homeui-mobile-sub) + 12px
+    ) 12px 20px;
+  }
+
+  .homeui-shell,
+  :root.homeui-collapsed .homeui-shell {
+    top: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: calc(
+      var(--homeui-mobile-top) + var(--homeui-mobile-sub)
+    );
+    border-right: 0;
+    border-bottom: 1px solid var(--homeui-border);
+    box-shadow: 0 5px 20px rgba(31, 50, 77, .06);
+  }
+
+  .homeui-brand {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 68px;
+    height: var(--homeui-mobile-top);
+    border: 0;
+  }
+
+  .homeui-brand-link,
+  :root.homeui-collapsed .homeui-brand-link {
+    inset: 0;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .homeui-brand-link img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .homeui-brand-link > span,
+  :root.homeui-collapsed .homeui-brand-link > span {
+    display: none;
+  }
+
+  #homeui-collapse,
+  :root.homeui-collapsed #homeui-collapse {
+    top: 14px;
+    right: -36px;
+    bottom: auto;
+    display: none;
+  }
+
+  .homeui-rail {
+    top: 0;
+    right: 0;
+    bottom: auto;
+    left: 68px;
+    width: auto;
+    height: var(--homeui-mobile-top);
+    border: 0;
+    background: var(--homeui-surface);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  #topmenu {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 5px 8px;
+  }
+
+  #topmenu > li {
+    min-width: 54px;
+    margin: 0;
+  }
+
+  #topmenu > li > a {
+    min-height: 46px;
+    padding: 4px 3px;
+  }
+
+  #topmenu > li.active > a::before {
+    top: auto;
+    right: 12px;
+    bottom: -5px;
+    left: 12px;
+    width: auto;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  .homeui-panel,
+  :root.homeui-collapsed .homeui-panel {
+    top: var(--homeui-mobile-top);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    height: var(--homeui-mobile-sub);
+    display: block;
+    border-top: 1px solid var(--homeui-border);
+    overflow: hidden;
+  }
+
+  .homeui-panel-heading,
+  .homeui-panel-footer {
+    display: none;
+  }
+
+  #sidemenu {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin: 0;
+    padding: 5px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  #sidemenu > li {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  #sidemenu > li > a {
+    min-height: 36px;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  .homeui-side-dot,
+  .homeui-nested-menu {
+    display: none;
+  }
+
+  #maincontent.container {
+    min-height: calc(100vh - 150px);
+    padding-top: 0;
+  }
+
+  .cbi-section,
+  .panel,
+  .network-status-table,
+  .cbi-map > fieldset,
+  .cbi-map > .cbi-section {
+    padding: 13px;
+    border-radius: 9px;
+  }
+
+  .cbi-section > h3:first-child,
+  .panel-title,
+  .cbi-section > legend {
+    margin: -13px -13px 12px;
+    padding: 12px 13px;
+  }
+
+  .tabs,
+  .cbi-tabmenu {
+    margin-bottom: 12px;
+  }
+
+  .table .tr {
+    padding: 8px 4px;
+    border-color: var(--homeui-border);
+  }
+
+  .table .td,
+  .table .th {
+    padding: 5px 7px;
+  }
+
+  .table .tr[data-title]::before {
+    border: 0;
+    border-radius: 6px;
+    background: var(--homeui-surface-soft) !important;
+    color: var(--text-color-highest);
+  }
+
+  .cbi-value {
+    border-color: var(--homeui-border);
+  }
+
+  .homeui-footer {
+    display: block;
+    padding: 10px 2px;
+    text-align: center;
+  }
+
+  .homeui-footer span {
+    display: block;
+  }
+
+  body:has(.homeui-login-view) {
+    padding: 74px 16px 24px;
+  }
+
+  .homeui-login-brand {
+    top: 18px;
+    left: 20px;
+  }
+}
+
+@media screen and (max-width: 460px) {
+  #topmenu > li {
+    min-width: 50px;
+  }
+
+  #topmenu > li > a > span:last-child {
+    display: none;
+  }
+
+  #topmenu > li > a {
+    min-height: 42px;
+  }
+
+  .homeui-menu-icon,
+  .homeui-menu-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+}

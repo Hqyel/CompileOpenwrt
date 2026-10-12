@@ -20,6 +20,7 @@ on:
       - .github/workflows/build.yml
       - configs/**
       - files/**
+      - package/**
       - scripts/**
 
 permissions:
@@ -48,7 +49,10 @@ jobs:
         run: |
           sed -i 's/\r$//' scripts/*.sh
           sed -i 's/\r$//' files/etc/uci-defaults/*
-          chmod +x scripts/*.sh files/etc/uci-defaults/*
+          sed -i 's/\r$//' \
+            package/luci-theme-homeui/root/etc/uci-defaults/*
+          chmod +x scripts/*.sh files/etc/uci-defaults/* \
+            package/luci-theme-homeui/root/etc/uci-defaults/*
 
       - name: Free runner disk space
         run: |
@@ -136,6 +140,9 @@ jobs:
             -o -name '*.vmdk.gz' -o -name 'sha256sums' \
             -o -name '*.manifest' -o -name '*.buildinfo' \) \
             -exec cp -v {} artifacts/ \;
+          find openwrt/bin/packages -type f \
+            -name 'luci-theme-homeui*.apk' \
+            -exec cp -v {} artifacts/ \;
           cp build.config source-commit.txt artifacts/
           git -C openwrt status --short > artifacts/source-status.txt
           sha256sum artifacts/* > artifacts/CUSTOM-SHA256SUMS
@@ -162,5 +169,4 @@ jobs:
 
           Target: x86/64 for PVE, EFI and BIOS images.
           Verify downloads with CUSTOM-SHA256SUMS before importing."
-
 
