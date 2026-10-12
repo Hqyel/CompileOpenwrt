@@ -44,6 +44,12 @@ jobs:
       - name: Check out build configuration
         uses: actions/checkout@v4
 
+      - name: Normalize executable scripts
+        run: |
+          sed -i 's/\r$//' scripts/*.sh
+          sed -i 's/\r$//' files/etc/uci-defaults/*
+          chmod +x scripts/*.sh files/etc/uci-defaults/*
+
       - name: Free runner disk space
         run: |
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet
