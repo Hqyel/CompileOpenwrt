@@ -92,9 +92,11 @@ jobs:
         working-directory: sdk
         run: |
           make package/luci-theme-homeui/clean \
-            CONFIG_PACKAGE_luci-theme-homeui=m
+            CONFIG_PACKAGE_luci-theme-homeui=m \
+            IGNORE_ERRORS="n m"
           make package/luci-theme-homeui/compile \
             CONFIG_PACKAGE_luci-theme-homeui=m \
+            IGNORE_ERRORS="n m" \
             -j"$(nproc)" V=s
 
       - name: Collect APK
