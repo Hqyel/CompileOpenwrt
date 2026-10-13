@@ -85,7 +85,14 @@
     border-left: 1px solid var(--homeui-border);
   }
 
+  .homeui-rail-col {
+    position: static;
+    width: auto;
+    border: 0;
+  }
+
   .homeui-rail {
+    position: absolute;
     top: 0;
     right: 0;
     bottom: auto;

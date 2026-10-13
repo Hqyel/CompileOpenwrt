@@ -3,34 +3,18 @@
 'require ui';
 
 const ICONS = {
-  overview: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/>' +
-    '<path d="M9.5 20v-6h5v6"/>',
-  status: '<rect x="3" y="4" width="18" height="14" rx="2"/>' +
-    '<path d="M7 12l3-3 3 3 4-4"/><path d="M8 21h8M12 18v3"/>',
-  system: '<circle cx="12" cy="12" r="3"/>' +
-    '<path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1' +
-    'a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21' +
-    'a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17' +
-    'l.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H2.8v-4' +
-    'H3A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2' +
-    'l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3' +
-    'a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7' +
-    'l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21' +
-    'a1.7 1.7 0 0 0-1.6 1z"/>',
-  services: '<rect x="3" y="4" width="18" height="6" rx="2"/>' +
-    '<rect x="3" y="14" width="18" height="6" rx="2"/>' +
-    '<path d="M7 7h.01M7 17h.01"/>',
-  network: '<circle cx="12" cy="5" r="2.2"/>' +
-    '<circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/>' +
-    '<path d="M12 7.2V12m-7 4.8V12h14v4.8"/>',
+  overview: '<path fill="currentColor" stroke="none" d="M12 3.2 3.2 10.4a1 1 0 0 0 .63 1.77H5.5v7.33a1 1 0 0 0 1 1h3.8v-5.2h3.4v5.2h3.8a1 1 0 0 0 1-1V12.17h1.67a1 1 0 0 0 .63-1.77L12 3.2z"/>',
+  status: '<path fill="currentColor" stroke="none" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-6v2h3a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h3v-2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm2.8 9.2 3.1-3.1 2.4 2.4 4.3-4.3a.9.9 0 0 0-1.27-1.27L12.3 10l-2.4-2.4-4.37 4.33a.9.9 0 1 0 1.27 1.27z"/>',
+  system: '<path fill="currentColor" stroke="none" d="M19.4 13c.04-.33.07-.66.07-1s-.03-.67-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.73-1l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65c-.63.25-1.21.59-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.49.49 0 0 0 .12.64L4.54 11c-.04.33-.07.67-.07 1s.03.67.07 1l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .6.22l2.49-1c.52.41 1.1.75 1.73 1l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.63-.25 1.21-.59 1.73-1l2.49 1a.5.5 0 0 0 .6-.22l2-3.46a.5.5 0 0 0-.12-.64L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>',
+  services: '<path fill="currentColor" stroke="none" d="M4 4h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 3a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-3 7h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zm3 3a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>',
+  network: '<path fill="currentColor" stroke="none" d="M10 3h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1v2.2h6a1 1 0 0 1 1 1V15h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1v-1.8H7V15h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1v-2.8a1 1 0 0 1 1-1h6V9h-1a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>',
   docker: '<rect x="3" y="10" width="4" height="4" rx=".6"/>' +
     '<rect x="8" y="10" width="4" height="4" rx=".6"/>' +
     '<rect x="13" y="10" width="4" height="4" rx=".6"/>' +
     '<rect x="8" y="5" width="4" height="4" rx=".6"/>' +
     '<path d="M2 14.5c1 3.5 4.2 5.5 9.5 5.5 6 0 9.5-3 10.5-7' +
     '-1.4-.5-2.8-.3-3.7.4"/>',
-  vpn: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
-    '<path d="m9 12 2 2 4-4"/>',
+  vpn: '<path fill="currentColor" stroke="none" d="M12 2.5 4 6v6c0 5.55 3.4 10.74 8 12 4.6-1.26 8-6.45 8-12V6l-8-3.5zm-1.2 13.2-3.3-3.3 1.4-1.4 1.9 1.9 4.3-4.3 1.4 1.4-5.7 5.7z"/>',
   logout: '<path d="M10 17l5-5-5-5M15 12H3"/>' +
     '<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>',
   default: '<rect x="4" y="4" width="6" height="6" rx="1.2"/>' +
@@ -39,10 +23,20 @@ const ICONS = {
     '<rect x="14" y="14" width="6" height="6" rx="1.2"/>'
 };
 
+const STANDALONE_STATUS_CHILDREN = {
+  overview: true,
+  processes: true,
+  logs: true,
+  syslog: true
+};
+
+const STANDALONE_SYSTEM_CHILDREN = {
+  system: true
+};
+
 const SIDE_ICONS = {
   overview: '<path d="M4 13h6V4H4zm10-9v6h6V4zM4 20h6v-4H4zm10 0h6v-7h-6z"/>',
-  routes: '<path d="M6 3v12"/><circle cx="18" cy="6" r="3"/>' +
-    '<circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+  routes: '<path d="M4 8h13l-3-3m6 11H7l3 3"/>',
   nftables: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
   iptables: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
   firewall: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
@@ -50,7 +44,7 @@ const SIDE_ICONS = {
     '<path d="M14 2v6h6M8 13h8M8 17h5"/>',
   processes: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   realtime: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
-  nlbw: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+  nlbw: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
   wireguard: '<circle cx="12" cy="12" r="9"/>' +
     '<path d="M8 12h8M12 8v8"/>',
   network: '<path d="M4 7h16M4 17h16"/><path d="m8 4-3 3 3 3m8 4 3 3-3 3"/>',
@@ -195,15 +189,42 @@ return baseclass.extend({
     const isOverviewPage =
       currentSection === 'status' &&
       (!currentSub || currentSub === 'overview');
+    const isProcessesPage =
+      currentSection === 'status' && currentSub === 'processes';
+    const isLogsPage =
+      currentSection === 'status' &&
+      (currentSub === 'logs' || currentSub === 'syslog');
+    const isSystemBasicPage =
+      currentSection === 'system' && currentSub === 'system';
+    const isStandaloneRailPage =
+      isOverviewPage || isProcessesPage || isLogsPage || isSystemBasicPage;
     let activeSection = null;
 
     document.documentElement.classList.toggle(
       'homeui-overview-single-rail',
-      isOverviewPage
+      isStandaloneRailPage
     );
+
+    const procUtil = document.querySelector('[data-rail-item="processes"]');
+    const logsUtil = document.querySelector('[data-rail-item="logs"]');
+    const sysUtil = document.querySelector('[data-rail-item="system"]');
+
+    if (procUtil)
+      procUtil.classList.toggle('active', isProcessesPage);
+    if (logsUtil)
+      logsUtil.classList.toggle('active', isLogsPage);
+    if (sysUtil)
+      sysUtil.classList.toggle('active', isSystemBasicPage);
 
     const statusSection = sections.find((s) => s.name === 'status');
     if (statusSection) {
+      const statusChildren = ui.menu.getChildren(statusSection);
+      const logNode = statusChildren.find(
+        (c) => c.name === 'logs' || c.name === 'syslog'
+      );
+      if (logsUtil && logNode)
+        logsUtil.href = L.url(url, 'status', logNode.name);
+
       const overviewLabel = isChinese ? '系统概况' : _('Overview');
       const overviewLink = E('a', {
         'href': L.url(url, 'status', 'overview'),
@@ -225,7 +246,11 @@ return baseclass.extend({
         section.name === currentSection :
         index === 0;
 
-      if (section.name === 'status' && isOverviewPage)
+      if (section.name === 'status' &&
+          (isOverviewPage || isProcessesPage || isLogsPage))
+        active = false;
+
+      if (section.name === 'system' && isSystemBasicPage)
         active = false;
 
       let itemUrl = L.url(url, section.name);
@@ -234,7 +259,7 @@ return baseclass.extend({
       if (section.name === 'status') {
         const statusChildren = ui.menu.getChildren(section);
         const firstMonitor = statusChildren.find(
-          (c) => c.name !== 'overview'
+          (c) => !STANDALONE_STATUS_CHILDREN[c.name]
         );
 
         if (firstMonitor)
@@ -242,12 +267,21 @@ return baseclass.extend({
 
         if (isChinese)
           displayTitle = '监控中心';
+      } else if (section.name === 'system') {
+        const systemChildren = ui.menu.getChildren(section);
+        const firstSystem = systemChildren.find(
+          (c) => !STANDALONE_SYSTEM_CHILDREN[c.name]
+        );
+
+        if (firstSystem)
+          itemUrl = L.url(url, 'system', firstSystem.name);
+
+        if (isChinese)
+          displayTitle = '系统管理';
       } else if (section.name === 'network' && isChinese) {
         displayTitle = '网络配置';
       } else if (section.name === 'services' && isChinese) {
         displayTitle = '高级服务';
-      } else if (section.name === 'system' && isChinese) {
-        displayTitle = '系统管理';
       }
 
       const icon = createIcon(section.name);
@@ -269,7 +303,7 @@ return baseclass.extend({
         'data-menu': section.name
       }, [link]));
 
-      if (active || (section.name === 'status' && isOverviewPage))
+      if (active)
         activeSection = section;
     });
 
@@ -279,13 +313,21 @@ return baseclass.extend({
     this.renderSideMenu(
       activeSection,
       url + '/' + activeSection.name,
-      side
+      side,
+      activeSection.name
     );
   },
 
-  renderSideMenu(tree, url, container)
+  renderSideMenu(tree, url, container, sectionName)
   {
-    const children = ui.menu.getChildren(tree);
+    const rawChildren = ui.menu.getChildren(tree);
+    const children = rawChildren.filter((child) => {
+      if (sectionName === 'status' && STANDALONE_STATUS_CHILDREN[child.name])
+        return false;
+      if (sectionName === 'system' && STANDALONE_SYSTEM_CHILDREN[child.name])
+        return false;
+      return true;
+    });
     const currentName = L.env.dispatchpath[2];
 
     children.forEach((child, index) => {

@@ -94,54 +94,56 @@
           </button>
         </div>
 
-        <nav class="homeui-rail" aria-label="{{ _('Main menu') }}">
-          <ul id="topmenu"></ul>
-        </nav>
+        <div class="homeui-rail-col">
+          <nav class="homeui-rail" aria-label="{{ _('Main menu') }}">
+            <ul id="topmenu"></ul>
+          </nav>
 
-        <div class="homeui-global-tools">
-          <div class="homeui-rail-Quicklinks">
-            <a class="homeui-rail-util"
-              href="{{ dispatcher.build_url('admin/status/processes') }}">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                <path d="M8 9h8M8 13h8M8 17h5"></path>
-              </svg>
-              <span>{{ _('Processes') }}</span>
-            </a>
-            <a class="homeui-rail-util"
-              href="{{ dispatcher.build_url('admin/status/logs') }}">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"></path>
-                <path d="M8 10h8M8 14h5"></path>
-              </svg>
-              <span>{{ _('System Log') }}</span>
-            </a>
-            <a class="homeui-rail-util"
-              href="{{ dispatcher.build_url('admin/system/system') }}">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"></path>
-              </svg>
-              <span>{{ _('System') }}</span>
-            </a>
-          </div>
-          <div class="homeui-rail-bottombar">
-            <button id="homeui-collapse" type="button"
-              title="{{ _('Toggle navigation') }}"
-              aria-label="{{ _('Toggle navigation') }}">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5v14"></path>
-                <path d="m14 8-4 4 4 4"></path>
-                <path d="M10 12h10"></path>
-              </svg>
-            </button>
-            <button id="homeui-color-toggle" type="button"
-              title="{{ _('Appearance') }}">
-              <span class="homeui-color-icon"></span>
-              <span class="homeui-color-label">{{ _('Appearance') }}</span>
-            </button>
-            <div id="indicators"></div>
-            <div id="homeui-logout-slot"></div>
+          <div class="homeui-global-tools">
+            <div class="homeui-rail-Quicklinks">
+              <a class="homeui-rail-util" data-rail-item="processes"
+                href="{{ dispatcher.build_url('admin/status/processes') }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="3" width="16" height="18" rx="2.5"></rect>
+                  <path d="M8 8h8M8 12h8M8 16h5"></path>
+                </svg>
+                <span>{{ _('Processes') }}</span>
+              </a>
+              <a class="homeui-rail-util" data-rail-item="logs"
+                href="{{ dispatcher.build_url('admin/status/logs') }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"></path>
+                  <path d="M8 13h8M8 16h5"></path>
+                </svg>
+                <span>{{ _('System Log') }}</span>
+              </a>
+              <a class="homeui-rail-util" data-rail-item="system"
+                href="{{ dispatcher.build_url('admin/system/system') }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"></path>
+                </svg>
+                <span>{{ _('System') }}</span>
+              </a>
+            </div>
+            <div class="homeui-rail-bottombar">
+              <button id="homeui-collapse" type="button"
+                title="{{ _('Toggle navigation') }}"
+                aria-label="{{ _('Toggle navigation') }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 5v14"></path>
+                  <path d="m14 8-4 4 4 4"></path>
+                  <path d="M10 12h10"></path>
+                </svg>
+              </button>
+              <button id="homeui-color-toggle" type="button"
+                title="{{ _('Appearance') }}">
+                <span class="homeui-color-icon"></span>
+                <span class="homeui-color-label">{{ _('Appearance') }}</span>
+              </button>
+              <div id="indicators"></div>
+              <div id="homeui-logout-slot"></div>
+            </div>
           </div>
         </div>
 

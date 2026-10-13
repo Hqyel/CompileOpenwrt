@@ -8,6 +8,38 @@ body[data-page="admin-status-overview"] .homeui-shell {
   width: var(--homeui-rail-width);
 }
 
+:root.homeui-overview-single-rail .homeui-rail-col,
+body[data-page="admin-status-overview"] .homeui-rail-col {
+  border-right: 0;
+}
+
+:root.homeui-overview-single-rail .homeui-brand-badge,
+body[data-page="admin-status-overview"] .homeui-brand-badge {
+  display: none;
+}
+
+:root.homeui-overview-single-rail .homeui-brand,
+body[data-page="admin-status-overview"] .homeui-brand {
+  padding: 14px 10px 12px;
+}
+
+:root.homeui-overview-single-rail .homeui-brand-wordmark,
+body[data-page="admin-status-overview"] .homeui-brand-wordmark {
+  font-size: 17px;
+}
+
+:root.homeui-overview-single-rail .homeui-search-pill,
+body[data-page="admin-status-overview"] .homeui-search-pill {
+  height: 28px;
+  padding: 0 7px;
+}
+
+:root.homeui-overview-single-rail .homeui-search-shortcut kbd,
+body[data-page="admin-status-overview"] .homeui-search-shortcut kbd {
+  padding: 1px 4px;
+  font-size: 9px;
+}
+
 :root.homeui-overview-single-rail body,
 body[data-page="admin-status-overview"] {
   padding-left: calc(var(--homeui-rail-width) + 16px);
@@ -31,32 +63,26 @@ body[data-page="admin-status-overview"] #maincontent > h2:first-of-type,
 body[data-page="admin-status-overview"] #view > h2:first-of-type,
 body[data-page="admin-status-overview"] .preview-title,
 body[data-page="admin-status-overview"] .preview-grid {
-  display: none;
+  display: none !important;
 }
 
-body[data-page="admin-status-overview"] #view.homeui-overview-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 14px;
-  align-items: start;
+/* Permanently hide raw native LuCI overview sections (used as live data source) */
+body[data-page="admin-status-overview"] #view .cbi-section,
+body[data-page="admin-status-overview"] #maincontent .cbi-section {
+  display: none !important;
 }
 
 .homeui-ikuai-dashboard {
-  grid-column: 1 / -1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-body[data-page="admin-status-overview"]
-  .homeui-overview-grid:not(.homeui-show-native) > .homeui-overview-card {
-  display: none !important;
-}
-
 .homeui-ikuai-topcard {
   display: grid;
   grid-template-columns:
-    minmax(310px, 1.36fr)
+    minmax(310px, 1.38fr)
     minmax(185px, 1fr)
     minmax(185px, 1fr)
     minmax(225px, 1.15fr);
@@ -141,9 +167,9 @@ body[data-page="admin-status-overview"]
 }
 
 .homeui-device-tip {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 14px;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -169,23 +195,23 @@ body[data-page="admin-status-overview"]
 }
 
 .homeui-device-edition {
-  padding: 0 5px;
+  padding: 0 6px;
   border: 1px solid #94c2ff;
-  border-radius: 4px;
+  border-radius: 999px;
   background: #eef5ff;
   color: #2f89ff;
-  font-size: 11px;
+  font-size: 10px;
   font-style: normal;
   line-height: 17px;
 }
 
 .homeui-device-ip {
-  margin-left: 6px;
+  margin-left: 4px;
   color: var(--text-color-highest);
 }
 
 .homeui-device-ip b {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .homeui-ring-card {
@@ -321,9 +347,9 @@ body[data-page="admin-status-overview"]
 
 .homeui-ikuai-body {
   display: grid;
-  grid-template-columns: 288px minmax(0, 1fr);
+  grid-template-columns: 292px minmax(0, 1fr);
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .homeui-ikuai-left {
@@ -338,14 +364,16 @@ body[data-page="admin-status-overview"]
 }
 
 .homeui-wan-card,
-.homeui-quick-card {
+.homeui-quick-card,
+.homeui-res-card {
   margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
 }
 
-.homeui-quick-card {
+.homeui-quick-card,
+.homeui-res-card {
   padding-top: 12px;
   border-top: 1px solid var(--homeui-border);
 }
@@ -367,17 +395,20 @@ body[data-page="admin-status-overview"]
 }
 
 .homeui-head-link {
-  padding: 0;
+  padding: 2px 6px;
   border: 0;
+  border-radius: 4px;
   background: transparent;
   color: #2f89ff;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  transition: background .15s ease;
 }
 
 .homeui-head-link:hover {
+  background: var(--homeui-accent-soft);
   color: var(--homeui-accent-hover);
 }
 
@@ -413,7 +444,7 @@ body[data-page="admin-status-overview"]
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 0;
+  padding: 7px 0;
   font-size: 12px;
 }
 
@@ -500,8 +531,8 @@ body[data-page="admin-status-overview"]
 .homeui-quick-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px 6px;
-  padding-top: 6px;
+  gap: 12px 6px;
+  padding-top: 4px;
 }
 
 .homeui-quick-item {
@@ -551,6 +582,58 @@ body[data-page="admin-status-overview"]
   white-space: nowrap;
 }
 
+/* Integrated Storage & Memory bars inside left column */
+.homeui-res-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.homeui-res-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.homeui-res-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+
+.homeui-res-row span {
+  color: var(--text-color-medium);
+}
+
+.homeui-res-row strong {
+  color: var(--text-color-highest);
+  font-weight: 500;
+}
+
+.homeui-res-track {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-res-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f89ff, #69b1ff);
+  transition: width .3s ease;
+}
+
+.homeui-res-fill.is-green {
+  background: linear-gradient(90deg, #28c76f, #5ad8a6);
+}
+
+.homeui-res-fill.is-purple {
+  background: linear-gradient(90deg, #6554e8, #9b8ff8);
+}
+
 .homeui-ikuai-right {
   min-width: 0;
   display: flex;
@@ -592,6 +675,12 @@ body[data-page="admin-status-overview"]
   gap: 8px;
 }
 
+/* Interactive Dropdown Pills for Charts */
+.homeui-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
 .homeui-select-pill {
   height: 26px;
   display: inline-flex;
@@ -603,12 +692,72 @@ body[data-page="admin-status-overview"]
   background: var(--homeui-surface);
   color: var(--text-color-medium);
   font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .16s ease, color .16s ease;
+}
+
+.homeui-select-pill:hover,
+.homeui-dropdown.is-open .homeui-select-pill {
+  border-color: #2f89ff;
+  color: #2f89ff;
 }
 
 .homeui-select-pill i {
   color: var(--homeui-muted);
   font-style: normal;
   font-size: 10px;
+  transition: transform .16s ease;
+}
+
+.homeui-dropdown.is-open .homeui-select-pill i {
+  color: #2f89ff;
+  transform: rotate(180deg);
+}
+
+.homeui-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 60;
+  min-width: 104px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 6px;
+  background: var(--homeui-surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+  list-style: none;
+  display: none;
+}
+
+.homeui-dropdown.is-open .homeui-dropdown-menu {
+  display: block;
+}
+
+.homeui-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: var(--text-color-medium);
+  font-size: 11.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease;
+}
+
+.homeui-dropdown-item:hover {
+  background: var(--homeui-accent-soft);
+  color: #2f89ff;
+}
+
+.homeui-dropdown-item.is-active {
+  background: var(--homeui-accent-soft);
+  color: #2f89ff;
+  font-weight: 600;
 }
 
 .homeui-seg-pills {
@@ -630,6 +779,11 @@ body[data-page="admin-status-overview"]
   font-size: 11px;
   box-shadow: none;
   cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.homeui-seg-pills button:hover:not(.active) {
+  color: #2f89ff;
 }
 
 .homeui-seg-pills button.active {
@@ -669,17 +823,51 @@ body[data-page="admin-status-overview"]
   font-family: var(--font-sans);
 }
 
+.chart-val-text {
+  fill: var(--text-color-medium);
+  font-size: 9.5px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+}
+
 .homeui-rate-legend {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 6px;
   font-size: 11px;
+}
+
+.homeui-rate-legend-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .homeui-rate-legend strong {
   color: var(--text-color-highest);
   font-weight: 500;
+}
+
+.homeui-rate-legend-metrics {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-color-medium);
+}
+
+.homeui-rate-legend-metrics em {
+  font-style: normal;
+}
+
+.homeui-rate-legend-metrics .leg-tx {
+  color: #597ef7;
+}
+
+.homeui-rate-legend-metrics .leg-rx {
+  color: #28c76f;
 }
 
 .homeui-green-strip {
@@ -690,56 +878,350 @@ body[data-page="admin-status-overview"]
   background: #67d676;
 }
 
-.homeui-overview-card {
+/* Integrated Bottom iKuai Cards (System Specs & Active Leases/Interfaces) */
+.homeui-ikuai-bottom {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.35fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.homeui-ikuai-panel {
   min-width: 0;
-  grid-column: span 6;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden;
-  border: 1px solid var(--homeui-border) !important;
-  border-radius: 8px !important;
-  background: var(--homeui-surface) !important;
-  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
-}
-
-.homeui-overview-system,
-.homeui-overview-network,
-.homeui-overview-dhcp {
-  grid-column: 1 / -1;
-}
-
-.homeui-overview-card > .cbi-title > h3 {
-  min-height: 44px;
-  margin: 0 !important;
-  padding: 0 16px;
-  align-items: center;
-  border-bottom: 1px solid var(--homeui-border);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 16px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 8px;
   background: var(--homeui-surface);
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03);
+}
+
+.homeui-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--homeui-border);
+}
+
+.homeui-panel-head h3 {
+  margin: 0;
   color: var(--text-color-highest);
   font-size: 13px;
   font-weight: 600;
 }
 
-.homeui-overview-card > div:not(.cbi-title) {
-  padding: 12px 16px;
+.homeui-panel-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.homeui-overview-card .cbi-progressbar {
-  height: 7px;
-  margin: 5px 0;
-  overflow: hidden;
+.homeui-panel-tab {
+  position: relative;
+  padding: 4px 2px 10px;
+  margin-bottom: -11px;
   border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-color-medium);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.homeui-panel-tab:hover {
+  color: #2f89ff;
+}
+
+.homeui-panel-tab.active {
+  border-bottom-color: #2f89ff;
+  color: #2f89ff;
+  font-weight: 600;
+}
+
+.homeui-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
   border-radius: 999px;
-  background: var(--homeui-surface-soft);
-  box-shadow: inset 0 0 0 1px var(--homeui-border);
+  background: #edf5ff;
+  color: #2f89ff;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-.homeui-overview-card .cbi-progressbar > div {
-  min-width: 3px;
-  height: 100%;
+:root[data-darkmode="true"] .homeui-panel-badge {
+  background: #1a3354;
+  color: #69b1ff;
+}
+
+.homeui-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.homeui-spec-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--homeui-surface-soft);
+  font-size: 12px;
+}
+
+.homeui-spec-item.is-wide {
+  grid-column: 1 / -1;
+}
+
+.homeui-spec-item span {
+  flex: 0 0 auto;
+  color: var(--text-color-medium);
+}
+
+.homeui-spec-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-color-highest);
+  font-weight: 500;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homeui-ikuai-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.homeui-ikuai-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.homeui-ikuai-table th {
+  padding: 9px 12px;
+  background: var(--homeui-surface-soft);
+  color: var(--text-color-medium);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.homeui-ikuai-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--homeui-border);
+  color: var(--text-color-highest);
+  vertical-align: middle;
+}
+
+.homeui-ikuai-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.homeui-ikuai-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--homeui-accent-soft) 45%, transparent);
+}
+
+.homeui-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.homeui-tag.is-green {
+  background: rgba(40, 199, 111, .12);
+  color: #28c76f;
+}
+
+.homeui-tag.is-blue {
+  background: #edf5ff;
+  color: #2f89ff;
+}
+
+:root[data-darkmode="true"] .homeui-tag.is-blue {
+  background: #1a3354;
+  color: #69b1ff;
+}
+
+.homeui-empty-hint {
+  padding: 24px 12px;
+  color: var(--homeui-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Shortcut Customization Modal */
+.homeui-shortcut-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .4);
+  backdrop-filter: blur(3px);
+}
+
+.homeui-shortcut-modal[hidden] {
+  display: none !important;
+}
+
+.homeui-shortcut-dialog {
+  width: min(620px, 100%);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--homeui-border);
+  border-radius: 10px;
+  background: var(--homeui-surface);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, .22);
+}
+
+.homeui-shortcut-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--homeui-border);
+}
+
+.homeui-shortcut-head h4 {
+  margin: 0;
+  color: var(--text-color-highest);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.homeui-shortcut-close {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #2f89ff, #6fc5ff);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--homeui-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.homeui-shortcut-close:hover {
+  background: var(--homeui-surface-soft);
+  color: var(--text-color-highest);
+}
+
+.homeui-shortcut-body {
+  flex: 1;
+  padding: 14px 18px;
+  overflow-y: auto;
+}
+
+.homeui-shortcut-tip {
+  margin: 0 0 12px;
+  color: var(--homeui-muted);
+  font-size: 12px;
+}
+
+.homeui-shortcut-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.homeui-shortcut-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 6px;
+  background: var(--homeui-surface);
+  color: var(--text-color-medium);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.homeui-shortcut-option:hover {
+  border-color: #91c3ff;
+}
+
+.homeui-shortcut-option.is-selected {
+  border-color: #2f89ff;
+  background: var(--homeui-accent-soft);
+  color: #2f89ff;
+  font-weight: 500;
+}
+
+.homeui-shortcut-option svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.homeui-shortcut-option span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homeui-shortcut-check {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--homeui-border);
+  border-radius: 4px;
+  background: var(--homeui-surface);
+  color: transparent;
+  font-size: 10px;
+}
+
+.homeui-shortcut-option.is-selected .homeui-shortcut-check {
+  border-color: #2f89ff;
+  background: #2f89ff;
+  color: #ffffff;
+}
+
+.homeui-shortcut-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--homeui-border);
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-shortcut-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 @media screen and (max-width: 1280px) {
@@ -750,6 +1232,10 @@ body[data-page="admin-status-overview"]
   .homeui-ikuai-body {
     grid-template-columns: 270px minmax(0, 1fr);
   }
+
+  .homeui-ikuai-bottom {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media screen and (max-width: 900px) {
@@ -759,11 +1245,13 @@ body[data-page="admin-status-overview"]
   }
 
   .homeui-ikuai-topcard,
-  .homeui-ikuai-body {
+  .homeui-ikuai-body,
+  .homeui-ikuai-bottom,
+  .homeui-spec-grid {
     grid-template-columns: 1fr;
   }
 
-  .homeui-overview-card {
-    grid-column: 1 / -1;
+  .homeui-shortcut-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

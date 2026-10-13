@@ -13,9 +13,9 @@
   --homeui-success: #28c76f;
   --homeui-warning: #f59f00;
   --homeui-danger: #ee5e68;
-  --homeui-rail-width: 118px;
+  --homeui-rail-width: 124px;
   --homeui-rail-collapsed-width: 54px;
-  --homeui-panel-width: 148px;
+  --homeui-panel-width: 144px;
   --homeui-shell-width: calc(
     var(--homeui-rail-width) + var(--homeui-panel-width)
   );
@@ -118,51 +118,56 @@ a:hover {
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--homeui-rail-width);
-  height: 92px;
+  right: 0;
+  width: 100%;
+  height: 96px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 13px 10px 10px;
-  border-right: 1px solid var(--homeui-border);
+  padding: 14px 12px 12px;
+  border-bottom: 1px solid var(--homeui-border);
   background: var(--homeui-surface);
-  transition: width .2s ease;
+  transition: width .2s ease, padding .2s ease;
 }
 
 .homeui-brand-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: 6px;
 }
 
 .homeui-brand-link {
   min-width: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   text-decoration: none;
   overflow: hidden;
 }
 
 .homeui-brand-wordmark {
-  color: #1677ff;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -.3px;
+  color: #0b65eb;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -.4px;
   line-height: 1;
 }
 
+:root[data-darkmode="true"] .homeui-brand-wordmark {
+  color: #55a1ff;
+}
+
 .homeui-brand-badge {
-  max-width: 46px;
-  padding: 1px 4px;
+  max-width: 72px;
+  padding: 1px 7px;
   overflow: hidden;
-  border: 1px solid #91c3ff;
-  border-radius: 4px;
-  background: #edf5ff;
-  color: #2f89ff;
-  font-size: 9px;
-  line-height: 1.3;
+  border: 1px solid #69b1ff;
+  border-radius: 999px;
+  background: #f0f7ff;
+  color: #1677ff;
+  font-size: 10px;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -174,9 +179,9 @@ a:hover {
 }
 
 .homeui-user-entry {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -189,8 +194,8 @@ a:hover {
 }
 
 .homeui-user-entry svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -200,14 +205,14 @@ a:hover {
 
 .homeui-search-pill {
   width: 100%;
-  height: 28px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 7px;
-  border: 1px solid transparent;
+  padding: 0 10px;
+  border: 1px solid #dbe3ef;
   border-radius: 999px;
-  background: #f2f5fa;
+  background: #ffffff;
   color: var(--homeui-muted);
   box-shadow: none;
   cursor: pointer;
@@ -215,18 +220,19 @@ a:hover {
 }
 
 :root[data-darkmode="true"] .homeui-search-pill {
+  border-color: var(--homeui-border);
   background: var(--homeui-surface-soft);
 }
 
 .homeui-search-pill:hover {
-  border-color: #91c3ff;
-  background: var(--homeui-accent-soft);
+  border-color: #69b1ff;
+  background: #f7faff;
 }
 
 .homeui-search-icon {
-  width: 13px;
-  height: 13px;
-  flex: 0 0 13px;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
   fill: none;
   stroke: #2f89ff;
   stroke-width: 2;
@@ -236,79 +242,88 @@ a:hover {
 .homeui-search-shortcut {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  font-size: 9px;
+  gap: 3px;
+  font-size: 10px;
   color: #2f89ff;
 }
 
 .homeui-search-shortcut kbd {
-  padding: 1px 4px;
-  border: 1px solid #cfe2ff;
-  border-radius: 3px;
-  background: #ffffff;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: #e8f2ff;
   color: #2f89ff;
   font-family: var(--font-sans);
-  font-size: 9px;
-  line-height: 1.2;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 :root[data-darkmode="true"] .homeui-search-shortcut kbd {
-  border-color: #2d5994;
-  background: var(--homeui-surface);
+  background: #1a3354;
+  color: #69b1ff;
 }
 
-.homeui-rail {
+.homeui-rail-col {
   position: absolute;
-  top: 92px;
-  bottom: 158px;
-  left: 0;
-  width: var(--homeui-rail-width);
-  overflow-x: hidden;
-  overflow-y: auto;
-  border-right: 1px solid var(--homeui-border);
-  background: var(--homeui-surface);
-  transition: width .2s ease;
-}
-
-.homeui-global-tools {
-  position: absolute;
-  z-index: 2;
+  top: 96px;
   bottom: 0;
   left: 0;
   width: var(--homeui-rail-width);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 6px 8px 8px;
   border-right: 1px solid var(--homeui-border);
   background: var(--homeui-surface);
   transition: width .2s ease;
+}
+
+.homeui-rail {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.homeui-global-tools {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 6px 8px 8px;
+  background: var(--homeui-surface);
 }
 
 .homeui-rail-Quicklinks {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-bottom: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--homeui-border);
   border-bottom: 1px solid var(--homeui-border);
 }
 
 .homeui-rail-util {
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
   color: var(--text-color-medium);
-  font-size: 12px;
+  font-size: 12.5px;
   text-decoration: none;
   transition: background .16s ease, color .16s ease;
 }
 
-.homeui-rail-util:hover {
+.homeui-rail-util:hover,
+.homeui-rail-util.active {
   background: var(--homeui-accent-soft);
   color: var(--homeui-accent);
+}
+
+.homeui-rail-util.active {
+  font-weight: 500;
 }
 
 .homeui-rail-util svg {
@@ -316,10 +331,15 @@ a:hover {
   height: 15px;
   flex: 0 0 15px;
   fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
+  stroke: #7b8a9e;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.homeui-rail-util:hover svg,
+.homeui-rail-util.active svg {
+  stroke: var(--homeui-accent);
 }
 
 .homeui-rail-bottombar {
@@ -362,7 +382,7 @@ a:hover {
 
 #topmenu {
   margin: 0;
-  padding: 4px 8px 24px;
+  padding: 10px 8px 16px;
   list-style: none;
 }
 
@@ -372,15 +392,15 @@ a:hover {
 
 #topmenu > li > a {
   position: relative;
-  min-height: 36px;
+  min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  padding: 6px 9px;
+  padding: 6px 10px;
   border-radius: 6px;
   color: var(--text-color-medium);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.25;
   text-align: left;
   text-decoration: none;
@@ -405,6 +425,13 @@ a:hover {
   align-items: center;
   justify-content: center;
   flex: 0 0 16px;
+  color: #7b8a9e;
+  transition: color .16s ease;
+}
+
+#topmenu > li > a:hover .homeui-menu-icon,
+#topmenu > li.active > a .homeui-menu-icon {
+  color: var(--homeui-accent);
 }
 
 .homeui-menu-icon svg {
@@ -419,7 +446,7 @@ a:hover {
 
 .homeui-panel {
   position: absolute;
-  top: 0;
+  top: 96px;
   right: 0;
   bottom: 0;
   width: var(--homeui-panel-width);
@@ -432,7 +459,7 @@ a:hover {
 #sidemenu {
   flex: 1;
   margin: 0;
-  padding: 14px 8px;
+  padding: 10px 8px 14px;
   overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
@@ -1133,6 +1160,7 @@ select:focus,
 
 :root.homeui-collapsed .homeui-shell,
 :root.homeui-collapsed .homeui-brand,
+:root.homeui-collapsed .homeui-rail-col,
 :root.homeui-collapsed .homeui-rail,
 :root.homeui-collapsed .homeui-global-tools {
   width: var(--homeui-rail-collapsed-width);
