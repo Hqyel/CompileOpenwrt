@@ -29,33 +29,32 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 68px;
+    width: 72px;
     height: var(--homeui-mobile-top);
+    justify-content: center;
+    padding: 0 6px;
     border: 0;
+  }
+
+  .homeui-brand-row {
+    justify-content: center;
   }
 
   .homeui-brand-link,
   :root.homeui-collapsed .homeui-brand-link {
-    inset: 0;
     justify-content: center;
     padding: 0;
   }
 
-  .homeui-brand-link img {
-    width: 34px;
-    height: 34px;
-  }
-
-  .homeui-brand-link > span,
-  :root.homeui-collapsed .homeui-brand-link > span {
-    display: none;
+  .homeui-brand-badge,
+  .homeui-user-entry,
+  .homeui-search-pill,
+  .homeui-rail-Quicklinks {
+    display: none !important;
   }
 
   #homeui-collapse,
   :root.homeui-collapsed #homeui-collapse {
-    top: 14px;
-    right: -36px;
-    bottom: auto;
     display: none;
   }
 
@@ -67,21 +66,22 @@
     width: auto;
     min-height: 0;
     flex-direction: row;
-    padding: 6px;
+    padding: 5px 8px;
     border: 1px solid var(--homeui-border);
-    border-radius: 11px;
+    border-radius: 10px;
     background: var(--homeui-surface);
     box-shadow: var(--homeui-shadow);
   }
 
-  #homeui-logout-slot {
-    width: 42px;
-    min-height: 36px;
-    align-items: center;
-    margin-top: 0;
+  .homeui-rail-bottombar,
+  :root.homeui-collapsed .homeui-rail-bottombar {
+    flex-direction: row;
     padding-top: 0;
+    gap: 6px;
+  }
+
+  #homeui-logout-slot {
     padding-left: 6px;
-    border-top: 0;
     border-left: 1px solid var(--homeui-border);
   }
 
@@ -89,7 +89,7 @@
     top: 0;
     right: 0;
     bottom: auto;
-    left: 68px;
+    left: 72px;
     width: auto;
     height: var(--homeui-mobile-top);
     border: 0;

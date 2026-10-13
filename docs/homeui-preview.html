@@ -3,134 +3,107 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HomeUI 视觉预览</title>
+    <title>HomeWrt | 系统概况</title>
     <link rel="stylesheet"
       href="../package/luci-theme-homeui/htdocs/luci-static/homeui/cascade.css">
+    <link rel="stylesheet"
+      href="../package/luci-theme-homeui/htdocs/luci-static/homeui/overview.css">
     <link rel="stylesheet" media="only screen and (max-width: 900px)"
       href="../package/luci-theme-homeui/htdocs/luci-static/homeui/mobile.css">
     <style>
       * {
         box-sizing: border-box;
       }
-
-      .preview-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(180px, 1fr));
-        gap: 14px;
-        margin-bottom: 16px;
-      }
-
-      .preview-stat {
-        min-height: 112px;
-        padding: 16px;
-        border: 1px solid var(--homeui-border);
-        border-radius: var(--homeui-radius);
-        background: var(--homeui-surface);
-        box-shadow: var(--homeui-shadow);
-      }
-
-      .preview-stat small {
-        color: var(--homeui-muted);
-      }
-
-      .preview-stat strong {
-        display: block;
-        margin: 10px 0 5px;
-        color: var(--text-color-highest);
-        font-size: 25px;
-        font-weight: 650;
-      }
-
-      .preview-stat span {
-        color: var(--homeui-success);
-        font-size: 12px;
-      }
-
-      .preview-chart {
-        height: 210px;
-        display: flex;
-        align-items: flex-end;
-        gap: 4%;
-        padding: 22px 18px 30px;
-        border: 1px solid var(--homeui-border);
-        border-radius: var(--homeui-radius);
-        background:
-          repeating-linear-gradient(
-            to bottom,
-            transparent 0,
-            transparent 39px,
-            var(--homeui-border) 40px
-          ),
-          var(--homeui-surface);
-        box-shadow: var(--homeui-shadow);
-      }
-
-      .preview-chart span {
-        flex: 1;
-        min-width: 12px;
-        border-radius: 4px 4px 0 0;
-        background: linear-gradient(
-          to top,
-          rgba(47, 137, 255, .18),
-          var(--homeui-accent)
-        );
-      }
-
-      .preview-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 0 0 16px;
-      }
-
-      .preview-title h2 {
-        margin: 0;
-      }
-
-      .homeui-menu-icon svg {
-        display: block;
-      }
-
-      .table .tr {
-        display: grid;
-        grid-template-columns: 1fr 1.4fr 1fr 1fr 1fr;
-      }
-
-      .table .th,
-      .table .td {
-        display: block;
-      }
-
-      @media (max-width: 760px) {
-        .preview-grid {
-          grid-template-columns: 1fr;
-        }
-      }
     </style>
   </head>
   <body data-page="admin-status-overview">
     <header class="homeui-shell">
       <div class="homeui-brand">
-        <a class="homeui-brand-link" href="#">
-          <img
-          src="../package/luci-theme-homeui/htdocs/luci-static/homeui/logo.svg"
-          alt="">
-          <span><strong>HomeUI</strong><small>HomeWrt</small></span>
-        </a>
-        <button id="homeui-collapse" type="button" aria-label="折叠菜单">
-          <span></span><span></span><span></span>
+        <div class="homeui-brand-row">
+          <a class="homeui-brand-link" href="#">
+            <strong class="homeui-brand-wordmark">HomeUI</strong>
+            <small class="homeui-brand-badge">HomeWrt</small>
+          </a>
+          <a class="homeui-user-entry" href="#" title="管理权">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.6"></circle>
+              <path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"></path>
+            </svg>
+          </a>
+        </div>
+        <button id="homeui-search-trigger" class="homeui-search-pill"
+          type="button" title="Ctrl + K">
+          <svg class="homeui-search-icon" viewBox="0 0 24 24"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4.2 4.2"></path>
+          </svg>
+          <span class="homeui-search-shortcut">
+            <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd>
+          </span>
         </button>
       </div>
-      <nav class="homeui-rail">
+
+      <nav class="homeui-rail" aria-label="主菜单">
         <ul id="topmenu">
           <li class="active">
             <a href="#">
               <span class="homeui-menu-icon">
                 <svg viewBox="0 0 24 24">
-                  <path d="M4 18V8m6 10V4m6 14v-7m6 7V2"/>
+                  <path d="M3 10.5 12 3l9 7.5"/>
+                  <path d="M5 9.5V20h14V9.5"/>
+                  <path d="M9.5 20v-6h5v6"/>
                 </svg>
               </span>
-              <span>状态</span>
+              <span>系统概况</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="homeui-menu-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="14" rx="2"/>
+                  <path d="M7 12l3-3 3 3 4-4"/>
+                  <path d="M8 21h8M12 18v3"/>
+                </svg>
+              </span>
+              <span>监控中心</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="homeui-menu-icon">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="5" r="2.2"/>
+                  <circle cx="5" cy="19" r="2.2"/>
+                  <circle cx="19" cy="19" r="2.2"/>
+                  <path d="M12 7.2V12m-7 4.8V12h14v4.8"/>
+                </svg>
+              </span>
+              <span>网络配置</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="homeui-menu-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </span>
+              <span>虚拟专网</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="homeui-menu-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="6" rx="2"/>
+                  <rect x="3" y="14" width="18" height="6" rx="2"/>
+                  <path d="M7 7h.01M7 17h.01"/>
+                </svg>
+              </span>
+              <span>高级服务</span>
             </a>
           </li>
           <li>
@@ -141,122 +114,144 @@
                   <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
                 </svg>
               </span>
-              <span>系统</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <span class="homeui-menu-icon">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="5" rx="2"/>
-                  <rect x="3" y="15" width="18" height="5" rx="2"/>
-                </svg>
-              </span>
-              <span>服务</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <span class="homeui-menu-icon">
-                <svg viewBox="0 0 24 24">
-                  <circle cx="12" cy="5" r="2"/>
-                  <circle cx="5" cy="19" r="2"/>
-                  <circle cx="19" cy="19" r="2"/>
-                  <path d="M12 7v4M5 17v-3h14v3"/>
-                </svg>
-              </span>
-              <span>网络</span>
+              <span>系统管理</span>
             </a>
           </li>
         </ul>
       </nav>
-      <nav class="homeui-panel">
-        <div class="homeui-panel-heading">
-          <span class="homeui-menu-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 18V8m6 10V4m6 14v-7m6 7V2"/>
+
+      <div class="homeui-global-tools">
+        <div class="homeui-rail-Quicklinks">
+          <a class="homeui-rail-util" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+              <path d="M8 9h8M8 13h8M8 17h5"></path>
             </svg>
-          </span>
-          <strong>状态</strong>
+            <span>任务进程</span>
+          </a>
+          <a class="homeui-rail-util" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"></path>
+              <path d="M8 10h8M8 14h5"></path>
+            </svg>
+            <span>日志中心</span>
+          </a>
+          <a class="homeui-rail-util" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 3v3m0 12v3M3 12h3m12 0h3"></path>
+            </svg>
+            <span>设备设置</span>
+          </a>
         </div>
-        <ul id="sidemenu">
-          <li class="active">
-            <a href="#"><span class="homeui-side-dot"></span>概览</a>
-          </li>
-          <li><a href="#"><span class="homeui-side-dot"></span>防火墙</a></li>
-          <li><a href="#"><span class="homeui-side-dot"></span>路由</a></li>
-          <li><a href="#"><span class="homeui-side-dot"></span>系统日志</a></li>
-          <li><a href="#"><span class="homeui-side-dot"></span>进程</a></li>
-        </ul>
-        <div class="homeui-panel-footer">
-          <button id="homeui-color-toggle" type="button">
+        <div class="homeui-rail-bottombar">
+          <button id="homeui-collapse" type="button" aria-label="折叠菜单">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5v14"></path>
+              <path d="m14 8-4 4 4 4"></path>
+              <path d="M10 12h10"></path>
+            </svg>
+          </button>
+          <button id="homeui-color-toggle" type="button" title="外观">
             <span class="homeui-color-icon"></span>
             <span class="homeui-color-label">Light</span>
           </button>
+          <div id="indicators"></div>
+          <div id="homeui-logout-slot"></div>
         </div>
+      </div>
+
+      <nav class="homeui-panel">
+        <ul id="sidemenu"></ul>
       </nav>
     </header>
 
     <div id="maincontent" class="container">
-      <div class="preview-title">
-        <div>
-          <h2>系统概览</h2>
-          <div class="cbi-map-descr">运行稳定，一切服务均正常</div>
+      <div id="view">
+        <div class="cbi-section">
+          <div class="cbi-title"><h3>系统</h3></div>
+          <div>
+            <table class="table">
+              <tr class="tr"><td class="td">主机名</td><td class="td">HomeWrt</td></tr>
+              <tr class="tr"><td class="td">型号</td><td class="td">Intel N5105 PVE x86_64</td></tr>
+              <tr class="tr"><td class="td">架构</td><td class="td">Intel(R) Celeron(R) N5105 @ 2.00GHz</td></tr>
+              <tr class="tr"><td class="td">固件版本</td><td class="td">ImmortalWrt 25.12.0 / LuCI openwrt-25.12</td></tr>
+              <tr class="tr"><td class="td">内核版本</td><td class="td">6.6.74</td></tr>
+              <tr class="tr"><td class="td">运行时间</td><td class="td">3d 13h 38m 26s</td></tr>
+              <tr class="tr"><td class="td">平均负载</td><td class="td">0.12, 0.08, 0.05</td></tr>
+              <tr class="tr"><td class="td">CPU 使用率 (%)</td><td class="td">8%</td></tr>
+            </table>
+          </div>
         </div>
-        <button class="btn cbi-button-positive">刷新数据</button>
+
+        <div class="cbi-section">
+          <div class="cbi-title"><h3>内存</h3></div>
+          <div>
+            <table class="table">
+              <tr class="tr">
+                <td class="td">已使用</td>
+                <td class="td">
+                  <div class="cbi-progressbar" title="460 MB / 2048 MB (22%)">
+                    <div style="width:22%"></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="cbi-section">
+          <div class="cbi-title"><h3>存储</h3></div>
+          <div>
+            <table class="table">
+              <tr class="tr">
+                <td class="td">磁盘空间</td>
+                <td class="td">
+                  <div class="cbi-progressbar" title="380 MB / 4096 MB (9%)">
+                    <div style="width:9%"></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="cbi-section">
+          <div class="cbi-title"><h3>网络</h3></div>
+          <div>
+            <div class="network-status-table">
+              <div class="ifacebox">
+                <div class="ifacebox-head active"><strong>wan1 (br-lan)</strong></div>
+                <div class="ifacebox-body">
+                  <span>
+                    <strong>协议: </strong>静态地址 (Static)<br>
+                    <strong>地址: </strong>10.10.10.2/24<br>
+                    <strong>网关: </strong>10.10.10.1<br>
+                    <strong>DNS: </strong>10.10.10.1<br>
+                    <strong>已连接: </strong>3d 13h 37m 26s
+                  </span>
+                </div>
+              </div>
+            </div>
+            <table class="table">
+              <tr class="tr">
+                <td class="td">活动连接</td>
+                <td class="td">
+                  <div class="cbi-progressbar" title="500 / 65536 (1%)">
+                    <div style="width:1%"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="tr">
+                <td class="td">在线用户</td>
+                <td class="td">28</td>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
-
-      <div class="preview-grid">
-        <section class="preview-stat">
-          <small>系统运行时间</small>
-          <strong>3 天 21 小时</strong>
-          <span>运行正常</span>
-        </section>
-        <section class="preview-stat">
-          <small>实时连接</small>
-          <strong>378</strong>
-          <span>TCP 243 · UDP 122</span>
-        </section>
-        <section class="preview-stat">
-          <small>内存使用</small>
-          <strong>34.8%</strong>
-          <span>可用 1.3 GiB</span>
-        </section>
-      </div>
-
-      <section class="cbi-section">
-        <h3>实时流量</h3>
-        <div class="preview-chart">
-          <span style="height:24%"></span><span style="height:38%"></span>
-          <span style="height:32%"></span><span style="height:48%"></span>
-          <span style="height:43%"></span><span style="height:64%"></span>
-          <span style="height:59%"></span><span style="height:72%"></span>
-          <span style="height:56%"></span><span style="height:81%"></span>
-          <span style="height:68%"></span><span style="height:88%"></span>
-        </div>
-      </section>
-
-      <section class="cbi-section">
-        <h3>网络接口</h3>
-        <div class="table">
-          <div class="tr table-titles">
-            <div class="th">接口</div><div class="th">地址</div>
-            <div class="th">状态</div><div class="th">下载</div>
-            <div class="th">上传</div>
-          </div>
-          <div class="tr">
-            <div class="td">LAN</div><div class="td">192.0.2.1</div>
-            <div class="td"><span class="label success">在线</span></div>
-            <div class="td">144.57 KB/s</div><div class="td">50.49 KB/s</div>
-          </div>
-          <div class="tr">
-            <div class="td">WireGuard</div><div class="td">198.51.100.1</div>
-            <div class="td"><span class="label success">在线</span></div>
-            <div class="td">2.41 MB/s</div><div class="td">186.33 KB/s</div>
-          </div>
-        </div>
-      </section>
     </div>
+
     <script
       src="../package/luci-theme-homeui/htdocs/luci-static/homeui/main.js">
     </script>
