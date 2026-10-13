@@ -27,6 +27,8 @@
   var pollLiveRouterStats = HomeUI.pollLiveRouterStats;
   var pollLiveMemory = HomeUI.pollLiveMemory;
   var pollLiveThroughput = HomeUI.pollLiveThroughput;
+  var pollPersistentHistory = HomeUI.pollPersistentHistory;
+  var chartState = HomeUI.chartState;
   var getOverviewSectionName = HomeUI.getOverviewSectionName;
   var createIkuaiDashboard = HomeUI.createIkuaiDashboard;
   var updateOverviewDashboard = HomeUI.updateOverviewDashboard;
@@ -170,6 +172,8 @@
     }
   }
 
+  HomeUI.refreshOverview = enhanceOverview;
+
   if (collapseButton)
     collapseButton.addEventListener('click', toggleSidebar);
 
@@ -250,11 +254,22 @@
       if (!document.hidden)
         pollLiveRouterStats(enhanceOverview);
     }, 15000);
+    setInterval(function() {
+      var historyVisible = chartState.rateRange !== 'live' ||
+        chartState.clientRange !== 'live' ||
+        chartState.memRange !== 'live';
+      if (!document.hidden && historyVisible)
+        pollPersistentHistory(enhanceOverview);
+    }, 60000);
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) {
         pollLiveRouterStats(enhanceOverview);
         pollLiveMemory(enhanceOverview);
         pollLiveThroughput(enhanceOverview);
+        if (chartState.rateRange !== 'live' ||
+            chartState.clientRange !== 'live' ||
+            chartState.memRange !== 'live')
+          pollPersistentHistory(enhanceOverview);
       }
     });
   } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage ||

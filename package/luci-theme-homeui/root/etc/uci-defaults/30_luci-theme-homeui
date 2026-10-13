@@ -5,4 +5,7 @@ if ! uci -q get luci.themes.HomeUI >/dev/null; then
   uci commit luci
 fi
 
+/etc/init.d/homeui-monitor enable 2>/dev/null
+/etc/init.d/homeui-monitor restart 2>/dev/null
+
 exit 0

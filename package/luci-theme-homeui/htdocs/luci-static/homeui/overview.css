@@ -725,6 +725,39 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
   white-space: nowrap;
 }
 
+.homeui-range-switch {
+  display: inline-flex;
+  height: 26px;
+  overflow: hidden;
+  border: 1px solid var(--homeui-border);
+  border-radius: 4px;
+  background: var(--homeui-surface);
+}
+
+.homeui-range-switch button {
+  min-width: 48px;
+  padding: 0 9px;
+  border: 0;
+  border-left: 1px solid var(--homeui-border);
+  background: transparent;
+  color: var(--text-color-medium);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.homeui-range-switch button:first-child {
+  border-left: 0;
+}
+
+.homeui-range-switch button:hover {
+  color: #2f89ff;
+}
+
+.homeui-range-switch button.is-active {
+  background: #3487f7;
+  color: #ffffff;
+}
+
 /* Interactive Dropdown Pills for Charts */
 .homeui-dropdown {
   position: relative;

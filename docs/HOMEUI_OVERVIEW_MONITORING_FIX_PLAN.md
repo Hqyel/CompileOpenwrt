@@ -463,3 +463,23 @@ last
   <https://github.com/openwrt/luci/blob/master/modules/luci-base/htdocs/luci-static/resources/network.js>
 - HomeUI 当前概况页实现：
   `package/luci-theme-homeui/htdocs/luci-static/homeui/page-overview.js`
+
+## 15. 阶段 D 实施结果
+
+阶段 D 采用随主题包安装的轻量级 `homeui-monitor` procd 服务：
+
+- 安装或升级 `luci-theme-homeui` 时自动启用并启动服务；
+- 每 5 秒采集网络设备累计 RX/TX 计数器和内存使用率；
+- 每 15 秒采集有线 ARP 邻居与 hostapd 无线关联终端数量；
+- 数据保存到 `/tmp/homeui-monitor`，页面关闭后仍继续采集；
+- 后端每分钟保存平均值和峰值，每个接口最多保留约 24 小时；
+- 前端按真实时间桶计算 1 小时和 24 小时图表；
+- 卸载主题时停止服务并清除运行时历史文件。
+
+历史数据使用内存文件系统，路由器重启后重新开始采集。这样不会对闪存
+进行高频写入，也不需要用户额外安装独立采集包。
+
+终端数量的后台统计口径为：
+
+- 无线终端：hostapd 当前关联客户端；
+- 有线终端：有效 IPv4 ARP 邻居，并排除已识别的无线客户端。

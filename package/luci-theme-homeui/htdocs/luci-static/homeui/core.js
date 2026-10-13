@@ -85,9 +85,12 @@
 
   var chartState = {
     rateStat: 'avg',
+    rateRange: 'live',
     clientStat: 'avg',
     clientType: 'wired',
+    clientRange: 'live',
     memStat: 'avg',
+    memRange: 'live',
     bottomTab: 'leases'
   };
 
@@ -113,6 +116,14 @@
     statsPollBusy: false,
     memoryPollBusy: false,
     throughputPollBusy: false,
+    historyPollBusy: false,
+    history: {
+      interfaces: {},
+      memorySamples: [],
+      clientSamples: [],
+      available: false,
+      loadedAt: 0
+    },
     clientSamplePending: false,
     memorySamplePending: false,
     tcpCount: 0,

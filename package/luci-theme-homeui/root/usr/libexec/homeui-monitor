@@ -1,0 +1,322 @@
+#!/bin/sh
+
+STATE_DIR="/tmp/homeui-monitor"
+SAMPLE_INTERVAL=5
+CLIENT_INTERVAL=15
+MAX_HISTORY_LINES=1450
+PRUNE_INTERVAL=300
+
+mkdir -p "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+umask 077
+
+if [ "$(sed -n '1p' "$STATE_DIR/.format" 2>/dev/null)" != "2" ]; then
+  rm -f "$STATE_DIR"/interface-*.tsv
+  rm -f "$STATE_DIR"/.interface-*.state
+  rm -f "$STATE_DIR/memory.tsv" "$STATE_DIR/.memory.state"
+  rm -f "$STATE_DIR/clients.tsv" "$STATE_DIR/.clients.state"
+  printf '2\n' > "$STATE_DIR/.format"
+fi
+
+read_counter()
+{
+  local path="$1"
+  local value
+
+  read -r value 2>/dev/null < "$path" || value=0
+  case "$value" in
+    ''|*[!0-9]*) value=0 ;;
+  esac
+  printf '%s' "$value"
+}
+
+collect_interfaces()
+{
+  local now="$1"
+  local rxPath
+  local dev
+  local rx
+  local tx
+
+  for rxPath in /sys/class/net/*/statistics/rx_bytes; do
+    [ -f "$rxPath" ] || continue
+    dev="${rxPath#/sys/class/net/}"
+    dev="${dev%/statistics/rx_bytes}"
+
+    case "$dev" in
+      lo|ifb*|veth*|docker*|dummy*) continue ;;
+    esac
+
+    rx="$(read_counter "$rxPath")"
+    tx="$(read_counter "/sys/class/net/$dev/statistics/tx_bytes")"
+    update_rate_history "$dev" "$now" "$rx" "$tx"
+  done
+}
+
+update_rate_history()
+{
+  local dev="$1"
+  local now="$2"
+  local rx="$3"
+  local tx="$4"
+  local statePath="$STATE_DIR/.interface-$dev.state"
+  local historyPath="$STATE_DIR/interface-$dev.tsv"
+  local minute=$((now - now % 60))
+  local previousTime
+  local previousRx
+  local previousTx
+  local bucket
+  local rxSum
+  local txSum
+  local count
+  local rxPeak
+  local txPeak
+  local elapsed
+  local rxDelta
+  local txDelta
+  local rxRate
+  local txRate
+
+  if ! read -r previousTime previousRx previousTx bucket rxSum txSum \
+    count rxPeak txPeak 2>/dev/null < "$statePath"; then
+    printf '%s %s %s %s 0 0 0 0 0\n' \
+      "$now" "$rx" "$tx" "$minute" > "$statePath"
+    return
+  fi
+
+  if [ "$minute" -ne "$bucket" ]; then
+    if [ "$count" -gt 0 ]; then
+      printf '%s\t%s\t%s\t%s\t%s\n' \
+        "$bucket" "$(((rxSum + count / 2) / count))" \
+        "$(((txSum + count / 2) / count))" "$rxPeak" "$txPeak" >> \
+        "$historyPath"
+    fi
+    bucket="$minute"
+    rxSum=0
+    txSum=0
+    count=0
+    rxPeak=0
+    txPeak=0
+  fi
+
+  elapsed=$((now - previousTime))
+  rxDelta=$((rx - previousRx))
+  txDelta=$((tx - previousTx))
+  if [ "$elapsed" -gt 0 ] && [ "$elapsed" -le 60 ] && \
+    [ "$rxDelta" -ge 0 ] && [ "$txDelta" -ge 0 ]; then
+    rxRate=$((rxDelta / elapsed))
+    txRate=$((txDelta / elapsed))
+    rxSum=$((rxSum + rxRate))
+    txSum=$((txSum + txRate))
+    count=$((count + 1))
+    [ "$rxRate" -le "$rxPeak" ] || rxPeak="$rxRate"
+    [ "$txRate" -le "$txPeak" ] || txPeak="$txRate"
+  fi
+
+  printf '%s %s %s %s %s %s %s %s %s\n' \
+    "$now" "$rx" "$tx" "$bucket" "$rxSum" "$txSum" "$count" \
+    "$rxPeak" "$txPeak" > "$statePath.new"
+  mv "$statePath.new" "$statePath"
+}
+
+update_single_history()
+{
+  local name="$1"
+  local now="$2"
+  local value="$3"
+  local statePath="$STATE_DIR/.$name.state"
+  local historyPath="$STATE_DIR/$name.tsv"
+  local minute=$((now - now % 60))
+  local bucket
+  local sum
+  local count
+  local peak
+
+  if read -r bucket sum count peak 2>/dev/null < "$statePath"; then
+    if [ "$minute" -ne "$bucket" ]; then
+      if [ "$count" -gt 0 ]; then
+        printf '%s\t%s\t%s\n' \
+          "$bucket" "$(((sum + count / 2) / count))" "$peak" >> \
+          "$historyPath"
+      fi
+      bucket="$minute"
+      sum=0
+      count=0
+      peak=0
+    fi
+  else
+    bucket="$minute"
+    sum=0
+    count=0
+    peak=0
+  fi
+
+  sum=$((sum + value))
+  count=$((count + 1))
+  [ "$value" -le "$peak" ] || peak="$value"
+  printf '%s %s %s %s\n' "$bucket" "$sum" "$count" "$peak" > \
+    "$statePath.new"
+  mv "$statePath.new" "$statePath"
+}
+
+update_client_history()
+{
+  local now="$1"
+  local wired="$2"
+  local wireless="$3"
+  local statePath="$STATE_DIR/.clients.state"
+  local historyPath="$STATE_DIR/clients.tsv"
+  local minute=$((now - now % 60))
+  local bucket
+  local wiredSum
+  local wirelessSum
+  local count
+  local wiredPeak
+  local wirelessPeak
+
+  if read -r bucket wiredSum wirelessSum count wiredPeak wirelessPeak \
+    2>/dev/null < "$statePath"; then
+    if [ "$minute" -ne "$bucket" ]; then
+      if [ "$count" -gt 0 ]; then
+        printf '%s\t%s\t%s\t%s\t%s\n' \
+          "$bucket" "$(((wiredSum + count / 2) / count))" \
+          "$(((wirelessSum + count / 2) / count))" \
+          "$wiredPeak" "$wirelessPeak" >> "$historyPath"
+      fi
+      bucket="$minute"
+      wiredSum=0
+      wirelessSum=0
+      count=0
+      wiredPeak=0
+      wirelessPeak=0
+    fi
+  else
+    bucket="$minute"
+    wiredSum=0
+    wirelessSum=0
+    count=0
+    wiredPeak=0
+    wirelessPeak=0
+  fi
+
+  wiredSum=$((wiredSum + wired))
+  wirelessSum=$((wirelessSum + wireless))
+  count=$((count + 1))
+  [ "$wired" -le "$wiredPeak" ] || wiredPeak="$wired"
+  [ "$wireless" -le "$wirelessPeak" ] || wirelessPeak="$wireless"
+  printf '%s %s %s %s %s %s\n' \
+    "$bucket" "$wiredSum" "$wirelessSum" "$count" \
+    "$wiredPeak" "$wirelessPeak" > "$statePath.new"
+  mv "$statePath.new" "$statePath"
+}
+
+collect_memory()
+{
+  local now="$1"
+  local memory
+
+  memory="$(awk '
+    /^MemTotal:/ { total = $2 }
+    /^MemAvailable:/ { available = $2 }
+    /^MemFree:/ { free = $2 }
+    /^Buffers:/ { buffers = $2 }
+    /^Cached:/ { cached = $2 }
+    END {
+      if (!available)
+        available = free + buffers + cached
+      if (total > 0)
+        printf "%d", ((total - available) * 100 + total / 2) / total
+    }
+  ' /proc/meminfo 2>/dev/null)"
+
+  case "$memory" in
+    ''|*[!0-9]*) return ;;
+  esac
+  update_single_history memory "$now" "$memory"
+}
+
+collect_clients()
+{
+  local now="$1"
+  local wifiFile="$STATE_DIR/.wireless.tmp"
+  local wiredFile="$STATE_DIR/.wired.tmp"
+  local ap
+  local lanDevices
+  local gateways
+  local wireless
+  local wired
+
+  : > "$wifiFile"
+  for ap in $(ubus list 'hostapd.*' 2>/dev/null); do
+    ubus call "$ap" get_clients 2>/dev/null
+  done | grep -Eo '"([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"' |
+    tr -d '"' | tr '[:lower:]' '[:upper:]' | sort -u > "$wifiFile"
+
+  lanDevices="$(ubus call network.interface.lan status 2>/dev/null |
+    jsonfilter -e '@.l3_device' -e '@.device' 2>/dev/null |
+    sort -u | tr '\n' ' ')"
+  gateways="$(ip -4 route show default 2>/dev/null |
+    awk '{ print $3 }' | sort -u | tr '\n' ' ')"
+
+  awk -v devices=" $lanDevices " -v gateways=" $gateways " '
+    NR > 1 && $3 == "0x2" {
+      if (devices != "  " && index(devices, " " $6 " ") == 0)
+        next
+      if (index(gateways, " " $1 " ") != 0)
+        next
+      print toupper($4)
+    }
+  ' /proc/net/arp 2>/dev/null | sort -u > "$wiredFile"
+
+  if [ -s "$wifiFile" ]; then
+    grep -Fvx -f "$wifiFile" "$wiredFile" > "$wiredFile.filtered"
+    mv "$wiredFile.filtered" "$wiredFile"
+  fi
+
+  wireless="$(wc -l < "$wifiFile")"
+  wired="$(wc -l < "$wiredFile")"
+  update_client_history "$now" "$wired" "$wireless"
+  rm -f "$wifiFile" "$wiredFile"
+}
+
+trim_file()
+{
+  local path="$1"
+  local maxLines="$2"
+  local lines
+
+  [ -f "$path" ] || return
+  lines="$(wc -l < "$path")"
+  [ "$lines" -gt "$maxLines" ] || return
+  tail -n "$maxLines" "$path" > "$path.new" && mv "$path.new" "$path"
+}
+
+prune_history()
+{
+  local path
+
+  for path in "$STATE_DIR"/interface-*.tsv "$STATE_DIR"/memory.tsv; do
+    trim_file "$path" "$MAX_HISTORY_LINES"
+  done
+  trim_file "$STATE_DIR/clients.tsv" "$MAX_HISTORY_LINES"
+}
+
+nextClient=0
+nextPrune=0
+while true; do
+  now="$(date +%s)"
+  collect_interfaces "$now"
+  collect_memory "$now"
+
+  if [ "$now" -ge "$nextClient" ]; then
+    collect_clients "$now"
+    nextClient=$((now + CLIENT_INTERVAL))
+  fi
+
+  if [ "$now" -ge "$nextPrune" ]; then
+    prune_history
+    nextPrune=$((now + PRUNE_INTERVAL))
+  fi
+
+  sleep "$SAMPLE_INTERVAL"
+done

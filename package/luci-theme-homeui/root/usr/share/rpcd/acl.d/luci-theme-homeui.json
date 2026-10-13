@@ -1,0 +1,10 @@
+{
+  "luci-theme-homeui": {
+    "description": "Grant access to HomeUI monitoring history",
+    "read": {
+      "file": {
+        "/tmp/homeui-monitor/*": [ "read" ]
+      }
+    }
+  }
+}

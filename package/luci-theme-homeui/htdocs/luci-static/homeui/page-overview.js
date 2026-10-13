@@ -22,13 +22,33 @@
   var MINI_SAMPLE_COUNT = 20;
   var MAX_REALTIME_SAMPLES = 160;
 
-  function getRealtimeAxisLabels(now)
+  function getWindowConfig(range)
+  {
+    if (range === '1h') {
+      return {
+        windowMs: 60 * 60 * 1000,
+        bucketCount: 12
+      };
+    }
+    if (range === '24h') {
+      return {
+        windowMs: 24 * 60 * 60 * 1000,
+        bucketCount: 12
+      };
+    }
+    return {
+      windowMs: REALTIME_WINDOW_MS,
+      bucketCount: REALTIME_BUCKET_COUNT
+    };
+  }
+
+  function getAxisLabels(now, windowMs, bucketCount)
   {
     var labels = [];
-    var bucketMs = REALTIME_WINDOW_MS / REALTIME_BUCKET_COUNT;
-    var start = now - REALTIME_WINDOW_MS;
+    var bucketMs = windowMs / bucketCount;
+    var start = now - windowMs;
 
-    for (var i = 0; i < REALTIME_BUCKET_COUNT; i++) {
+    for (var i = 0; i < bucketCount; i++) {
       var d = new Date(start + (i + 0.5) * bucketMs);
       labels.push(pad2(d.getHours()) + ':' + pad2(d.getMinutes()));
     }
@@ -51,13 +71,13 @@
       list.shift();
   }
 
-  function aggregateSamples(samples, keys, stat, now)
+  function aggregateSamples(samples, keys, stat, now, windowMs, bucketCount)
   {
-    var bucketMs = REALTIME_WINDOW_MS / REALTIME_BUCKET_COUNT;
-    var start = now - REALTIME_WINDOW_MS;
+    var bucketMs = windowMs / bucketCount;
+    var start = now - windowMs;
     var buckets = [];
 
-    for (var i = 0; i < REALTIME_BUCKET_COUNT; i++) {
+    for (var i = 0; i < bucketCount; i++) {
       var values = {};
       keys.forEach(function(key) {
         values[key] = [];
@@ -67,9 +87,9 @@
 
     (samples || []).forEach(function(sample) {
       var idx = Math.floor((sample.time - start) / bucketMs);
-      if (idx === REALTIME_BUCKET_COUNT)
-        idx = REALTIME_BUCKET_COUNT - 1;
-      if (idx < 0 || idx >= REALTIME_BUCKET_COUNT)
+      if (idx === bucketCount)
+        idx = bucketCount - 1;
+      if (idx < 0 || idx >= bucketCount)
         return;
 
       keys.forEach(function(key) {
@@ -93,7 +113,7 @@
       });
     });
 
-    result.times = getRealtimeAxisLabels(now);
+    result.times = getAxisLabels(now, windowMs, bucketCount);
     return result;
   }
 
@@ -755,6 +775,140 @@
     });
   }
 
+  function getHistoryFileName(deviceName)
+  {
+    return String(deviceName || '').replace(/[^A-Za-z0-9_.:@-]/g, '_');
+  }
+
+  function parseHistoryLines(text, valueCount)
+  {
+    var rows = [];
+
+    String(text || '').split(/\r?\n/).forEach(function(line) {
+      var fields = line.trim().split(/\s+/);
+      if (fields.length < valueCount + 1)
+        return;
+
+      var timestamp = Number(fields[0]);
+      if (!isFinite(timestamp) || timestamp <= 0)
+        return;
+
+      var values = [];
+      for (var i = 0; i < valueCount; i++) {
+        var value = Number(fields[i + 1]);
+        if (!isFinite(value) || value < 0)
+          return;
+        values.push(value);
+      }
+      rows.push({
+        timestamp: timestamp,
+        values: values
+      });
+    });
+
+    return rows;
+  }
+
+  function getHistoryClockOffset()
+  {
+    var localtime = Number(liveState.sysInfo && liveState.sysInfo.localtime);
+    return isFinite(localtime) && localtime > 0 ?
+      Date.now() - localtime * 1000 : 0;
+  }
+
+  function parseInterfaceHistory(text)
+  {
+    var rows = parseHistoryLines(text, 4);
+    var offset = getHistoryClockOffset();
+    return rows.map(function(row) {
+      return {
+        time: row.timestamp * 1000 + offset,
+        rxKBAvg: row.values[0] / 1024,
+        txKBAvg: row.values[1] / 1024,
+        rxKBPeak: row.values[2] / 1024,
+        txKBPeak: row.values[3] / 1024
+      };
+    });
+  }
+
+  function parseMemoryHistory(text)
+  {
+    var rows = parseHistoryLines(text, 2);
+    var offset = getHistoryClockOffset();
+    return rows.map(function(row) {
+      return {
+        time: row.timestamp * 1000 + offset,
+        percentAvg: Math.max(0, Math.min(100, row.values[0])),
+        percentPeak: Math.max(0, Math.min(100, row.values[1]))
+      };
+    });
+  }
+
+  function parseClientHistory(text)
+  {
+    var rows = parseHistoryLines(text, 4);
+    var offset = getHistoryClockOffset();
+    return rows.map(function(row) {
+      return {
+        time: row.timestamp * 1000 + offset,
+        wiredAvg: row.values[0],
+        wirelessAvg: row.values[1],
+        wiredPeak: row.values[2],
+        wirelessPeak: row.values[3]
+      };
+    });
+  }
+
+  function pollPersistentHistory(callback)
+  {
+    if (!window.L || typeof window.L.require !== 'function' ||
+        liveState.historyPollBusy)
+      return Promise.resolve();
+
+    var deviceName = liveState.selectedWanKey;
+    if (!deviceName)
+      return Promise.resolve();
+
+    liveState.historyPollBusy = true;
+    return window.L.require('fs').then(function(fs) {
+      var basePath = '/tmp/homeui-monitor/';
+      var ifacePath = basePath + 'interface-' +
+        getHistoryFileName(deviceName) + '.tsv';
+      var readFile = function(path) {
+        return fs.read(path).catch(function() { return null; });
+      };
+
+      return Promise.all([
+        readFile(ifacePath),
+        readFile(basePath + 'memory.tsv'),
+        readFile(basePath + 'clients.tsv')
+      ]).then(function(files) {
+        var loaded = false;
+        if (files[0] !== null) {
+          liveState.history.interfaces[deviceName] =
+            parseInterfaceHistory(files[0]);
+          loaded = true;
+        }
+        if (files[1] !== null) {
+          liveState.history.memorySamples = parseMemoryHistory(files[1]);
+          loaded = true;
+        }
+        if (files[2] !== null) {
+          liveState.history.clientSamples = parseClientHistory(files[2]);
+          loaded = true;
+        }
+
+        liveState.history.available = loaded ||
+          liveState.history.available;
+        liveState.history.loadedAt = Date.now();
+        if (typeof callback === 'function')
+          callback();
+      });
+    }).catch(function() {}).then(function() {
+      liveState.historyPollBusy = false;
+    });
+  }
+
   function pollLiveRouterStats(callback)
   {
     if (!window.L || typeof window.L.require !== 'function')
@@ -1119,13 +1273,35 @@
 
   function getRateSeriesForSelection()
   {
+    var range = chartState.rateRange || 'live';
+    var config = getWindowConfig(range);
     var state = liveState.interfaceStats[liveState.selectedWanKey];
-    return aggregateSamples(
-      state ? state.samples : [],
-      ['txKB', 'rxKB'],
+    var samples;
+    var keys;
+    var data;
+
+    if (range === 'live') {
+      samples = state ? state.samples : [];
+      keys = ['txKB', 'rxKB'];
+    } else {
+      samples = liveState.history.interfaces[liveState.selectedWanKey] || [];
+      keys = chartState.rateStat === 'peak' ?
+        ['txKBPeak', 'rxKBPeak'] : ['txKBAvg', 'rxKBAvg'];
+    }
+
+    data = aggregateSamples(
+      samples,
+      keys,
       chartState.rateStat,
-      Date.now()
+      Date.now(),
+      config.windowMs,
+      config.bucketCount
     );
+    if (range !== 'live') {
+      data.txKB = data[keys[0]];
+      data.rxKB = data[keys[1]];
+    }
+    return data;
   }
 
   function renderRateChartSvg(dash)
@@ -1136,6 +1312,7 @@
     if (!container)
       return;
 
+    var range = chartState.rateRange || 'live';
     var data = getRateSeriesForSelection();
     var state = liveState.interfaceStats[liveState.selectedWanKey];
     var values = data.txKB.concat(data.rxKB).filter(function(value) {
@@ -1143,8 +1320,11 @@
     });
     if (!values.length) {
       container.innerHTML = '<div class="homeui-empty-hint">' +
-        (isChinese ? '正在采集实时速率…' :
-          'Collecting real-time throughput…') + '</div>';
+        (range === 'live' ?
+          (isChinese ? '正在采集实时速率…' :
+            'Collecting real-time throughput…') :
+          (isChinese ? '正在读取历史速率数据…' :
+            'Loading throughput history…')) + '</div>';
       setText(
         dash,
         '[data-leg-tx]',
@@ -1249,25 +1429,42 @@
       return;
 
     var cType = chartState.clientType || 'wired';
+    var range = chartState.clientRange || 'live';
+    var config = getWindowConfig(range);
+    var samples;
+    var keys;
+    var seriesKey;
+
+    if (range === 'live') {
+      samples = liveState.clientSamples;
+      keys = ['wired', 'wireless'];
+      seriesKey = cType;
+    } else {
+      samples = liveState.history.clientSamples;
+      keys = chartState.clientStat === 'peak' ?
+        ['wiredPeak', 'wirelessPeak'] : ['wiredAvg', 'wirelessAvg'];
+      seriesKey = cType +
+        (chartState.clientStat === 'peak' ? 'Peak' : 'Avg');
+    }
     var data = aggregateSamples(
-      liveState.clientSamples,
-      ['wired', 'wireless'],
+      samples,
+      keys,
       chartState.clientStat,
-      Date.now()
+      Date.now(),
+      config.windowMs,
+      config.bucketCount
     );
     var series;
 
-    if (cType === 'wireless') {
-      series = data.wireless;
-    } else if (cType === 'all') {
-      series = data.wired.map(function(wired, idx) {
-        var wireless = data.wireless[idx];
+    if (cType === 'all') {
+      series = data[keys[0]].map(function(wired, idx) {
+        var wireless = data[keys[1]][idx];
         if (wired === null && wireless === null)
           return null;
         return (Number(wired) || 0) + (Number(wireless) || 0);
       });
     } else {
-      series = data.wired;
+      series = data[seriesKey];
     }
 
     var values = series.filter(function(value) {
@@ -1275,8 +1472,11 @@
     });
     if (!values.length) {
       container.innerHTML = '<div class="homeui-empty-hint">' +
-        (isChinese ? '正在采集终端数量…' :
-          'Collecting client counts…') + '</div>';
+        (range === 'live' ?
+          (isChinese ? '正在采集终端数量…' :
+            'Collecting client counts…') :
+          (isChinese ? '正在读取历史终端数据…' :
+            'Loading client history…')) + '</div>';
       return;
     }
 
@@ -1344,20 +1544,37 @@
     if (!container)
       return;
 
+    var range = chartState.memRange || 'live';
+    var config = getWindowConfig(range);
+    var samples;
+    var key;
+
+    if (range === 'live') {
+      samples = liveState.memorySamples;
+      key = 'percent';
+    } else {
+      samples = liveState.history.memorySamples;
+      key = chartState.memStat === 'peak' ? 'percentPeak' : 'percentAvg';
+    }
     var data = aggregateSamples(
-      liveState.memorySamples,
-      ['percent'],
+      samples,
+      [key],
       chartState.memStat,
-      Date.now()
+      Date.now(),
+      config.windowMs,
+      config.bucketCount
     );
-    var series = data.percent;
+    var series = data[key];
     var values = series.filter(function(value) {
       return value !== null && isFinite(Number(value));
     });
     if (!values.length) {
       container.innerHTML = '<div class="homeui-empty-hint">' +
-        (isChinese ? '正在采集内存使用率…' :
-          'Collecting memory usage…') + '</div>';
+        (range === 'live' ?
+          (isChinese ? '正在采集内存使用率…' :
+            'Collecting memory usage…') :
+          (isChinese ? '正在读取历史内存数据…' :
+            'Loading memory history…')) + '</div>';
       return;
     }
     var times = data.times;
@@ -1437,6 +1654,62 @@
         itemsHtml +
       '</ul>' +
     '</div>';
+  }
+
+  function createRangeSwitchHtml(id)
+  {
+    return '<div class="homeui-range-switch" data-chart-range="' + id + '">' +
+      '<button type="button" class="is-active" data-range-val="live">' +
+        (isChinese ? '实时' : 'Live') +
+      '</button>' +
+      '<button type="button" data-range-val="1h">' +
+        (isChinese ? '1 小时' : '1 hour') +
+      '</button>' +
+      '<button type="button" data-range-val="24h">' +
+        (isChinese ? '24 小时' : '24 hours') +
+      '</button>' +
+    '</div>';
+  }
+
+  function updateRangeControls(dash)
+  {
+    var rangeMap = {
+      rate: chartState.rateRange || 'live',
+      client: chartState.clientRange || 'live',
+      mem: chartState.memRange || 'live'
+    };
+
+    Object.keys(rangeMap).forEach(function(id) {
+      var group = dash.querySelector('[data-chart-range="' + id + '"]');
+      if (!group)
+        return;
+      Array.prototype.forEach.call(
+        group.querySelectorAll('[data-range-val]'),
+        function(button) {
+          button.classList.toggle(
+            'is-active', button.dataset.rangeVal === rangeMap[id]);
+        }
+      );
+
+      var label = dash.querySelector('[data-live-label="' + id + '"]');
+      if (!label)
+        return;
+      if (rangeMap[id] !== 'live') {
+        label.textContent = liveState.history.available ?
+          (isChinese ? '后台历史 · 每分钟同步' :
+            'Background history · 1 minute sync') :
+          (isChinese ? '等待历史服务数据' : 'Waiting for history service');
+      } else if (id === 'rate') {
+        label.textContent = isChinese ? '实时 · 3 秒更新' :
+          'Live · 3 second updates';
+      } else if (id === 'client') {
+        label.textContent = isChinese ? '实时 · 15 秒更新' :
+          'Live · 15 second updates';
+      } else {
+        label.textContent = isChinese ? '实时 · 5 秒更新' :
+          'Live · 5 second updates';
+      }
+    });
   }
 
   function updateWanSelector(dash, ifaces)
@@ -1816,7 +2089,8 @@
               '<h4>' + (isChinese ? '上下行速率' : 'Throughput') + '</h4>' +
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('rate-stat', avgLabel, statOpts) +
-                '<span class="homeui-live-label">' +
+                createRangeSwitchHtml('rate') +
+                '<span class="homeui-live-label" data-live-label="rate">' +
                   (isChinese ? '实时 · 3 秒更新' :
                     'Live · 3 second updates') +
                 '</span>' +
@@ -1848,7 +2122,8 @@
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('client-stat', avgLabel, statOpts) +
                 createDropdownHtml('client-type', isChinese ? '有线' : 'Wired', clientTypeOpts) +
-                '<span class="homeui-live-label">' +
+                createRangeSwitchHtml('client') +
+                '<span class="homeui-live-label" data-live-label="client">' +
                   (isChinese ? '实时 · 15 秒更新' :
                     'Live · 15 second updates') +
                 '</span>' +
@@ -1862,7 +2137,8 @@
               '<h4>' + (isChinese ? '内存使用率' : 'Memory Usage') + '</h4>' +
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('mem-stat', avgLabel, statOpts) +
-                '<span class="homeui-live-label">' +
+                createRangeSwitchHtml('mem') +
+                '<span class="homeui-live-label" data-live-label="mem">' +
                   (isChinese ? '实时 · 5 秒更新' :
                     'Live · 5 second updates') +
                 '</span>' +
@@ -1916,11 +2192,32 @@
     if (wanSwitch) {
       wanSwitch.addEventListener('change', function() {
         liveState.selectedWanKey = wanSwitch.value;
-        enhanceOverview();
+        pollPersistentHistory(HomeUI.refreshOverview);
+        if (typeof HomeUI.refreshOverview === 'function')
+          HomeUI.refreshOverview();
       });
     }
 
     dash.addEventListener('click', function(ev) {
+      var rangeButton = ev.target.closest('[data-range-val]');
+      if (rangeButton) {
+        var rangeGroup = rangeButton.closest('[data-chart-range]');
+        var rangeId = rangeGroup ? rangeGroup.dataset.chartRange : '';
+        var range = rangeButton.dataset.rangeVal;
+        if (rangeId === 'rate')
+          chartState.rateRange = range;
+        else if (rangeId === 'client')
+          chartState.clientRange = range;
+        else if (rangeId === 'mem')
+          chartState.memRange = range;
+
+        if (range !== 'live')
+          pollPersistentHistory(HomeUI.refreshOverview);
+        if (typeof HomeUI.refreshOverview === 'function')
+          HomeUI.refreshOverview();
+        return;
+      }
+
       var ddBtn = ev.target.closest('[data-dropdown-btn]');
       if (ddBtn) {
         ev.stopPropagation();
@@ -1980,7 +2277,8 @@
             function(b) { b.classList.toggle('active', b === btabBtn); }
           );
         }
-        enhanceOverview();
+        if (typeof HomeUI.refreshOverview === 'function')
+          HomeUI.refreshOverview();
       }
     });
 
@@ -2033,7 +2331,8 @@
 
       var coords = series.map(function(rawVal, idx) {
         var val = Math.max(0, Number(rawVal) || 0);
-        var x = plotLeft + (plotW * idx) / (MINI_SAMPLE_COUNT - 1);
+        var slot = MINI_SAMPLE_COUNT - series.length + idx;
+        var x = plotLeft + (plotW * slot) / (MINI_SAMPLE_COUNT - 1);
         var norm = Math.max(0, Math.min(1, val / maxV));
         var y = padTop + plotH * (1 - norm);
         return [x, y];
@@ -2293,6 +2592,7 @@
     var netBoxes = extractNetworkBoxes(netSec);
     var allIfaces = liveState.ifaces;
     updateWanSelector(dash, allIfaces);
+    updateRangeControls(dash);
 
     var primaryBox = allIfaces.find(function(iface) {
       return iface.devName === liveState.selectedWanKey;
@@ -2464,6 +2764,7 @@
   HomeUI.pollLiveRouterStats = pollLiveRouterStats;
   HomeUI.pollLiveMemory = pollLiveMemory;
   HomeUI.pollLiveThroughput = pollLiveThroughput;
+  HomeUI.pollPersistentHistory = pollPersistentHistory;
   HomeUI.getOverviewSectionName = getOverviewSectionName;
   HomeUI.createIkuaiDashboard = createIkuaiDashboard;
   HomeUI.updateOverviewDashboard = updateOverviewDashboard;
