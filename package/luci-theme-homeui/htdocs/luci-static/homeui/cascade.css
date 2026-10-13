@@ -165,11 +165,8 @@ a:hover {
 }
 
 #homeui-collapse {
-  position: absolute;
-  top: 21px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -177,7 +174,7 @@ a:hover {
   gap: 3px;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   box-shadow: none;
 }
@@ -196,11 +193,29 @@ a:hover {
 .homeui-rail {
   position: absolute;
   top: 70px;
-  bottom: 0;
+  bottom: 128px;
   left: 0;
   width: var(--homeui-rail-width);
   overflow-x: hidden;
   overflow-y: auto;
+  border-right: 1px solid var(--homeui-border);
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-global-tools {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  width: var(--homeui-rail-width);
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 7px;
+  border-top: 1px solid var(--homeui-border);
   border-right: 1px solid var(--homeui-border);
   background: var(--homeui-surface-soft);
 }
@@ -380,24 +395,28 @@ a:hover {
 
 .homeui-panel-footer {
   flex: 0 0 auto;
-  padding: 10px;
+  padding: 8px 10px;
   border-top: 1px solid var(--homeui-border);
   background: var(--homeui-surface-soft);
 }
 
+.homeui-panel-footer:not(:has(#modemenu > li)) {
+  display: none;
+}
+
 #homeui-color-toggle {
-  width: 100%;
+  width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 10px;
+  justify-content: center;
+  padding: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: var(--homeui-muted);
   box-shadow: none;
-  text-align: left;
+  text-align: center;
 }
 
 #homeui-color-toggle:hover {
@@ -425,15 +444,36 @@ a:hover {
   content: "";
 }
 
+.homeui-color-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 #indicators {
+  width: 100%;
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 4px;
 }
 
 #indicators > * {
+  min-width: 36px;
   max-width: 100%;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 7px;
+  font-size: 10px;
 }
 
 #modemenu {
@@ -817,14 +857,6 @@ select:focus,
   inset: 0;
   justify-content: center;
   padding: 0;
-}
-
-:root.homeui-collapsed #homeui-collapse {
-  top: auto;
-  right: 19px;
-  bottom: 10px;
-  z-index: 2;
-  background: var(--homeui-surface);
 }
 
 body:has(.homeui-login-view) {

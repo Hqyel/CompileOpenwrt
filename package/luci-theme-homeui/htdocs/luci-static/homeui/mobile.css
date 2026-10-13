@@ -59,6 +59,21 @@
     display: none;
   }
 
+  .homeui-global-tools {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    width: auto;
+    min-height: 0;
+    flex-direction: row;
+    padding: 6px;
+    border: 1px solid var(--homeui-border);
+    border-radius: 11px;
+    background: var(--homeui-surface);
+    box-shadow: var(--homeui-shadow);
+  }
+
   .homeui-rail {
     top: 0;
     right: 0;

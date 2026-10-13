@@ -1,0 +1,321 @@
+body[data-page="admin-status-overview"] #maincontent.container {
+  padding-top: 18px;
+}
+
+body[data-page="admin-status-overview"] #view.homeui-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.homeui-overview-card {
+  min-width: 0;
+  grid-column: span 4;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border-color: var(--homeui-border) !important;
+  border-radius: 12px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 7px 24px rgba(41, 62, 88, .055) !important;
+}
+
+.homeui-overview-system {
+  grid-column: span 8;
+}
+
+.homeui-overview-memory,
+.homeui-overview-storage {
+  grid-column: span 4;
+}
+
+.homeui-overview-ports {
+  grid-column: span 8;
+}
+
+.homeui-overview-network,
+.homeui-overview-dhcp,
+.homeui-overview-wifi {
+  grid-column: 1 / -1;
+}
+
+.homeui-overview-dsl {
+  grid-column: span 6;
+}
+
+.homeui-overview-card > .cbi-title {
+  margin: 0;
+  border: 0;
+}
+
+.homeui-overview-card > .cbi-title > h3 {
+  min-height: 52px;
+  margin: 0 !important;
+  padding: 0 16px;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--homeui-border);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--homeui-accent-soft) 58%, transparent),
+    transparent 58%
+  );
+  color: var(--text-color-highest);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: .1px;
+}
+
+.homeui-overview-card > .cbi-title > h3::before {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 3px;
+  background: var(--homeui-accent);
+  box-shadow: 0 0 0 5px rgba(47, 137, 255, .1);
+  content: "";
+}
+
+.homeui-overview-memory > .cbi-title > h3::before {
+  background: #7c6df2;
+  box-shadow: 0 0 0 5px rgba(124, 109, 242, .1);
+}
+
+.homeui-overview-storage > .cbi-title > h3::before {
+  background: #f0a13c;
+  box-shadow: 0 0 0 5px rgba(240, 161, 60, .1);
+}
+
+.homeui-overview-network > .cbi-title > h3::before {
+  background: var(--homeui-success);
+  box-shadow: 0 0 0 5px rgba(36, 189, 131, .1);
+}
+
+.homeui-overview-card > .cbi-title .label {
+  min-width: 52px !important;
+  min-height: 27px;
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 999px;
+  background: var(--homeui-surface);
+  color: var(--homeui-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.homeui-overview-card > .cbi-title .label:hover {
+  border-color: var(--homeui-accent);
+  background: var(--homeui-accent-soft);
+  color: var(--homeui-accent);
+}
+
+.homeui-overview-card > div:not(.cbi-title) {
+  padding: 13px 16px 15px;
+}
+
+.homeui-overview-card .table {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.homeui-overview-card .table .tr {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(126px, 34%) minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--homeui-border);
+}
+
+.homeui-overview-card .table .tr:last-child {
+  border-bottom: 0;
+}
+
+.homeui-overview-card .table .td {
+  min-width: 0;
+  padding: 9px 8px;
+  overflow-wrap: anywhere;
+}
+
+.homeui-overview-card .table .td:first-child {
+  color: var(--homeui-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.homeui-overview-card .table .td:last-child {
+  color: var(--text-color-highest);
+  font-weight: 530;
+}
+
+.homeui-overview-system > div:not(.cbi-title) > .table {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.homeui-overview-system .table .tr {
+  min-height: 54px;
+  grid-template-columns: minmax(108px, 38%) minmax(0, 1fr);
+  border: 1px solid var(--homeui-border);
+  border-radius: 9px;
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-overview-system .table .td {
+  background: transparent !important;
+}
+
+.homeui-overview-card .cbi-progressbar {
+  height: 9px;
+  margin: 5px 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--homeui-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--homeui-border);
+}
+
+.homeui-overview-card .cbi-progressbar > div {
+  min-width: 3px;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--homeui-accent),
+    color-mix(in srgb, var(--homeui-accent) 55%, #6dd9ff)
+  );
+}
+
+.homeui-overview-memory .cbi-progressbar > div {
+  background: linear-gradient(90deg, #7464ef, #a895ff);
+}
+
+.homeui-overview-network .network-status-table {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.homeui-overview-network .ifacebox {
+  min-width: 0;
+  border-radius: 10px;
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-overview-network .ifacebox-head {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--homeui-border);
+  background: transparent;
+  color: var(--homeui-muted);
+  text-align: left;
+}
+
+.homeui-overview-network .ifacebox-head.active {
+  color: var(--homeui-success);
+}
+
+.homeui-overview-network .ifacebox-head::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--homeui-muted);
+  content: "";
+}
+
+.homeui-overview-network .ifacebox-head.active::after {
+  background: var(--homeui-success);
+  box-shadow: 0 0 0 4px rgba(36, 189, 131, .11);
+}
+
+.homeui-overview-network .ifacebox-body {
+  padding: 12px;
+  background: transparent;
+}
+
+.homeui-overview-network .ifacebox-body > span {
+  display: grid;
+  grid-template-columns: minmax(110px, 32%) minmax(0, 1fr);
+  gap: 7px 10px;
+}
+
+.homeui-overview-network .ifacebox-body > span > strong {
+  color: var(--homeui-muted);
+  font-weight: 500;
+}
+
+.homeui-overview-network .ifacebox-body > span > span {
+  min-width: 0;
+  color: var(--text-color-highest);
+  overflow-wrap: anywhere;
+}
+
+.homeui-overview-ports .ports-status-table,
+.homeui-overview-wifi .network-status-table {
+  border: 0;
+  box-shadow: none;
+}
+
+:root[data-darkmode="true"] .homeui-overview-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .16) !important;
+}
+
+@media screen and (max-width: 1280px) {
+  .homeui-overview-system,
+  .homeui-overview-ports,
+  .homeui-overview-network,
+  .homeui-overview-dhcp,
+  .homeui-overview-wifi {
+    grid-column: 1 / -1;
+  }
+
+  .homeui-overview-memory,
+  .homeui-overview-storage,
+  .homeui-overview-dsl {
+    grid-column: span 6;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  body[data-page="admin-status-overview"] #view.homeui-overview-grid {
+    display: block;
+  }
+
+  .homeui-overview-card {
+    margin-bottom: 12px !important;
+  }
+
+  .homeui-overview-system > div:not(.cbi-title) > .table,
+  .homeui-overview-network .network-status-table {
+    display: block;
+  }
+
+  .homeui-overview-system .table .tr,
+  .homeui-overview-network .ifacebox {
+    margin-bottom: 8px;
+  }
+}
+
+@media screen and (max-width: 560px) {
+  .homeui-overview-card > div:not(.cbi-title) {
+    padding: 10px 12px 12px;
+  }
+
+  .homeui-overview-card .table .tr,
+  .homeui-overview-system .table .tr {
+    grid-template-columns: minmax(98px, 38%) minmax(0, 1fr);
+  }
+}

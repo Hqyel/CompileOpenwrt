@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-homeui
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=HomeWrt
 
@@ -39,6 +39,9 @@ define Package/luci-theme-homeui/install
 	$(INSTALL_DIR) $(1)/usr/share/ucode/luci
 	$(CP) ./ucode/* $(1)/usr/share/ucode/luci/
 	$(CP) ./root/* $(1)/
+	$(SED) 's/@HOMEUI_VERSION@/$(PKG_VERSION)-r$(PKG_RELEASE)/g' \
+		$(1)/usr/share/ucode/luci/template/themes/homeui/header.ut \
+		$(1)/usr/share/ucode/luci/template/themes/homeui/footer.ut
 endef
 
 define Package/luci-theme-homeui/postinst
@@ -66,4 +69,3 @@ define Package/luci-theme-homeui/postrm
 endef
 
 $(eval $(call BuildPackage,luci-theme-homeui))
-

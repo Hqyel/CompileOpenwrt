@@ -34,14 +34,18 @@
           document.documentElement.classList.add('homeui-collapsed');
       })();
     </script>
-    <link rel="stylesheet" href="{{ media }}/cascade.css">
+    <link rel="stylesheet"
+      href="{{ media }}/cascade.css?v=@HOMEUI_VERSION@">
+    <link rel="stylesheet"
+      href="{{ media }}/overview.css?v=@HOMEUI_VERSION@">
     <link rel="stylesheet"
       media="only screen and (max-width: 900px)"
       href="/luci-static/bootstrap/mobile.css">
     <link rel="stylesheet"
       media="only screen and (max-width: 900px)"
-      href="{{ media }}/mobile.css">
-    <link rel="icon" href="{{ media }}/logo.svg" sizes="any">
+      href="{{ media }}/mobile.css?v=@HOMEUI_VERSION@">
+    <link rel="icon"
+      href="{{ media }}/logo.svg?v=@HOMEUI_VERSION@" sizes="any">
     {% if (node?.css): %}
       <link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
     {% endif %}
@@ -67,15 +71,25 @@
               <small>{{ striptags(boardinfo.hostname ?? '?') }}</small>
             </span>
           </a>
-          <button id="homeui-collapse" type="button"
-            aria-label="{{ _('Toggle navigation') }}">
-            <span></span><span></span><span></span>
-          </button>
         </div>
 
         <nav class="homeui-rail" aria-label="{{ _('Main menu') }}">
           <ul id="topmenu"></ul>
         </nav>
+
+        <div class="homeui-global-tools">
+          <button id="homeui-collapse" type="button"
+            title="{{ _('Toggle navigation') }}"
+            aria-label="{{ _('Toggle navigation') }}">
+            <span></span><span></span><span></span>
+          </button>
+          <button id="homeui-color-toggle" type="button"
+            title="{{ _('Appearance') }}">
+            <span class="homeui-color-icon"></span>
+            <span class="homeui-color-label">{{ _('Appearance') }}</span>
+          </button>
+          <div id="indicators"></div>
+        </div>
 
         <nav class="homeui-panel" aria-label="{{ _('Secondary menu') }}">
           <div class="homeui-panel-heading">
@@ -84,11 +98,6 @@
           </div>
           <ul id="sidemenu"></ul>
           <div class="homeui-panel-footer">
-            <button id="homeui-color-toggle" type="button">
-              <span class="homeui-color-icon"></span>
-              <span class="homeui-color-label">{{ _('Appearance') }}</span>
-            </button>
-            <div id="indicators"></div>
             <ul id="modemenu" style="display:none"></ul>
           </div>
         </nav>

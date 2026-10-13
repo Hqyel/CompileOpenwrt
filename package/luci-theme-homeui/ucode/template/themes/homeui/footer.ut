@@ -10,7 +10,7 @@
         {% endif %}
       </footer>
       <script>L.require('menu-homeui')</script>
-      <script src="{{ media }}/main.js"></script>
+      <script src="{{ media }}/main.js?v=@HOMEUI_VERSION@"></script>
     {% endif %}
   </body>
 </html>
