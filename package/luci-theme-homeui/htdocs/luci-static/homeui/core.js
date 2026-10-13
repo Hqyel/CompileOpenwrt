@@ -72,13 +72,15 @@
   var isProcessesPage = pageId === 'admin-status-processes';
   var isNetworkPage =
     pageId === 'admin-network-network' ||
-    pageId === 'admin-network' ||
-    /admin-network/.test(pageId);
+    pageId === 'admin-network';
+  var isFirewallPage = /^admin-network-firewall/.test(pageId);
   var isStandalonePage =
     isOverview ||
     isProcessesPage ||
     isLogsPage ||
-    isSystemPage;
+    isSystemPage ||
+    isNetworkPage ||
+    isFirewallPage;
 
   if (isStandalonePage)
     root.classList.add('homeui-overview-single-rail');
@@ -805,13 +807,194 @@
     var btnBar = modal.querySelector('.right, .button-row, .cbi-page-actions');
     if (btnBar)
       btnBar.classList.add('homeui-modal-actions');
+
+    enhanceAllSelects(modal);
+  }
+
+  function enhanceSelect(sel)
+  {
+    if (!sel || sel.nodeType !== 1 || sel.tagName !== 'SELECT')
+      return;
+    if (sel.hasAttribute('data-homeui-enhanced'))
+      return;
+    if (sel.multiple || (sel.size && sel.size > 1))
+      return;
+    if (sel.closest('.cbi-dropdown'))
+      return;
+
+    sel.setAttribute('data-homeui-enhanced', 'true');
+    var inCell = !!sel.closest('td, .td, .cbi-section-table-cell');
+    sel.style.display = 'none';
+
+    var dd = document.createElement('div');
+    dd.className = 'cbi-dropdown homeui-select-enhanced' + (inCell ? ' in-table-cell' : '');
+    dd.tabIndex = -1;
+    if (sel.disabled)
+      dd.setAttribute('disabled', '');
+
+    function renderClosed() {
+      dd.removeAttribute('open');
+      var cur = dd.parentElement;
+      while (cur && cur !== document.body) {
+        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD')) {
+          cur.classList.remove('cbi-dropdown-open');
+        }
+        cur = cur.parentElement;
+      }
+      dd.innerHTML = '';
+      var ul = document.createElement('ul');
+      var opts = sel.options || [];
+      for (var i = 0; i < opts.length; i++) {
+        var opt = opts[i];
+        var li = document.createElement('li');
+        li.setAttribute('data-value', opt.value);
+        li.textContent = opt.textContent || opt.text || '';
+        if (opt.selected) {
+          li.setAttribute('selected', '');
+          li.setAttribute('display', '0');
+        }
+        ul.appendChild(li);
+      }
+      dd.appendChild(ul);
+      var spanOpen = document.createElement('span');
+      spanOpen.className = 'open';
+      spanOpen.tabIndex = -1;
+      dd.appendChild(spanOpen);
+    }
+
+    function renderOpen() {
+      dd.innerHTML = '';
+      var opts = sel.options || [];
+
+      var ulDropdown = document.createElement('ul');
+      ulDropdown.className = 'dropdown';
+
+      var ulPreview = document.createElement('ul');
+      ulPreview.className = 'preview';
+
+      for (var i = 0; i < opts.length; i++) {
+        var opt = opts[i];
+        var isSel = opt.selected;
+
+        var liPrev = document.createElement('li');
+        liPrev.setAttribute('data-value', opt.value);
+        liPrev.textContent = opt.textContent || opt.text || '';
+        if (isSel) {
+          liPrev.setAttribute('selected', '');
+          liPrev.setAttribute('display', '0');
+        }
+        ulPreview.appendChild(liPrev);
+
+        var li = document.createElement('li');
+        li.setAttribute('data-value', opt.value);
+        li.textContent = opt.textContent || opt.text || '';
+        if (isSel)
+          li.setAttribute('selected', '');
+
+        (function(val) {
+          li.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            sel.value = val;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            renderClosed();
+          });
+        })(opt.value);
+
+        ulDropdown.appendChild(li);
+      }
+
+      dd.appendChild(ulDropdown);
+      dd.appendChild(ulPreview);
+
+      var spanOpen = document.createElement('span');
+      spanOpen.className = 'open';
+      spanOpen.tabIndex = -1;
+      dd.appendChild(spanOpen);
+
+      dd.setAttribute('open', '');
+      var cur = dd.parentElement;
+      while (cur && cur !== document.body) {
+        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD')) {
+          cur.classList.add('cbi-dropdown-open');
+        }
+        cur = cur.parentElement;
+      }
+
+      var rect = dd.getBoundingClientRect();
+      var spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow < 210 && rect.top > 210) {
+        ulDropdown.style.top = 'auto';
+        ulDropdown.style.bottom = '100%';
+        ulDropdown.style.marginBottom = '4px';
+      } else {
+        ulDropdown.style.top = '100%';
+        ulDropdown.style.bottom = 'auto';
+        ulDropdown.style.marginTop = '4px';
+      }
+    }
+
+    dd.addEventListener('click', function(e) {
+      if (dd.hasAttribute('disabled'))
+        return;
+      if (e.target.closest('ul.dropdown'))
+        return;
+      if (dd.hasAttribute('open')) {
+        renderClosed();
+      } else {
+        document.querySelectorAll('.cbi-dropdown[open]').forEach(function(o) {
+          if (o !== dd) {
+            if (typeof o._renderClosed === 'function')
+              o._renderClosed();
+            else
+              o.removeAttribute('open');
+          }
+        });
+        renderOpen();
+      }
+    });
+
+    dd._renderClosed = renderClosed;
+
+    sel.addEventListener('change', function() {
+      renderClosed();
+    });
+
+    var selObs = new MutationObserver(function() {
+      if (sel.disabled)
+        dd.setAttribute('disabled', '');
+      else
+        dd.removeAttribute('disabled');
+      if (!dd.hasAttribute('open'))
+        renderClosed();
+    });
+    selObs.observe(sel, { childList: true, attributes: true, attributeFilter: ['disabled'] });
+
+    renderClosed();
+    if (sel.parentNode)
+      sel.parentNode.insertBefore(dd, sel.nextSibling);
+  }
+
+  function enhanceAllSelects(rootEl)
+  {
+    var container = rootEl || document.body;
+    if (!container)
+      return;
+    var selects = container.querySelectorAll('select:not([data-homeui-enhanced])');
+    for (var i = 0; i < selects.length; i++) {
+      enhanceSelect(selects[i]);
+    }
   }
 
   function observeModals()
   {
     var scan = function() {
       var list = document.querySelectorAll('.modal, .cbi-modal, #modal_overlay > div');
-      Array.prototype.forEach.call(list, enhanceModal);
+      Array.prototype.forEach.call(list, function(m) {
+        enhanceModal(m);
+        enhanceAllSelects(m);
+      });
+      enhanceAllSelects(document.body);
     };
 
     new MutationObserver(function(mutations) {
@@ -821,9 +1004,10 @@
           Array.prototype.some.call(m.addedNodes || [], function(n) {
             return n.nodeType === 1 && (
               n.id === 'modal_overlay' ||
+              n.tagName === 'SELECT' ||
               n.classList.contains('modal') ||
               n.classList.contains('cbi-modal') ||
-              (n.querySelector && n.querySelector('.modal, .cbi-modal, #modal_overlay'))
+              (n.querySelector && n.querySelector('.modal, .cbi-modal, #modal_overlay, select'))
             );
           });
       });
@@ -839,6 +1023,17 @@
           if (btn)
             btn.click();
         }
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.cbi-dropdown')) {
+        document.querySelectorAll('.cbi-dropdown[open]').forEach(function(d) {
+          if (typeof d._renderClosed === 'function')
+            d._renderClosed();
+          else
+            d.removeAttribute('open');
+        });
       }
     });
 
@@ -893,6 +1088,7 @@
     isLogsPage: isLogsPage,
     isProcessesPage: isProcessesPage,
     isNetworkPage: isNetworkPage,
+    isFirewallPage: isFirewallPage,
     chartState: chartState,
     subpageState: subpageState,
     liveState: liveState,
@@ -921,6 +1117,8 @@
     parseSizeStringToBytes: parseSizeStringToBytes,
     readFormFieldText: readFormFieldText,
     enhanceModal: enhanceModal,
-    observeModals: observeModals
+    observeModals: observeModals,
+    enhanceSelect: enhanceSelect,
+    enhanceAllSelects: enhanceAllSelects
   };
 })(window);

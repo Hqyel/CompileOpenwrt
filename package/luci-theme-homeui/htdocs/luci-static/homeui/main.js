@@ -40,6 +40,7 @@
   var enhanceLogsPage = HomeUI.enhanceLogsPage;
   var enhanceProcessesPage = HomeUI.enhanceProcessesPage;
   var enhanceNetworkInterfacesPage = HomeUI.enhanceNetworkInterfacesPage;
+  var enhanceFirewallPage = HomeUI.enhanceFirewallPage;
   var isEnhancing = false;
 
   function enhanceOverview()
@@ -127,6 +128,17 @@
       isEnhancing = true;
       try {
         enhanceNetworkInterfacesPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (/^admin-network-firewall/.test(page)) {
+      isEnhancing = true;
+      try {
+        if (typeof enhanceFirewallPage === 'function')
+          enhanceFirewallPage(view, page);
       } finally {
         isEnhancing = false;
       }

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    iKuai 4.0 Subpages Adaptation:
    - Monitoring -> Routes (admin-status-routes)
    - Monitoring -> Firewall (admin-status-nftables / admin-status-iptables)
@@ -502,6 +502,13 @@ body[data-page="admin-status-wireguard"] .cbi-section {
   border-radius: 8px !important;
   background: var(--homeui-surface) !important;
   box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+.homeui-subpage-card:has(.cbi-dropdown[open]),
+.homeui-subpage-card.cbi-dropdown-open,
+.cbi-section:has(.cbi-dropdown[open]),
+.cbi-section.cbi-dropdown-open {
+  overflow: visible !important;
 }
 
 .nft-table > .nft-chains > .nft-chain.cbi-section {
@@ -1952,6 +1959,340 @@ body:is([data-page="admin-network-network"], [data-page="admin-network"]) .cbi-s
 .homeui-sec-hidden,
 .homeui-hidden-by-filter {
   display: none !important;
+}
+
+/* ==========================================================================
+   Network Firewall Page (admin-network-firewall*) - 5 Tabs Adaptation
+   ========================================================================== */
+body[data-page^="admin-network-firewall"] #view > .cbi-map > .cbi-tabmenu,
+body[data-page^="admin-network-firewall"] #view > .cbi-map > .tabs,
+body[data-page^="admin-network-firewall"] #maincontent > .tabs,
+body[data-page^="admin-network-firewall"] .cbi-map > .cbi-tabmenu {
+  display: flex !important;
+  align-items: center !important;
+  gap: 28px !important;
+  margin: 0 0 16px 0 !important;
+  padding: 0 20px !important;
+  min-height: 46px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+body[data-page^="admin-network-firewall"] #view > .cbi-map > .cbi-tabmenu > li > a,
+body[data-page^="admin-network-firewall"] #view > .cbi-map > .tabs > li > a,
+body[data-page^="admin-network-firewall"] #maincontent > .tabs > li > a,
+body[data-page^="admin-network-firewall"] .cbi-map > .cbi-tabmenu > li > a {
+  min-height: 46px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+
+/* Firewall Sections as Cards */
+body[data-page^="admin-network-firewall"] .cbi-section:not(.modal .cbi-section):not(.cbi-modal .cbi-section) {
+  padding: 0 !important;
+  margin: 0 0 16px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section > h3:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 12px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  border-radius: 7px 7px 0 0 !important;
+  background: #fafbfe !important;
+  color: var(--text-color-highest) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-network-firewall"] .cbi-section > h3:first-child {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section > h3:first-child .homeui-sec-count {
+  margin-left: auto !important;
+}
+
+/* Category Badges for Firewall Sections */
+.homeui-sec-cat.is-setting {
+  background: rgba(47, 137, 255, .12);
+  color: #2f89ff;
+}
+
+.homeui-sec-cat.is-offload {
+  background: rgba(124, 58, 237, .12);
+  color: #7c3aed;
+}
+
+.homeui-sec-cat.is-zone {
+  background: rgba(40, 199, 111, .12);
+  color: #20a55a;
+}
+
+.homeui-sec-cat.is-forward {
+  background: rgba(47, 137, 255, .12);
+  color: #2f89ff;
+}
+
+.homeui-sec-cat.is-rule {
+  background: rgba(245, 158, 11, .12);
+  color: #d97706;
+}
+
+.homeui-sec-cat.is-nat {
+  background: rgba(16, 185, 129, .12);
+  color: #059669;
+}
+
+.homeui-sec-cat.is-ipset {
+  background: rgba(99, 102, 241, .12);
+  color: #4f46e5;
+}
+
+/* Firewall Forms (General Settings & Offload) */
+body[data-page^="admin-network-firewall"] .cbi-map-descr {
+  margin: 0 0 14px 0 !important;
+  padding: 8px 14px !important;
+  background: rgba(47, 137, 255, .06) !important;
+  border-left: 3px solid #2f89ff !important;
+  border-radius: 4px !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-descr {
+  padding: 8px 18px !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  color: var(--homeui-muted) !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-node > .cbi-value {
+  padding: 12px 18px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f0f2f5 !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-network-firewall"] .cbi-section-node > .cbi-value {
+  border-bottom-color: var(--homeui-border) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-node > .cbi-value:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Firewall Tables (Zones, Forwards, Rules, SNATs, IPSets) */
+body[data-page^="admin-network-firewall"] .cbi-section-table,
+body[data-page^="admin-network-firewall"] .table {
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-table-titles,
+body[data-page^="admin-network-firewall"] .table .tr.cbi-section-table-titles,
+body[data-page^="admin-network-firewall"] thead tr {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-table-titles .th,
+body[data-page^="admin-network-firewall"] .cbi-section-table-titles th,
+body[data-page^="admin-network-firewall"] .table .th {
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-color-medium) !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+/* Table Filter Inputs in Headers */
+body[data-page^="admin-network-firewall"] .cbi-section-table-titles input,
+body[data-page^="admin-network-firewall"] .table .th input {
+  height: 28px !important;
+  min-height: 28px !important;
+  border-radius: 4px !important;
+  border: 1px solid #dcdfe6 !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  padding: 0 8px !important;
+  font-size: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+  outline: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-table-titles input:focus,
+body[data-page^="admin-network-firewall"] .table .th input:focus {
+  border-color: #2f89ff !important;
+  box-shadow: 0 0 0 2px rgba(47, 137, 255, .15) !important;
+}
+
+/* Table Body Rows */
+body[data-page^="admin-network-firewall"] .cbi-section-table-row,
+body[data-page^="admin-network-firewall"] .table .tr:not(.cbi-section-table-titles):not(.cbi-section-table-descr) {
+  transition: background-color .12s ease !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-table-row:hover,
+body[data-page^="admin-network-firewall"] .table .tr:not(.cbi-section-table-titles):not(.cbi-section-table-descr):hover {
+  background: rgba(47, 137, 255, .03) !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-network-firewall"] .cbi-section-table-row:hover,
+:root[data-darkmode="true"] body[data-page^="admin-network-firewall"] .table .tr:not(.cbi-section-table-titles):not(.cbi-section-table-descr):hover {
+  background: rgba(255, 255, 255, .03) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-table-cell,
+body[data-page^="admin-network-firewall"] .table .td {
+  padding: 10px 14px !important;
+  font-size: 12.5px !important;
+  color: var(--homeui-text) !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  vertical-align: middle !important;
+}
+
+/* Zone Badges Enhancement */
+.zonebadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: .2px !important;
+  border: 1px solid rgba(0, 0, 0, .08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04) !important;
+  vertical-align: middle !important;
+}
+
+/* Action Buttons inside Firewall Tables */
+body[data-page^="admin-network-firewall"] .cbi-section-actions,
+body[data-page^="admin-network-firewall"] .td.cbi-section-actions {
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-actions .cbi-button,
+body[data-page^="admin-network-firewall"] .cbi-section-actions .btn,
+body[data-page^="admin-network-firewall"] .td .cbi-button-edit,
+body[data-page^="admin-network-firewall"] .td .cbi-button-clone,
+body[data-page^="admin-network-firewall"] .td .cbi-button-remove,
+body[data-page^="admin-network-firewall"] .td .cbi-button-drag {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  margin: 0 2px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all .15s ease !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-edit {
+  background: var(--homeui-surface) !important;
+  border: 1px solid #dcdfe6 !important;
+  color: #2f89ff !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-edit:hover {
+  background: rgba(47, 137, 255, .08) !important;
+  border-color: #2f89ff !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-clone {
+  background: var(--homeui-surface) !important;
+  border: 1px solid #dcdfe6 !important;
+  color: #606266 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-clone:hover {
+  background: #f5f7fa !important;
+  border-color: #909399 !important;
+  color: #303133 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-remove {
+  background: var(--homeui-surface) !important;
+  border: 1px solid rgba(245, 108, 108, .35) !important;
+  color: #f56c6c !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-remove:hover {
+  background: rgba(245, 108, 108, .08) !important;
+  border-color: #f56c6c !important;
+}
+
+/* Drag Order Handle */
+body[data-page^="admin-network-firewall"] .cbi-button-drag {
+  background: transparent !important;
+  border: 1px solid #dcdfe6 !important;
+  color: #909399 !important;
+  cursor: grab !important;
+  padding: 0 6px !important;
+  font-family: monospace !important;
+  font-weight: 700 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-button-drag:hover {
+  background: var(--homeui-surface-soft) !important;
+  color: #606266 !important;
+}
+
+/* Add ("添加") Button at section bottom */
+body[data-page^="admin-network-firewall"] .cbi-section-create {
+  padding: 12px 18px !important;
+  background: var(--homeui-surface) !important;
+  border-top: 1px solid var(--homeui-border) !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-create .cbi-button-add,
+body[data-page^="admin-network-firewall"] .cbi-section-create .cbi-button-positive,
+body[data-page^="admin-network-firewall"] .cbi-section-create input[type="submit"],
+body[data-page^="admin-network-firewall"] .cbi-section-create button {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 16px !important;
+  border-radius: 4px !important;
+  background: #2f89ff !important;
+  border-color: #2f89ff !important;
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 6px rgba(47, 137, 255, .18) !important;
+  cursor: pointer !important;
+  transition: background-color .15s ease, border-color .15s ease !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-create .cbi-button-add:hover,
+body[data-page^="admin-network-firewall"] .cbi-section-create .cbi-button-positive:hover,
+body[data-page^="admin-network-firewall"] .cbi-section-create input[type="submit"]:hover,
+body[data-page^="admin-network-firewall"] .cbi-section-create button:hover {
+  background: #1d76eb !important;
+  border-color: #1d76eb !important;
 }
 
 @media screen and (max-width: 1280px) {

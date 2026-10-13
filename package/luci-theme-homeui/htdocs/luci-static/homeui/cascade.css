@@ -925,6 +925,38 @@ select:not(.cbi-select select),
   color: var(--homeui-muted) !important;
 }
 
+/* Fallback styling for unenhanced native select */
+select:not([data-homeui-enhanced]):not(.cbi-select select) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 30px 0 12px !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background-color: var(--homeui-surface) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23909399' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 14px 14px !important;
+  color: var(--homeui-text) !important;
+  font-size: 13px !important;
+  line-height: 30px !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  cursor: pointer !important;
+  width: min(340px, 100%) !important;
+}
+
+select:not([data-homeui-enhanced]):not(.cbi-select select):hover {
+  border-color: #c0c4cc !important;
+}
+
+select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
+  border-color: #2f89ff !important;
+  box-shadow: 0 0 0 2px rgba(47, 137, 255, .15) !important;
+}
+
 /* Comprehensive iKuai cbi-dropdown styling */
 .cbi-dropdown:not(.btn):not(.cbi-button) {
   position: relative !important;
@@ -1309,6 +1341,56 @@ span[style*="background-color"].zonebadge,
   width: 100% !important;
   background: rgba(47, 137, 255, .22) !important;
   color: #60a5fa !important;
+}
+
+/* Compact dropdowns in table cells */
+.cbi-dropdown.in-table-cell,
+.td > .cbi-dropdown,
+.th > .cbi-dropdown,
+.cbi-section-table-cell .cbi-dropdown,
+td > .cbi-dropdown,
+th > .cbi-dropdown {
+  width: 100% !important;
+  min-width: 76px !important;
+  max-width: 180px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  line-height: 26px !important;
+  padding: 0 22px 0 8px !important;
+  font-size: 12px !important;
+}
+
+.cbi-dropdown.in-table-cell > .open,
+.td > .cbi-dropdown > .open,
+.th > .cbi-dropdown > .open,
+.cbi-section-table-cell .cbi-dropdown > .open,
+td > .cbi-dropdown > .open,
+th > .cbi-dropdown > .open {
+  right: 6px !important;
+}
+
+.cbi-dropdown.in-table-cell[open] > ul.dropdown,
+.td > .cbi-dropdown[open] > ul.dropdown,
+.th > .cbi-dropdown[open] > ul.dropdown,
+.cbi-section-table-cell .cbi-dropdown[open] > ul.dropdown,
+td > .cbi-dropdown[open] > ul.dropdown,
+th > .cbi-dropdown[open] > ul.dropdown {
+  min-width: 100% !important;
+  width: max-content !important;
+  max-width: 260px !important;
+}
+
+.cbi-dropdown.in-table-cell[open] > ul.dropdown > li,
+.td > .cbi-dropdown[open] > ul.dropdown > li,
+.th > .cbi-dropdown[open] > ul.dropdown > li,
+.cbi-section-table-cell .cbi-dropdown[open] > ul.dropdown > li,
+td > .cbi-dropdown[open] > ul.dropdown > li,
+th > .cbi-dropdown[open] > ul.dropdown > li {
+  min-height: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  font-size: 12px !important;
+  padding: 0 12px !important;
 }
 
 textarea {
@@ -2091,12 +2173,23 @@ body:not(.modal-overlay-active) #modal_overlay {
   margin: 0 !important;
 }
 
-/* Stacking context for dropdown rows inside modal forms */
+/* Stacking context for open dropdowns in forms, tables, cards and modals */
+.cbi-section:has(.cbi-dropdown[open]),
+.cbi-section.cbi-dropdown-open,
 .cbi-value:has(.cbi-dropdown[open]),
-.cbi-value:has(.cbi-dropdown-open),
-.cbi-value-field.cbi-dropdown-open {
+.cbi-value-field:has(.cbi-dropdown[open]),
+.cbi-value.cbi-dropdown-open,
+.cbi-value-field.cbi-dropdown-open,
+tr:has(.cbi-dropdown[open]),
+.tr:has(.cbi-dropdown[open]),
+td:has(.cbi-dropdown[open]),
+.td:has(.cbi-dropdown[open]),
+tr.cbi-dropdown-open,
+.tr.cbi-dropdown-open,
+td.cbi-dropdown-open,
+.td.cbi-dropdown-open {
   position: relative !important;
-  z-index: 200 !important;
+  z-index: 500 !important;
 }
 
 .modal > p,
