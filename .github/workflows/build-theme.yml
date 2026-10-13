@@ -68,12 +68,6 @@ jobs:
             --extract --file "$archive" --directory sdk \
             --strip-components=1
 
-      - name: Install LuCI build definitions
-        working-directory: sdk
-        run: |
-          ./scripts/feeds update luci
-          ./scripts/feeds install luci-base luci-theme-bootstrap
-
       - name: Add HomeUI package
         run: |
           cp -a package/luci-theme-homeui sdk/package/luci-theme-homeui
@@ -85,18 +79,16 @@ jobs:
       - name: Configure SDK
         working-directory: sdk
         run: |
-          : > .config
-          make defconfig
+          echo 'CONFIG_PACKAGE_luci-theme-homeui=m' > .config
+          make HOMEUI_PACKAGE_ONLY=1 defconfig
 
       - name: Build HomeUI package
         working-directory: sdk
         run: |
           make package/luci-theme-homeui/clean \
-            CONFIG_PACKAGE_luci-theme-homeui=m \
-            IGNORE_ERRORS="n m"
+            HOMEUI_PACKAGE_ONLY=1
           make package/luci-theme-homeui/compile \
-            CONFIG_PACKAGE_luci-theme-homeui=m \
-            IGNORE_ERRORS="n m" \
+            HOMEUI_PACKAGE_ONLY=1 \
             -j"$(nproc)" V=s
 
       - name: Collect APK
