@@ -85,8 +85,6 @@ jobs:
       - name: Build HomeUI package
         working-directory: sdk
         run: |
-          make package/luci-theme-homeui/clean \
-            HOMEUI_PACKAGE_ONLY=1
           make package/luci-theme-homeui/compile \
             HOMEUI_PACKAGE_ONLY=1 \
             -j"$(nproc)" V=s
@@ -108,3 +106,4 @@ jobs:
           path: artifacts/
           if-no-files-found: error
           retention-days: 30
+
