@@ -942,7 +942,7 @@
       if (dd.hasAttribute('open')) {
         renderClosed();
       } else {
-        document.querySelectorAll('.cbi-dropdown[open]').forEach(function(o) {
+        document.querySelectorAll('.cbi-dropdown.homeui-select-enhanced[open]').forEach(function(o) {
           if (o !== dd) {
             if (typeof o._renderClosed === 'function')
               o._renderClosed();
@@ -1028,7 +1028,7 @@
 
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.cbi-dropdown')) {
-        document.querySelectorAll('.cbi-dropdown[open]').forEach(function(d) {
+        document.querySelectorAll('.cbi-dropdown.homeui-select-enhanced[open]').forEach(function(d) {
           if (typeof d._renderClosed === 'function')
             d._renderClosed();
           else

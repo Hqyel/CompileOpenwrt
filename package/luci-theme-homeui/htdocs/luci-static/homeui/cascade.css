@@ -1034,7 +1034,12 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
 }
 
 /* Closed state: display ONLY selected choice(s) */
-.cbi-dropdown:not([open]) > ul {
+.cbi-dropdown:not([open]) > ul.preview,
+.cbi-dropdown:not([open]) > ul.dropdown {
+  display: none !important;
+}
+
+.cbi-dropdown:not([open]) > ul:not(.preview):not(.dropdown) {
   display: flex !important;
   align-items: center !important;
   flex-wrap: nowrap !important;

@@ -2295,6 +2295,143 @@ body[data-page^="admin-network-firewall"] .cbi-section-create button:hover {
   border-color: #1d76eb !important;
 }
 
+/* Firewall Tables: Column Width Constraints & Single-Line Flow */
+
+/* Tab 1: Zone Table (6 columns) */
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(1),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(1) {
+  width: auto !important;
+  min-width: 200px !important;
+}
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(2),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(2),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(3),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(3),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(4),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(4) {
+  width: 120px !important;
+  min-width: 100px !important;
+}
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(5),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(5) {
+  width: 90px !important;
+  min-width: 80px !important;
+  text-align: center !important;
+}
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .th:nth-child(6),
+body:is([data-page="admin-network-firewall"], [data-page="admin-network-firewall-zones"]) .table .td:nth-child(6) {
+  width: 150px !important;
+  min-width: 140px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+/* Tabs 2, 3, 4, 5 (Forwards, Rules, SNATs, IPSets: 5 columns) */
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(1),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .td:nth-child(1),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .cbi-section-table-cell:nth-child(1),
+.homeui-fw-compact-table .th:nth-child(1),
+.homeui-fw-compact-table .td:nth-child(1),
+.homeui-fw-compact-table .cbi-section-table-cell:nth-child(1) {
+  width: 170px !important;
+  min-width: 140px !important;
+  max-width: 220px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-weight: 550 !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(2),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .td:nth-child(2),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .cbi-section-table-cell:nth-child(2),
+.homeui-fw-compact-table .th:nth-child(2),
+.homeui-fw-compact-table .td:nth-child(2),
+.homeui-fw-compact-table .cbi-section-table-cell:nth-child(2) {
+  width: auto !important;
+  min-width: 380px !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(3),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .td:nth-child(3),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .cbi-section-table-cell:nth-child(3),
+.homeui-fw-compact-table .th:nth-child(3),
+.homeui-fw-compact-table .td:nth-child(3),
+.homeui-fw-compact-table .cbi-section-table-cell:nth-child(3) {
+  width: 170px !important;
+  min-width: 140px !important;
+  white-space: nowrap !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(4),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .td:nth-child(4),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .cbi-section-table-cell:nth-child(4),
+.homeui-fw-compact-table .th:nth-child(4),
+.homeui-fw-compact-table .td:nth-child(4),
+.homeui-fw-compact-table .cbi-section-table-cell:nth-child(4) {
+  width: 68px !important;
+  min-width: 58px !important;
+  max-width: 75px !important;
+  text-align: center !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(4) input,
+.homeui-fw-compact-table .th:nth-child(4) input {
+  width: 46px !important;
+  text-align: center !important;
+  margin: 4px auto 0 !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(5),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .td:nth-child(5),
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .cbi-section-table-cell:nth-child(5),
+.homeui-fw-compact-table .th:nth-child(5),
+.homeui-fw-compact-table .td:nth-child(5),
+.homeui-fw-compact-table .cbi-section-table-cell:nth-child(5) {
+  width: 190px !important;
+  min-width: 180px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(5) .cbi-button-reset,
+body:is([data-page="admin-network-firewall-forwards"], [data-page="admin-network-firewall-rules"], [data-page="admin-network-firewall-snats"], [data-page="admin-network-firewall-ipsets"]) .table .th:nth-child(5) button,
+.homeui-fw-compact-table .th:nth-child(5) .cbi-button-reset,
+.homeui-fw-compact-table .th:nth-child(5) button {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Single line inline flow for match rule and action cells */
+body[data-page^="admin-network-firewall"] .table .td:nth-child(2),
+body[data-page^="admin-network-firewall"] .table .td:nth-child(3),
+.homeui-fw-compact-table .td:nth-child(2),
+.homeui-fw-compact-table .td:nth-child(3) {
+  line-height: 24px !important;
+}
+
+body[data-page^="admin-network-firewall"] .table .td:nth-child(2) br,
+body[data-page^="admin-network-firewall"] .table .td:nth-child(3) br,
+.homeui-fw-compact-table .td:nth-child(2) br,
+.homeui-fw-compact-table .td:nth-child(3) br {
+  display: none !important;
+}
+
+.homeui-fw-sep {
+  display: inline-block !important;
+  color: #909399 !important;
+  margin: 0 6px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  vertical-align: middle !important;
+}
+
 @media screen and (max-width: 1280px) {
   .homeui-subpage-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));

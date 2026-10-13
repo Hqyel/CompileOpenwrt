@@ -285,8 +285,101 @@
       if (typeof enhanceAllSelects === 'function')
         enhanceAllSelects(view);
 
+      // 8. Compact and clean table rows for 5-column firewall rule tables
+      setupFirewallTableObserver(view);
+
     } finally {
       isEnhancingFirewall = false;
+    }
+  }
+
+  var isCleaningRows = false;
+  function cleanFirewallTableRows(root)
+  {
+    if (isCleaningRows || !root)
+      return;
+    isCleaningRows = true;
+    try {
+      var rows = root.querySelectorAll('.cbi-section-table-row:not(.cbi-section-table-titles)');
+      Array.prototype.forEach.call(rows, function(row) {
+        var cells = row.children;
+        // Tab 2, 3, 4, 5 tables have matchCell at index 1 and actCell at index 2
+        if (cells.length >= 4) {
+          var matchCell = cells[1];
+          if (matchCell && !matchCell.dataset.homeuiCleaned) {
+            matchCell.dataset.homeuiCleaned = 'true';
+            var brs = matchCell.querySelectorAll('br');
+            Array.prototype.forEach.call(brs, function(br) {
+              var sep = document.createElement('span');
+              sep.className = 'homeui-fw-sep';
+              sep.textContent = '·';
+              br.parentNode.replaceChild(sep, br);
+            });
+          }
+          var actCell = cells[2];
+          if (actCell && !actCell.dataset.homeuiCleaned) {
+            actCell.dataset.homeuiCleaned = 'true';
+            var brs = actCell.querySelectorAll('br');
+            Array.prototype.forEach.call(brs, function(br) {
+              var sep = document.createElement('span');
+              sep.className = 'homeui-fw-sep';
+              sep.textContent = ' ';
+              br.parentNode.replaceChild(sep, br);
+            });
+          }
+        }
+      });
+    } finally {
+      isCleaningRows = false;
+    }
+  }
+
+  function setupFirewallTableObserver(view)
+  {
+    if (!view)
+      return;
+
+    var tables = view.querySelectorAll('.cbi-section-table, .table');
+    Array.prototype.forEach.call(tables, function(tbl) {
+      var ths = tbl.querySelectorAll('.cbi-section-table-titles > th, .cbi-section-table-titles > .th');
+      if (ths.length === 5) {
+        tbl.classList.add('homeui-fw-compact-table');
+      }
+      cleanFirewallTableRows(tbl);
+
+      if (!tbl._homeuiTableObserver && window.MutationObserver) {
+        var obs = new MutationObserver(function() {
+          cleanFirewallTableRows(tbl);
+        });
+        obs.observe(tbl, { childList: true, subtree: true });
+        tbl._homeuiTableObserver = obs;
+      }
+    });
+
+    if (!view._homeuiFwViewObserver && window.MutationObserver) {
+      var viewTimer = null;
+      var viewObs = new MutationObserver(function(mutations) {
+        var hasNewTable = false;
+        for (var i = 0; i < mutations.length; i++) {
+          var m = mutations[i];
+          for (var j = 0; j < m.addedNodes.length; j++) {
+            var n = m.addedNodes[j];
+            if (n.nodeType === 1 && (n.matches && (n.matches('.cbi-section-table, .table, .cbi-section') || n.querySelector('.cbi-section-table, .table')))) {
+              hasNewTable = true;
+              break;
+            }
+          }
+          if (hasNewTable) break;
+        }
+        if (hasNewTable) {
+          clearTimeout(viewTimer);
+          viewTimer = setTimeout(function() {
+            setupFirewallTableObserver(view);
+          }, 50);
+        }
+      });
+      viewObs.observe(view, { childList: true, subtree: true });
+      view._homeuiFwViewObserver = viewObs;
     }
   }
 
