@@ -40,6 +40,9 @@
   var enhanceLogsPage = HomeUI.enhanceLogsPage;
   var enhanceProcessesPage = HomeUI.enhanceProcessesPage;
   var enhanceNetworkInterfacesPage = HomeUI.enhanceNetworkInterfacesPage;
+  var enhanceDiagnosticsPage = HomeUI.enhanceDiagnosticsPage;
+  var enhanceDnsPage = HomeUI.enhanceDnsPage;
+  var enhanceDhcpPage = HomeUI.enhanceDhcpPage;
   var enhanceFirewallPage = HomeUI.enhanceFirewallPage;
   var isEnhancing = false;
 
@@ -128,6 +131,39 @@
       isEnhancing = true;
       try {
         enhanceNetworkInterfacesPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-network-diagnostics') {
+      isEnhancing = true;
+      try {
+        if (typeof enhanceDiagnosticsPage === 'function')
+          enhanceDiagnosticsPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-network-dns') {
+      isEnhancing = true;
+      try {
+        if (typeof enhanceDnsPage === 'function')
+          enhanceDnsPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-network-dhcp') {
+      isEnhancing = true;
+      try {
+        if (typeof enhanceDhcpPage === 'function')
+          enhanceDhcpPage(view);
       } finally {
         isEnhancing = false;
       }

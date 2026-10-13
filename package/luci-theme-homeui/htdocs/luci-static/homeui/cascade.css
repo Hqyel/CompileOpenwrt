@@ -789,7 +789,7 @@ legend {
   border-collapse: separate;
   border-spacing: 0;
   background: var(--homeui-surface);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .table .tr {
@@ -1165,10 +1165,13 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
 .cbi-dropdown[open] > ul.dropdown {
   position: absolute !important;
   left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
+  top: 100% !important;
+  bottom: auto !important;
+  margin-top: 4px !important;
+  margin-bottom: 0 !important;
   min-width: 100% !important;
-  max-width: 100% !important;
+  width: max-content !important;
+  max-width: min(560px, 92vw) !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
@@ -1182,20 +1185,54 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
   list-style: none !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  max-height: 240px;
   z-index: 3000 !important;
 }
 
-.cbi-dropdown[open] > ul.dropdown:not([style*="bottom"]) {
-  top: 100% !important;
-  margin-top: 4px !important;
-  max-height: 240px;
-}
-
-.cbi-dropdown[open] > ul.dropdown[style*="bottom"] {
+.cbi-dropdown[open].is-dropup > ul.dropdown,
+.cbi-dropdown[open] > ul.dropdown.is-dropup {
   top: auto !important;
   bottom: 100% !important;
+  margin-top: 0 !important;
   margin-bottom: 4px !important;
-  max-height: 240px;
+}
+
+/* LuCI RichListValue: toggle .hide-open (title only) and .hide-close (rich description) */
+.cbi-dropdown > ul.preview > li .hide-open,
+.cbi-dropdown:not([open]) .hide-open {
+  display: inline !important;
+}
+
+.cbi-dropdown > ul.preview > li .hide-close,
+.cbi-dropdown:not([open]) .hide-close {
+  display: none !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown > li .hide-open {
+  display: none !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown > li .hide-close {
+  display: block !important;
+  width: 100% !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown > li .hide-close strong {
+  display: block !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: inherit !important;
+  line-height: 1.4 !important;
+  margin-bottom: 2px !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown > li .hide-close span {
+  display: block !important;
+  font-size: 12px !important;
+  color: #909399 !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+  white-space: normal !important;
 }
 
 /* Custom rounded scrollbar matching iKuai */
@@ -1229,21 +1266,32 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
   max-width: 100% !important;
   gap: 8px !important;
   min-height: 34px !important;
-  height: 34px !important;
-  padding: 0 16px !important;
+  height: auto !important;
+  padding: 6px 16px !important;
   margin: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   color: #606266 !important;
   font-size: 13px !important;
-  line-height: 34px !important;
+  line-height: 1.4 !important;
   cursor: pointer !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
   transition: background-color .12s ease, color .12s ease !important;
+}
+
+/* Rich item list styling when containing description cards */
+.cbi-dropdown[open] > ul.dropdown > li:has(.hide-close),
+.cbi-dropdown[open] > ul.dropdown > li.has-rich-content {
+  min-height: 52px !important;
+  white-space: normal !important;
+  align-items: flex-start !important;
+  flex-direction: column !important;
+  text-overflow: clip !important;
+  padding: 8px 16px !important;
 }
 
 .cbi-dropdown[open] > ul.dropdown > li img {
@@ -2181,6 +2229,12 @@ body:not(.modal-overlay-active) #modal_overlay {
 /* Stacking context for open dropdowns in forms, tables, cards and modals */
 .cbi-section:has(.cbi-dropdown[open]),
 .cbi-section.cbi-dropdown-open,
+.cbi-section-node:has(.cbi-dropdown[open]),
+.cbi-section-node.cbi-dropdown-open,
+.table:has(.cbi-dropdown[open]),
+.table.cbi-dropdown-open,
+.cbi-section-table:has(.cbi-dropdown[open]),
+.cbi-section-table.cbi-dropdown-open,
 .cbi-value:has(.cbi-dropdown[open]),
 .cbi-value-field:has(.cbi-dropdown[open]),
 .cbi-value.cbi-dropdown-open,
@@ -2195,6 +2249,7 @@ td.cbi-dropdown-open,
 .td.cbi-dropdown-open {
   position: relative !important;
   z-index: 500 !important;
+  overflow: visible !important;
 }
 
 .modal > p,

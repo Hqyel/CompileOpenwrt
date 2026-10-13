@@ -2432,6 +2432,279 @@ body[data-page^="admin-network-firewall"] .table .td:nth-child(3) br,
   vertical-align: middle !important;
 }
 
+/* Badges for Diagnostics, DNS, DHCP */
+.homeui-sec-cat.is-diag {
+  background: rgba(59, 130, 246, .12);
+  color: #2563eb;
+}
+.homeui-sec-cat.is-dns {
+  background: rgba(16, 185, 129, .12);
+  color: #059669;
+}
+.homeui-sec-cat.is-cache {
+  background: rgba(139, 92, 246, .12);
+  color: #7c3aed;
+}
+.homeui-sec-cat.is-port {
+  background: rgba(245, 158, 11, .12);
+  color: #d97706;
+}
+.homeui-sec-cat.is-record {
+  background: rgba(6, 182, 212, .12);
+  color: #0891b2;
+}
+.homeui-sec-cat.is-hosts {
+  background: rgba(100, 116, 139, .12);
+  color: #475569;
+}
+.homeui-sec-cat.is-static {
+  background: rgba(245, 158, 11, .12);
+  color: #d97706;
+}
+.homeui-sec-cat.is-ipv4 {
+  background: rgba(59, 130, 246, .12);
+  color: #2563eb;
+}
+.homeui-sec-cat.is-ipv6 {
+  background: rgba(147, 51, 234, .12);
+  color: #9333ea;
+}
+.homeui-sec-cat.is-dhcp {
+  background: rgba(16, 185, 129, .12);
+  color: #059669;
+}
+
+/* Network Diagnostics Styles */
+body[data-page="admin-network-diagnostics"] #view .cbi-map,
+body[data-page="admin-network-diagnostics"] #maincontent .cbi-map {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+body[data-page="admin-network-diagnostics"] .homeui-diag-card {
+  padding: 20px !important;
+}
+
+body[data-page="admin-network-diagnostics"] .cbi-value-field {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+body[data-page="admin-network-diagnostics"] input[type="text"] {
+  height: 36px !important;
+  min-width: 240px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 6px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  outline: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+
+body[data-page="admin-network-diagnostics"] input[type="text"]:focus {
+  border-color: #2f89ff !important;
+  box-shadow: 0 0 0 2px rgba(47, 137, 255, .15) !important;
+}
+
+body[data-page="admin-network-diagnostics"] .cbi-button,
+body[data-page="admin-network-diagnostics"] input[type="button"],
+body[data-page="admin-network-diagnostics"] button {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 18px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  background: #2f89ff !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 2px 6px rgba(47, 137, 255, .25) !important;
+  transition: background-color .15s ease, box-shadow .15s ease !important;
+}
+
+body[data-page="admin-network-diagnostics"] .cbi-button:hover,
+body[data-page="admin-network-diagnostics"] input[type="button"]:hover,
+body[data-page="admin-network-diagnostics"] button:hover {
+  background: #1d76eb !important;
+  box-shadow: 0 4px 10px rgba(47, 137, 255, .35) !important;
+}
+
+/* Modern Diagnostic Terminal Console */
+.homeui-terminal-window {
+  background: #181825;
+  border-radius: 8px;
+  border: 1px solid #313244;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+  overflow: hidden;
+  margin-top: 18px;
+}
+
+.homeui-terminal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #1e1e2e;
+  border-bottom: 1px solid #313244;
+}
+
+.homeui-terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.homeui-terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.homeui-terminal-dot.is-red { background: #f38ba8; }
+.homeui-terminal-dot.is-yellow { background: #f9e2af; }
+.homeui-terminal-dot.is-green { background: #a6e3a1; }
+
+.homeui-terminal-title {
+  font-size: 12px;
+  color: #cdd6f4;
+  font-weight: 600;
+  letter-spacing: .4px;
+}
+
+.homeui-terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.homeui-terminal-btn {
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 550 !important;
+  border-radius: 4px !important;
+  background: #313244 !important;
+  color: #cdd6f4 !important;
+  border: 1px solid #45475a !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.homeui-terminal-btn:hover {
+  background: #45475a !important;
+  color: #fff !important;
+}
+
+body[data-page="admin-network-diagnostics"] textarea,
+body[data-page="admin-network-diagnostics"] pre,
+.homeui-terminal-window textarea,
+.homeui-terminal-window pre {
+  width: 100% !important;
+  min-height: 360px !important;
+  background: #181825 !important;
+  color: #a6e3a1 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  padding: 16px 20px !important;
+  border: 0 !important;
+  border-radius: 0 0 8px 8px !important;
+  outline: none !important;
+  resize: vertical !important;
+  box-sizing: border-box !important;
+  white-space: pre-wrap !important;
+}
+
+/* DNS and DHCP Subpage Tabs & Cards */
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  border-bottom: 0 !important;
+  margin: 0 0 16px 0 !important;
+  padding: 0 !important;
+}
+
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > li,
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > .cbi-tab {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > li > a,
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > .cbi-tab > a {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 34px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #606266 !important;
+  background: var(--homeui-surface) !important;
+  border: 1px solid var(--homeui-border) !important;
+  text-decoration: none !important;
+  transition: all .15s ease !important;
+}
+
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > li.cbi-tab-active > a,
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-tabmenu > .cbi-tab-active > a {
+  background: #2f89ff !important;
+  color: #fff !important;
+  border-color: #2f89ff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(47, 137, 255, .25) !important;
+}
+
+body:is([data-page="admin-network-dns"], [data-page="admin-network-dhcp"]) .cbi-section:not(.modal .cbi-section):not(.cbi-modal .cbi-section) {
+  margin: 0 0 16px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+/* DHCP Tables */
+body[data-page="admin-network-dhcp"] .table .th:nth-child(1),
+body[data-page="admin-network-dhcp"] .table .td:nth-child(1) {
+  font-weight: 600 !important;
+  color: var(--homeui-text) !important;
+}
+
+body[data-page="admin-network-dhcp"] .table .td {
+  padding: 10px 14px !important;
+  font-size: 12.5px !important;
+}
+
+.homeui-table-empty {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #909399 !important;
+  font-style: normal !important;
+  font-size: 13px !important;
+  padding: 12px 0 !important;
+}
+
+.homeui-empty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  display: inline-block;
+}
+
 @media screen and (max-width: 1280px) {
   .homeui-subpage-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -833,10 +833,11 @@
       dd.setAttribute('disabled', '');
 
     function renderClosed() {
+      dd.classList.remove('is-dropup');
       dd.removeAttribute('open');
       var cur = dd.parentElement;
       while (cur && cur !== document.body) {
-        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD')) {
+        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('cbi-section-node') || cur.classList.contains('table') || cur.classList.contains('cbi-section-table') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD' || cur.tagName === 'TABLE')) {
           cur.classList.remove('cbi-dropdown-open');
         }
         cur = cur.parentElement;
@@ -915,7 +916,7 @@
       dd.setAttribute('open', '');
       var cur = dd.parentElement;
       while (cur && cur !== document.body) {
-        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD')) {
+        if (cur.classList && (cur.classList.contains('cbi-value') || cur.classList.contains('cbi-value-field') || cur.classList.contains('cbi-section') || cur.classList.contains('cbi-section-node') || cur.classList.contains('table') || cur.classList.contains('cbi-section-table') || cur.classList.contains('tr') || cur.classList.contains('td') || cur.tagName === 'TR' || cur.tagName === 'TD' || cur.tagName === 'TABLE')) {
           cur.classList.add('cbi-dropdown-open');
         }
         cur = cur.parentElement;
@@ -923,14 +924,13 @@
 
       var rect = dd.getBoundingClientRect();
       var spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < 210 && rect.top > 210) {
-        ulDropdown.style.top = 'auto';
-        ulDropdown.style.bottom = '100%';
-        ulDropdown.style.marginBottom = '4px';
+      var spaceAbove = rect.top;
+      if (spaceBelow < 180 && spaceAbove > spaceBelow) {
+        dd.classList.add('is-dropup');
+        ulDropdown.classList.add('is-dropup');
       } else {
-        ulDropdown.style.top = '100%';
-        ulDropdown.style.bottom = 'auto';
-        ulDropdown.style.marginTop = '4px';
+        dd.classList.remove('is-dropup');
+        ulDropdown.classList.remove('is-dropup');
       }
     }
 
@@ -1033,6 +1033,10 @@
             d._renderClosed();
           else
             d.removeAttribute('open');
+        });
+        document.querySelectorAll('.cbi-dropdown-open').forEach(function(el) {
+          if (!el.querySelector('.cbi-dropdown[open]'))
+            el.classList.remove('cbi-dropdown-open');
         });
       }
     });
