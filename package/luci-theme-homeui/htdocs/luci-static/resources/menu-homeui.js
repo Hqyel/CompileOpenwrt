@@ -124,11 +124,6 @@ return baseclass.extend({
     if (!activeSection)
       return;
 
-    document.querySelector('#homeui-section-title').textContent =
-      _(activeSection.title);
-    document.querySelector('#homeui-section-icon').appendChild(
-      createIcon(activeSection.name)
-    );
     this.renderSideMenu(
       activeSection,
       url + '/' + activeSection.name,
@@ -151,7 +146,6 @@ return baseclass.extend({
       item.appendChild(E('a', {
         'href': L.url(url, child.name)
       }, [
-        E('span', { 'class': 'homeui-side-dot' }),
         E('span', {}, [_(child.title)])
       ]));
 

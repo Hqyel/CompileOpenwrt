@@ -5,6 +5,10 @@
 
 {% include('header', { blank_page: true }) %}
 
+<script>
+  document.body.classList.add('homeui-login-page');
+</script>
+
 <div class="homeui-login-brand">
   <img src="{{ media }}/logo.svg" alt="">
   <strong>HomeUI</strong>
@@ -43,7 +47,7 @@
     </div>
   {% endif %}
 
-  <button class="btn cbi-button-positive important">
+  <button type="submit" class="btn cbi-button-positive important">
     {{ _('Log in') }}
   </button>
 </section>

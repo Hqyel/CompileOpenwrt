@@ -103,6 +103,9 @@
 
   #topmenu > li > a {
     min-height: 46px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
     padding: 4px 3px;
   }
 
@@ -129,7 +132,6 @@
     overflow: hidden;
   }
 
-  .homeui-panel-heading,
   .homeui-panel-footer {
     display: none;
   }
@@ -156,7 +158,6 @@
     white-space: nowrap;
   }
 
-  .homeui-side-dot,
   .homeui-nested-menu {
     display: none;
   }
@@ -218,17 +219,66 @@
     display: block;
   }
 
-  body:has(.homeui-login-view) {
-    padding: 74px 16px 24px;
+  body.homeui-login-page {
+    display: block;
+    padding: 18px;
   }
 
-  .homeui-login-brand {
-    top: 18px;
-    left: 20px;
+  .homeui-login-view {
+    width: 100%;
+  }
+
+  .homeui-login-shell {
+    min-height: calc(100vh - 36px);
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+  }
+
+  .homeui-login-aside {
+    min-height: 170px;
+    padding: 24px 26px;
+  }
+
+  .homeui-login-intro {
+    margin-top: 34px;
+  }
+
+  .homeui-login-intro h1 {
+    max-width: 330px;
+    margin: 10px 0 0;
+    font-size: 24px;
+  }
+
+  .homeui-login-intro p,
+  .homeui-login-network {
+    display: none;
+  }
+
+  .homeui-login-card {
+    padding: 36px 30px 42px;
   }
 }
 
 @media screen and (max-width: 460px) {
+  body.homeui-login-page {
+    padding: 0;
+  }
+
+  .homeui-login-shell {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .homeui-login-aside {
+    min-height: 150px;
+    padding: 21px 22px;
+  }
+
+  .homeui-login-card {
+    padding: 32px 24px 40px;
+  }
+
   #topmenu > li {
     min-width: 50px;
   }

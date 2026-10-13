@@ -81,7 +81,9 @@
           <button id="homeui-collapse" type="button"
             title="{{ _('Toggle navigation') }}"
             aria-label="{{ _('Toggle navigation') }}">
-            <span></span><span></span><span></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m14 7-5 5 5 5"></path>
+            </svg>
           </button>
           <button id="homeui-color-toggle" type="button"
             title="{{ _('Appearance') }}">
@@ -92,10 +94,6 @@
         </div>
 
         <nav class="homeui-panel" aria-label="{{ _('Secondary menu') }}">
-          <div class="homeui-panel-heading">
-            <span id="homeui-section-icon"></span>
-            <strong id="homeui-section-title">{{ _('Overview') }}</strong>
-          </div>
           <ul id="sidemenu"></ul>
           <div class="homeui-panel-footer">
             <ul id="modemenu" style="display:none"></ul>
