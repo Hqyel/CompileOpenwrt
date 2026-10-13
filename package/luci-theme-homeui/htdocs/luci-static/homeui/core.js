@@ -842,40 +842,30 @@
       }
     });
 
-    document.addEventListener('cbi-dropdown-open', function(ev) {
-      var sb = ev.target;
-      if (!sb || !sb.classList || !sb.classList.contains('cbi-dropdown'))
-        return;
-      var modal = sb.closest('.modal, .cbi-modal');
-      if (modal) {
-        modal.classList.add('homeui-has-open-dropdown');
-        var row = sb.closest('.cbi-value');
-        if (row)
-          row.style.zIndex = '2500';
-        sb.style.zIndex = '2600';
-      }
-      var ul = sb.querySelector('ul');
+    function syncDropdown(sb) {
+      if (!sb || !sb.classList || !sb.classList.contains('cbi-dropdown')) return;
+      var ul = sb.querySelector('ul.dropdown');
       if (ul) {
-        ul.style.zIndex = '3100';
-        if (ul.style.bottom && ul.style.bottom !== '')
+        ul.style.left = '0px';
+        ul.style.right = '0px';
+        ul.style.width = '100%';
+        if (ul.style.bottom && ul.style.bottom !== '') {
           ul.style.top = 'auto';
+        }
       }
-    });
+    }
 
-    document.addEventListener('cbi-dropdown-close', function(ev) {
-      var sb = ev.target;
-      if (!sb || !sb.classList || !sb.classList.contains('cbi-dropdown'))
-        return;
-      var modal = sb.closest('.modal, .cbi-modal');
-      if (modal) {
-        if (!modal.querySelector('.cbi-dropdown[open]'))
-          modal.classList.remove('homeui-has-open-dropdown');
-        var row = sb.closest('.cbi-value');
-        if (row)
-          row.style.zIndex = '';
-        sb.style.zIndex = '';
+    var ddObserver = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
+        if (m.type === 'attributes' && m.attributeName === 'open' && m.target) {
+          if (m.target.hasAttribute('open')) {
+            syncDropdown(m.target);
+          }
+        }
       }
     });
+    ddObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['open'] });
 
     scan();
   }
