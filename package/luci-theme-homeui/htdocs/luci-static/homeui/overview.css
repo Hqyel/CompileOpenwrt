@@ -958,26 +958,47 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
 
 .homeui-panel-tab {
   position: relative;
-  padding: 4px 2px 10px;
-  margin-bottom: -11px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-color-medium);
-  font-size: 12.5px;
-  font-weight: 500;
+  padding: 4px 2px 10px !important;
+  margin: 0 0 -11px 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--text-color-medium) !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
   cursor: pointer;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color .15s ease, border-color .15s ease !important;
 }
 
-.homeui-panel-tab:hover {
-  color: #2f89ff;
+.homeui-panel-tab:hover,
+.homeui-panel-tab:focus,
+.homeui-panel-tab:active {
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  border-bottom-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2f89ff !important;
 }
 
-.homeui-panel-tab.active {
-  border-bottom-color: #2f89ff;
-  color: #2f89ff;
-  font-weight: 600;
+.homeui-panel-tab.active,
+.homeui-panel-tab.active:hover,
+.homeui-panel-tab.active:focus {
+  border-bottom: 2px solid #2f89ff !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2f89ff !important;
+  font-weight: 500 !important;
 }
 
 .homeui-panel-badge {
@@ -1287,6 +1308,8 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
    iKuai 4.0 Subpages Adaptation:
    - Monitoring -> Routes (admin-status-routes)
    - Monitoring -> Firewall (admin-status-nftables / admin-status-iptables)
+   - Monitoring -> Realtime (admin-status-realtime*)
+   - Monitoring -> WireGuard (admin-status-wireguard)
    ========================================================================== */
 body[data-page="admin-status-routes"] #maincontent > h2:first-of-type,
 body[data-page="admin-status-routes"] #view > h2:first-of-type,
@@ -1301,7 +1324,14 @@ body[data-page^="admin-status-nftables"] #view > div > p:first-of-type,
 body[data-page^="admin-status-iptables"] #maincontent > h2:first-of-type,
 body[data-page^="admin-status-iptables"] #view > h2:first-of-type,
 body[data-page^="admin-status-iptables"] #view > div > h2:first-of-type,
-body[data-page^="admin-status-iptables"] .cbi-map-descr {
+body[data-page^="admin-status-iptables"] .cbi-map-descr,
+body[data-page^="admin-status-realtime"] #maincontent > h2:first-of-type,
+body[data-page^="admin-status-realtime"] #view > h2:first-of-type,
+body[data-page^="admin-status-realtime"] .cbi-map > h2:first-of-type,
+body[data-page^="admin-status-realtime"] .cbi-map-descr,
+body[data-page="admin-status-wireguard"] #maincontent > h2:first-of-type,
+body[data-page="admin-status-wireguard"] #view > h2:first-of-type,
+body[data-page="admin-status-wireguard"] #view > div > h2:first-of-type {
   display: none !important;
 }
 
@@ -1309,51 +1339,76 @@ body[data-page^="admin-status-iptables"] .cbi-map-descr {
 .homeui-legacy-fw-banner,
 body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning {
   display: flex !important;
-  align-items: center;
+  align-items: center !important;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px 18px;
-  padding: 10px 18px !important;
+  flex-wrap: wrap !important;
+  gap: 8px 14px !important;
+  padding: 12px 18px !important;
   margin: 0 0 14px 0 !important;
-  border: 1px solid rgba(245, 159, 0, .32) !important;
-  border-left: 4px solid #f59f00 !important;
+  border: 1px solid rgba(245, 159, 0, .3) !important;
+  border-left: 3.5px solid #f59f00 !important;
   border-radius: 8px !important;
-  background: #fffbeb !important;
-  color: #78350f !important;
+  background: #fffdf5 !important;
+  color: #4b5563 !important;
   box-shadow: 0 2px 8px rgba(15, 23, 42, .03) !important;
 }
 
 :root[data-darkmode="true"] .homeui-legacy-fw-banner,
 :root[data-darkmode="true"] body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning {
-  background: color-mix(in srgb, #f59f00 12%, var(--homeui-surface)) !important;
+  background: color-mix(in srgb, #f59f00 10%, var(--homeui-surface)) !important;
   color: var(--text-color-highest) !important;
 }
 
+.homeui-legacy-fw-banner h4,
 .homeui-legacy-fw-banner h3,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning h4,
 body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning h3 {
+  flex: 0 0 100% !important;
+  width: 100% !important;
   margin: 0 !important;
+  padding: 0 !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: inherit !important;
+  line-height: 1.4 !important;
+  color: var(--text-color-highest) !important;
 }
 
 .homeui-legacy-fw-banner p,
 body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning p {
-  flex: 1 1 360px;
+  flex: 1 1 380px !important;
   margin: 0 !important;
+  padding: 0 !important;
   font-size: 12px !important;
-  line-height: 1.5 !important;
-  color: inherit !important;
-  opacity: .9;
+  line-height: 1.55 !important;
+  color: var(--text-color-medium) !important;
 }
 
 .homeui-legacy-fw-banner .btn,
 body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .btn {
   margin: 0 !important;
   height: 30px !important;
-  padding: 0 12px !important;
+  min-height: 30px !important;
+  padding: 0 14px !important;
+  border: 1px solid #dcdfe6 !important;
   border-radius: 4px !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #303133 !important;
   font-size: 12px !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.homeui-legacy-fw-banner .btn:hover,
+.homeui-legacy-fw-banner .btn:focus,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .btn:hover,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .btn:focus {
+  border-color: #2f89ff !important;
+  background: #ffffff !important;
+  color: #2f89ff !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .homeui-subpage-shell {
@@ -1480,9 +1535,12 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
 
 .homeui-subpage-metric .metric-meta strong {
   color: var(--text-color-highest);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .homeui-subpage-metric .metric-meta small {
@@ -1499,7 +1557,8 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 10px 18px;
+  padding: 0 18px;
+  min-height: 46px;
   border: 1px solid var(--homeui-border);
   border-radius: 8px;
   background: var(--homeui-surface);
@@ -1510,34 +1569,61 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 24px;
 }
 
 .homeui-subpage-tab {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 6px;
-  padding: 6px 2px 8px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-color-medium);
-  font-size: 13px;
-  font-weight: 500;
+  margin: 0 !important;
+  padding: 10px 2px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--text-color-medium) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
   cursor: pointer;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color .15s ease, border-color .15s ease !important;
 }
 
-.homeui-subpage-tab:hover {
-  color: #2f89ff;
+.homeui-subpage-tab:hover,
+.homeui-subpage-tab:focus,
+.homeui-subpage-tab:focus-visible,
+.homeui-subpage-tab:active {
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  border-bottom-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2f89ff !important;
 }
 
 .homeui-subpage-tab.active,
-.homeui-subpage-tab.is-active {
-  border-bottom-color: #2f89ff;
-  color: #2f89ff;
-  font-weight: 600;
+.homeui-subpage-tab.is-active,
+.homeui-subpage-tab.active:hover,
+.homeui-subpage-tab.is-active:hover,
+.homeui-subpage-tab.active:focus,
+.homeui-subpage-tab.is-active:focus {
+  border-bottom: 2px solid #2f89ff !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2f89ff !important;
+  font-weight: 500 !important;
 }
 
 .homeui-subpage-tab em {
@@ -1549,8 +1635,10 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
   font-style: normal;
   font-weight: 500;
   line-height: 18px;
+  transition: background .15s ease, color .15s ease;
 }
 
+.homeui-subpage-tab:hover em,
 .homeui-subpage-tab.active em,
 .homeui-subpage-tab.is-active em {
   background: #edf5ff;
@@ -1563,6 +1651,7 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
   flex-wrap: wrap;
   gap: 10px;
   margin-left: auto;
+  padding: 6px 0;
 }
 
 .homeui-subpage-search {
@@ -1575,13 +1664,19 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
 
 .homeui-subpage-search input {
   width: 100%;
-  min-height: 32px !important;
-  height: 32px;
+  min-height: 30px !important;
+  height: 30px !important;
   padding: 0 30px 0 12px !important;
-  border: 1px solid var(--homeui-border) !important;
+  border: 1px solid #dcdfe6 !important;
   border-radius: 4px !important;
   background: var(--homeui-surface) !important;
-  font-size: 12px;
+  font-size: 12px !important;
+  box-shadow: none !important;
+}
+
+.homeui-subpage-search input:focus {
+  border-color: #2f89ff !important;
+  box-shadow: none !important;
 }
 
 .homeui-subpage-search svg {
@@ -1596,31 +1691,49 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
 }
 
 .homeui-filter-pill {
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
+  height: 30px !important;
+  min-height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 6px;
-  padding: 0 12px;
-  border: 1px solid var(--homeui-border);
-  border-radius: 4px;
-  background: var(--homeui-surface);
-  color: var(--text-color-medium);
-  font-size: 12px;
+  padding: 0 14px !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #303133 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
+  outline: none !important;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
 }
 
-.homeui-filter-pill:hover {
-  border-color: #2f89ff;
-  color: #2f89ff;
+:root[data-darkmode="true"] .homeui-filter-pill {
+  border-color: var(--homeui-border) !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+}
+
+.homeui-filter-pill:hover,
+.homeui-filter-pill:focus {
+  border-color: #2f89ff !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #2f89ff !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .homeui-filter-pill.active,
 .homeui-filter-pill.is-active {
-  border-color: #2f89ff;
-  background: var(--homeui-accent-soft);
-  color: #2f89ff;
-  font-weight: 500;
+  border-color: #2f89ff !important;
+  background: #edf5ff !important;
+  background-image: none !important;
+  color: #2f89ff !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
 }
 
 /* Transparent tab-pane wrapper on Routes page when split into cards */
@@ -1665,11 +1778,12 @@ body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .
   padding: 0 !important;
 }
 
-/* Styled sections and cards on Routes and Firewall status pages */
+/* Styled sections and cards on Routes, Firewall, and WireGuard status pages */
 .homeui-subpage-card,
 body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane),
 body[data-page^="admin-status-nftables"] .nft-chain.cbi-section,
-body[data-page^="admin-status-iptables"] .cbi-section {
+body[data-page^="admin-status-iptables"] .cbi-section,
+body[data-page="admin-status-wireguard"] .cbi-section {
   padding: 0 !important;
   margin: 0 0 14px 0 !important;
   overflow: hidden;
@@ -1689,7 +1803,8 @@ body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane) >
 body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane) > legend,
 body[data-page^="admin-status-nftables"] .nft-chain.cbi-section > h4:first-child,
 body[data-page^="admin-status-iptables"] .cbi-section > h3:first-child,
-body[data-page^="admin-status-iptables"] .cbi-section h4 {
+body[data-page^="admin-status-iptables"] .cbi-section h4,
+body[data-page="admin-status-wireguard"] .cbi-section > h3:first-child {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
@@ -1705,7 +1820,8 @@ body[data-page^="admin-status-iptables"] .cbi-section h4 {
 :root[data-darkmode="true"] .homeui-subpage-card > h3:first-child,
 :root[data-darkmode="true"] .homeui-subpage-card > h4:first-child,
 :root[data-darkmode="true"] body[data-page^="admin-status-nftables"] .nft-chain.cbi-section > h4:first-child,
-:root[data-darkmode="true"] body[data-page^="admin-status-iptables"] .cbi-section h4 {
+:root[data-darkmode="true"] body[data-page^="admin-status-iptables"] .cbi-section h4,
+:root[data-darkmode="true"] body[data-page="admin-status-wireguard"] .cbi-section > h3:first-child {
   background: var(--homeui-surface-soft) !important;
 }
 
@@ -1723,19 +1839,22 @@ body[data-page^="admin-status-iptables"] .cbi-section h4 {
 }
 
 .homeui-sec-cat.is-v4route,
-.homeui-sec-cat.is-nat {
+.homeui-sec-cat.is-nat,
+.homeui-sec-cat.is-green {
   background: rgba(40, 199, 111, .12);
   color: #28c76f;
 }
 
 .homeui-sec-cat.is-v6route,
-.homeui-sec-cat.is-mangle {
+.homeui-sec-cat.is-mangle,
+.homeui-sec-cat.is-purple {
   background: rgba(108, 92, 231, .12);
   color: #6c5ce7;
 }
 
 .homeui-sec-cat.is-v6neigh,
-.homeui-sec-cat.is-rule {
+.homeui-sec-cat.is-rule,
+.homeui-sec-cat.is-orange {
   background: rgba(245, 159, 0, .14);
   color: #f59f00;
 }
@@ -1794,7 +1913,8 @@ body[data-page^="admin-status-nftables"] .nft-chain-hook strong {
 .homeui-subpage-card .table,
 body[data-page="admin-status-routes"] .cbi-section .table,
 body[data-page^="admin-status-nftables"] .cbi-section .table,
-body[data-page^="admin-status-iptables"] .cbi-section .table {
+body[data-page^="admin-status-iptables"] .cbi-section .table,
+body[data-page="admin-status-wireguard"] .cbi-section .table {
   width: 100% !important;
   margin: 0 !important;
   border: 0 !important;
@@ -1804,7 +1924,8 @@ body[data-page^="admin-status-iptables"] .cbi-section .table {
 .homeui-subpage-card .table .th,
 body[data-page="admin-status-routes"] .cbi-section .table .th,
 body[data-page^="admin-status-nftables"] .cbi-section .table .th,
-body[data-page^="admin-status-iptables"] .cbi-section .table .th {
+body[data-page^="admin-status-iptables"] .cbi-section .table .th,
+body[data-page="admin-status-wireguard"] .cbi-section .table .th {
   padding: 10px 18px !important;
   background: var(--homeui-surface-soft) !important;
   color: var(--text-color-medium) !important;
@@ -1817,10 +1938,379 @@ body[data-page^="admin-status-iptables"] .cbi-section .table .th {
 .homeui-subpage-card .table .td,
 body[data-page="admin-status-routes"] .cbi-section .table .td,
 body[data-page^="admin-status-nftables"] .cbi-section .table .td,
-body[data-page^="admin-status-iptables"] .cbi-section .table .td {
+body[data-page^="admin-status-iptables"] .cbi-section .table .td,
+body[data-page="admin-status-wireguard"] .cbi-section .table .td {
   padding: 10px 18px !important;
   font-size: 12px !important;
   vertical-align: middle !important;
+}
+
+/* ==========================================================================
+   Monitoring -> Realtime Graphs (admin-status-realtime*)
+   ========================================================================== */
+body[data-page^="admin-status-realtime"] #maincontent > .tabs {
+  margin: 0 0 14px 0 !important;
+  padding: 0 18px !important;
+  min-height: 46px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-map {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-tabmenu {
+  margin: 0 !important;
+  padding: 0 18px !important;
+  min-height: 44px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-bottom: 0 !important;
+  border-radius: 8px 8px 0 0 !important;
+  background: #fafbfe !important;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-status-realtime"] .cbi-tabmenu {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section {
+  padding: 16px 18px 18px !important;
+  margin: 0 0 14px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-tabmenu + .cbi-section,
+body[data-page^="admin-status-realtime"] .cbi-section[data-tab] {
+  border-radius: 0 0 8px 8px !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > br {
+  display: none !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .right {
+  display: none !important;
+}
+
+.homeui-rt-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 0 12px 0;
+  margin: 0 0 12px 0;
+  border-bottom: 1px solid var(--homeui-border);
+}
+
+.homeui-rt-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-color-highest);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.homeui-rt-card-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-color-medium);
+}
+
+.homeui-rt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-color-medium);
+}
+
+.homeui-rt-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.homeui-rt-scale-pill {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--homeui-surface-soft);
+  color: var(--homeui-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+body[data-page^="admin-status-realtime"] .homeui-rt-chart-box,
+body[data-page^="admin-status-realtime"] .cbi-section > div[style*="height:300px"] {
+  width: 100% !important;
+  height: 280px !important;
+  margin: 0 0 14px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, #fcfdff 0%, #f6f9fc 100%) !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, .02) !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-status-realtime"] .homeui-rt-chart-box,
+:root[data-darkmode="true"] body[data-page^="admin-status-realtime"] .cbi-section > div[style*="height:300px"] {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section svg line {
+  stroke: #e2e8f0 !important;
+  stroke-width: 1px !important;
+  stroke-dasharray: 3 3 !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-status-realtime"] .cbi-section svg line {
+  stroke: var(--homeui-border) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section svg text {
+  fill: #64748b !important;
+  text-shadow: none !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section svg #load01,
+body[data-page^="admin-status-realtime"] .cbi-section svg #rx,
+body[data-page^="admin-status-realtime"] .cbi-section svg #tcp,
+body[data-page^="admin-status-realtime"] .cbi-section svg #rssi {
+  stroke: #2f89ff !important;
+  stroke-width: 1.8px !important;
+  fill: #2f89ff !important;
+  fill-opacity: .16 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section svg #load05,
+body[data-page^="admin-status-realtime"] .cbi-section svg #tx,
+body[data-page^="admin-status-realtime"] .cbi-section svg #udp,
+body[data-page^="admin-status-realtime"] .cbi-section svg #rate {
+  stroke: #28c76f !important;
+  stroke-width: 1.8px !important;
+  fill: #28c76f !important;
+  fill-opacity: .15 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section svg #load15,
+body[data-page^="admin-status-realtime"] .cbi-section svg #other,
+body[data-page^="admin-status-realtime"] .cbi-section svg #noise {
+  stroke: #f59f00 !important;
+  stroke-width: 1.8px !important;
+  fill: #f59f00 !important;
+  fill-opacity: .14 !important;
+}
+
+/* Realtime summary table under SVG */
+body[data-page^="admin-status-realtime"] .cbi-section > .table {
+  width: 100% !important;
+  margin: 0 0 14px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table:last-child,
+body[data-page^="admin-status-realtime"] .cbi-section > .table:has(+ .cbi-section-create) {
+  margin-bottom: 0 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .td.right {
+  width: 120px;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--text-color-medium) !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  border-right: 1px solid var(--homeui-border) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .td:not(.right) {
+  color: var(--text-color-highest) !important;
+  font-weight: 600 !important;
+  border-right: 1px solid var(--homeui-border) !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .td:last-child {
+  border-right: 0 !important;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table strong[style*="border-bottom"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 0 !important;
+  font-weight: 600;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .tr:nth-child(1) strong[style*="border-bottom"]::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f89ff;
+  content: "";
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .tr:nth-child(2) strong[style*="border-bottom"]::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #28c76f;
+  content: "";
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .table .tr:nth-child(3) strong[style*="border-bottom"]::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59f00;
+  content: "";
+}
+
+/* Connections page filter bar & table */
+body[data-page^="admin-status-realtime"] #settings-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap;
+  gap: 12px !important;
+  margin: 4px 0 0 0 !important;
+  padding: 12px 16px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-bottom: 0 !important;
+  border-radius: 6px 6px 0 0 !important;
+  background: #fafbfe !important;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-status-realtime"] #settings-row {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-status-realtime"] #settings-row .filter {
+  flex: 0 1 340px !important;
+}
+
+body[data-page^="admin-status-realtime"] #settings-row #filter-connections {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  font-size: 12px !important;
+  box-shadow: none !important;
+}
+
+body[data-page^="admin-status-realtime"] #settings-row #filter-connections:focus {
+  border-color: #2f89ff !important;
+}
+
+body[data-page^="admin-status-realtime"] #settings-row .right {
+  flex: 0 0 auto !important;
+  margin-left: auto;
+}
+
+body[data-page^="admin-status-realtime"] .cbi-section > .cbi-section-node {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 0 0 6px 6px !important;
+  overflow: hidden !important;
+}
+
+body[data-page^="admin-status-realtime"] #connections {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* ==========================================================================
+   Monitoring -> WireGuard Status (admin-status-wireguard)
+   ========================================================================== */
+.homeui-wg-instance-bar,
+body[data-page="admin-status-wireguard"] .cbi-section > p {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px 12px !important;
+  margin: 0 !important;
+  padding: 10px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: var(--homeui-surface) !important;
+  color: var(--text-color-medium) !important;
+  font-size: 12px !important;
+}
+
+.homeui-wg-instance-bar .ifacebadge,
+body[data-page="admin-status-wireguard"] .cbi-section > p .ifacebadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 10px !important;
+  border: 1px solid rgba(47, 137, 255, .22) !important;
+  border-radius: 6px !important;
+  background: #edf5ff !important;
+  color: #2f89ff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] .homeui-wg-instance-bar .ifacebadge,
+:root[data-darkmode="true"] body[data-page="admin-status-wireguard"] .cbi-section > p .ifacebadge {
+  background: #1a3354 !important;
+  color: #69b1ff !important;
+}
+
+.homeui-wg-instance-bar .ifacebadge img,
+body[data-page="admin-status-wireguard"] .cbi-section > p .ifacebadge img {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.homeui-wg-instance-bar code,
+body[data-page="admin-status-wireguard"] .cbi-section > p code {
+  padding: 2px 8px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--text-color-highest) !important;
+  font-family: monospace !important;
+  font-size: 11.5px !important;
+}
+
+body[data-page="admin-status-wireguard"] .table .td .ifacebadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-top: 3px !important;
+  padding: 1px 7px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--homeui-muted) !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin-status-wireguard"] .table .td p {
+  margin: 0 !important;
+  font-weight: 600 !important;
+  color: var(--text-color-highest) !important;
 }
 
 .homeui-sec-hidden,
