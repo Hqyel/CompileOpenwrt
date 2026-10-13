@@ -39,6 +39,8 @@
     <link rel="stylesheet"
       href="{{ media }}/overview.css?v=@HOMEUI_VERSION@">
     <link rel="stylesheet"
+      href="{{ media }}/pages.css?v=@HOMEUI_VERSION@">
+    <link rel="stylesheet"
       media="only screen and (max-width: 900px)"
       href="/luci-static/bootstrap/mobile.css">
     <link rel="stylesheet"

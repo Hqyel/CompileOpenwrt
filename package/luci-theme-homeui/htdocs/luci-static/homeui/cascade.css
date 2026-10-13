@@ -807,6 +807,11 @@ legend {
   background: transparent !important;
 }
 
+.table .th,
+table th {
+  white-space: nowrap !important;
+}
+
 .table .th {
   display: table-cell;
   padding: 11px 14px;
@@ -816,6 +821,7 @@ legend {
   font-size: 12px;
   font-weight: 500;
   text-transform: none;
+  white-space: nowrap !important;
 }
 
 .table .td {
@@ -991,13 +997,14 @@ input[type="radio"] {
 
 input[type="checkbox"]::before,
 input[type="radio"]::before {
-  top: 0 !important;
-  left: 0 !important;
-  width: 16px !important;
-  height: 16px !important;
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   box-sizing: border-box !important;
-  border: 1px solid #dcdfe6 !important;
-  border-radius: 4px !important;
+  border: 1px solid #c8cfd8 !important;
+  border-radius: 3.5px !important;
   background: var(--homeui-surface) !important;
   background-image: none !important;
   box-shadow: none !important;
@@ -1028,17 +1035,47 @@ input[type="radio"]:checked::before {
   background: #2f89ff !important;
 }
 
-input[type="checkbox"]::after,
-input[type="radio"]::after {
-  top: 3px !important;
-  left: 3px !important;
-  width: 10px !important;
-  height: 10px !important;
+input[type="checkbox"]::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 5px !important;
+  width: 4px !important;
+  height: 8px !important;
+  box-sizing: content-box !important;
+  border: solid #ffffff !important;
+  border-width: 0 1.8px 1.8px 0 !important;
+  background: transparent !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  transform: rotate(45deg) scale(0) !important;
+  transition: transform .12s ease !important;
 }
 
-input[type="checkbox"]:checked::after,
+input[type="checkbox"]:checked::after {
+  background: transparent !important;
+  transform: rotate(45deg) scale(1) !important;
+}
+
+input[type="radio"]::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 4px !important;
+  left: 4px !important;
+  width: 8px !important;
+  height: 8px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  transform: scale(0) !important;
+  transition: transform .12s ease !important;
+}
+
 input[type="radio"]:checked::after {
   background: #ffffff !important;
+  transform: scale(1) !important;
 }
 
 /* Unified CBI Form Layout & Spacing */
