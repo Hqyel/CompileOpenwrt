@@ -1608,6 +1608,16 @@ body[data-page="admin-network-network"] .cbi-section > h3:first-child .homeui-se
 }
 
 /* Tab 1: Interfaces Table */
+body[data-page="admin-network-network"] #view .cbi-section:not(.modal .cbi-section):not(.cbi-modal .cbi-section) {
+  padding: 0 !important;
+  margin: 0 0 16px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+  overflow: hidden;
+}
+
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table,
 body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table {
   width: 100% !important;
@@ -1628,6 +1638,25 @@ body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .
   white-space: nowrap !important;
 }
 
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th input,
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th select {
+  height: 28px !important;
+  min-height: 28px !important;
+  border-radius: 4px !important;
+  border: 1px solid #dcdfe6 !important;
+  background: var(--homeui-surface) !important;
+  padding: 0 8px !important;
+  font-size: 12px !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th .cbi-button,
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th .btn {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+}
+
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td,
 body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .td {
   padding: 12px 18px !important;
@@ -1637,18 +1666,29 @@ body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .
 
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th:nth-child(1),
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(1) {
-  width: 146px !important;
+  width: 140px !important;
+  vertical-align: middle !important;
 }
 
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th:nth-child(3),
 body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(3) {
-  width: 270px !important;
+  width: 250px !important;
   text-align: right !important;
   white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(3) .cbi-button,
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(3) .btn {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  margin: 0 2px !important;
 }
 
 body[data-page="admin-network-network"] .ifacebox {
-  width: 126px !important;
+  width: 120px !important;
   margin: 0 !important;
   border: 1px solid var(--homeui-border) !important;
   border-radius: 6px !important;
@@ -1660,8 +1700,9 @@ body[data-page="admin-network-network"] .ifacebox {
 body[data-page="admin-network-network"] .ifacebox .ifacebox-head {
   padding: 5px 8px !important;
   font-size: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 650 !important;
   text-align: center !important;
+  color: #1f2937 !important;
 }
 
 body[data-page="admin-network-network"] .ifacebox .ifacebox-body {
@@ -1673,23 +1714,151 @@ body[data-page="admin-network-network"] .ifacebox .ifacebox-body {
   line-height: 1.45 !important;
 }
 
-body[data-page="admin-network-network"] [data-name="_ifacestat"] > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  font-size: 12px;
-  line-height: 1.65;
+/* Enhanced Interface Status Card Layout */
+.homeui-iface-card-meta {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+  width: 100% !important;
 }
 
-body[data-page="admin-network-network"] [data-name="_ifacestat"] > div > span.nowrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.homeui-iface-headline {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px 12px !important;
 }
 
-body[data-page="admin-network-network"] [data-name="_ifacestat"] strong {
-  color: var(--text-color-medium);
-  font-weight: 500;
+.homeui-iface-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 2px 9px !important;
+  border-radius: 20px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.homeui-iface-status-pill.is-up {
+  background: #e6f8ea !important;
+  color: #15803d !important;
+  border: 1px solid rgba(22, 163, 74, .2) !important;
+}
+
+.homeui-iface-status-pill.is-down {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid rgba(100, 116, 139, .2) !important;
+}
+
+.homeui-iface-status-pill .status-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+}
+
+.homeui-iface-ip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  font-family: "JetBrains Mono", Consolas, monospace !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.homeui-iface-ip.is-ipv4 {
+  background: rgba(47, 137, 255, .08) !important;
+  color: #1d76eb !important;
+  border: 1px solid rgba(47, 137, 255, .2) !important;
+}
+
+.homeui-iface-ip.is-ipv6 {
+  background: rgba(124, 58, 237, .08) !important;
+  color: #7c3aed !important;
+  border: 1px solid rgba(124, 58, 237, .2) !important;
+}
+
+.homeui-iface-ip .ip-tag {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 4px !important;
+  border-radius: 2px !important;
+  background: currentColor !important;
+  color: #ffffff !important;
+  letter-spacing: .2px;
+}
+
+.homeui-iface-ip.is-ipv4 .ip-tag {
+  background: #2f89ff !important;
+}
+
+.homeui-iface-ip.is-ipv6 .ip-tag {
+  background: #7c3aed !important;
+}
+
+.homeui-iface-chips {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 5px 8px !important;
+  font-size: 11.5px !important;
+}
+
+.homeui-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface-soft) !important;
+  border: 1px solid var(--homeui-border) !important;
+  color: var(--text-color-medium) !important;
+  font-size: 11.5px !important;
+  line-height: 1.35 !important;
+}
+
+.homeui-chip .chip-lbl {
+  color: var(--homeui-muted) !important;
+  font-weight: 500 !important;
+}
+
+.homeui-chip.is-mac {
+  font-family: "JetBrains Mono", Consolas, monospace !important;
+  font-size: 11px !important;
+}
+
+.homeui-chip.is-rx {
+  color: #059669 !important;
+  border-color: rgba(16, 185, 129, .2) !important;
+  background: rgba(16, 185, 129, .06) !important;
+  font-weight: 500 !important;
+}
+
+.homeui-chip.is-tx {
+  color: #2563eb !important;
+  border-color: rgba(37, 99, 235, .2) !important;
+  background: rgba(37, 99, 235, .06) !important;
+  font-weight: 500 !important;
+}
+
+.homeui-chip.is-rx svg,
+.homeui-chip.is-tx svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.homeui-chip.is-info {
+  color: #d97706 !important;
+  border-color: rgba(245, 158, 11, .25) !important;
+  background: rgba(245, 158, 11, .06) !important;
 }
 
 /* Tab 2: Devices Table */
@@ -1712,10 +1881,11 @@ body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .
   font-size: 12px !important;
 }
 
-/* Section bottom Add buttons */
-body[data-page="admin-network-network"] .cbi-section > .cbi-section-create,
-body[data-page="admin-network-network"] .cbi-tblsection > .cbi-section-create {
-  padding: 14px 18px !important;
+/* Section bottom Add buttons - constrained width, never full-width */
+body[data-page="admin-network-network"] .cbi-section .cbi-section-create,
+body[data-page="admin-network-network"] .cbi-tblsection .cbi-section-create,
+body[data-page="admin-network-network"] div.cbi-section-create {
+  padding: 12px 18px !important;
   margin: 0 !important;
   border-top: 1px solid var(--homeui-border) !important;
   background: #fafbfe !important;
@@ -1723,24 +1893,45 @@ body[data-page="admin-network-network"] .cbi-tblsection > .cbi-section-create {
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 10px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
-:root[data-darkmode="true"] body[data-page="admin-network-network"] .cbi-section > .cbi-section-create {
+:root[data-darkmode="true"] body[data-page="admin-network-network"] .cbi-section-create {
   background: var(--homeui-surface-soft) !important;
 }
 
+body[data-page="admin-network-network"] .cbi-section-create input,
+body[data-page="admin-network-network"] .cbi-section-create button,
 body[data-page="admin-network-network"] .cbi-section-create .cbi-button-add,
-body[data-page="admin-network-network"] .cbi-section-create > button,
-body[data-page="admin-network-network"] .cbi-section-create > input[type="button"] {
+body[data-page="admin-network-network"] .cbi-section-create .cbi-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: fit-content !important;
   height: 32px !important;
   min-height: 32px !important;
-  padding: 0 16px !important;
+  padding: 0 18px !important;
+  margin: 0 !important;
+  flex: 0 0 auto !important;
   border: 1px solid #2f89ff !important;
   border-radius: 4px !important;
   background: #2f89ff !important;
   color: #ffffff !important;
   font-size: 12.5px !important;
   font-weight: 500 !important;
+  box-shadow: 0 2px 6px rgba(47, 137, 255, .18) !important;
+  cursor: pointer !important;
+  transition: background-color .15s ease, border-color .15s ease !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section-create input:hover,
+body[data-page="admin-network-network"] .cbi-section-create button:hover,
+body[data-page="admin-network-network"] .cbi-section-create .cbi-button-add:hover {
+  background: #1d76eb !important;
+  border-color: #1d76eb !important;
 }
 
 /* Tab 3: Globals Form */

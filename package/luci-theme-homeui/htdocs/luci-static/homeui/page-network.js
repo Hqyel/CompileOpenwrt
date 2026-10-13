@@ -110,6 +110,111 @@
       ifaceRows.length + (isChinese ? ' 个接口' : ' interfaces')
     );
 
+    function enhanceInterfaceRows(sec) {
+      if (!sec)
+        return;
+      var rows = sec.querySelectorAll('.cbi-section-table-row');
+      Array.prototype.forEach.call(rows, function(row) {
+        var statCell = row.querySelector('[data-name="_ifacestat"]') || row.children[1];
+        if (!statCell)
+          return;
+
+        var existingCard = statCell.querySelector('.homeui-iface-card-meta');
+        var txt = '';
+        var rawChildren = [];
+        Array.prototype.forEach.call(statCell.childNodes, function(cn) {
+          if (cn !== existingCard) {
+            txt += (cn.textContent || '') + ' ';
+            if (cn.nodeType === 1)
+              rawChildren.push(cn);
+          }
+        });
+
+        if (!txt.trim())
+          return;
+
+        var isUp = /已连接|connected|uptime|运行时间/i.test(txt) &&
+          !/未连接|未启动|接口已禁用|disabled|not present|not connected/i.test(txt);
+        if (/未连接|not connected/i.test(txt))
+          isUp = false;
+
+        var ipv4Matches = txt.match(/\b(?:192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+|(?:\d{1,3}\.){3}\d{1,3})(?:\/\d+)?\b/g) || [];
+        ipv4Matches = ipv4Matches.filter(function(ip) {
+          return !/^255\./.test(ip) && !/^0\.0\.0\.0/.test(ip);
+        });
+
+        var ipv6Matches = (txt.match(/\b(?:[0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}(?:\/\d+)?\b|\b[0-9a-fA-F]{1,4}::[0-9a-fA-F0-9:]*(?:\/\d+)?\b/gi) || [])
+          .filter(function(ip) {
+            return !/^[0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5}$/i.test(ip);
+          });
+
+        var protoMatch = txt.match(/(?:协议|Protocol)[:：]?\s*([^\n\r]+?)(?=\s*(?:链路状态|Carrier|设备|Device|运行时间|Uptime|MAC|接收|RX|发送|TX|IPv4|IPv6|信息|Information|$))/i);
+        var proto = protoMatch ? protoMatch[1].trim() : '';
+
+        var macMatch = txt.match(/([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5})/);
+        var mac = macMatch ? macMatch[1] : '';
+
+        var uptimeMatch = txt.match(/(?:运行时间|Uptime)[:：]?\s*([0-9a-zA-Z\s天时分秒hdms]+?)(?=\s*(?:MAC|接收|RX|IPv4|IPv6|$))/i);
+        var uptime = uptimeMatch ? uptimeMatch[1].trim() : '';
+
+        var rxMatch = txt.match(/(?:接收|RX)[:：]?\s*([0-9.]+\s*[KMGTPE]?i?B)/i);
+        var txMatch = txt.match(/(?:发送|TX)[:：]?\s*([0-9.]+\s*[KMGTPE]?i?B)/i);
+        var rx = rxMatch ? rxMatch[1] : '';
+        var tx = txMatch ? txMatch[1] : '';
+
+        var infoMatch = txt.match(/(?:信息|Information)[:：]?\s*([^\n\r]+?)(?=\s*(?:$))/i);
+        var info = infoMatch ? infoMatch[1].trim() : '';
+
+        if (!existingCard) {
+          existingCard = document.createElement('div');
+          existingCard.className = 'homeui-iface-card-meta';
+          statCell.appendChild(existingCard);
+        }
+
+        rawChildren.forEach(function(el) {
+          el.style.display = 'none';
+        });
+
+        var ipsHtml = '';
+        ipv4Matches.forEach(function(ip) {
+          ipsHtml += '<span class="homeui-iface-ip is-ipv4"><span class="ip-tag">IPv4</span>' + escapeHtml(ip) + '</span>';
+        });
+        ipv6Matches.forEach(function(ip) {
+          ipsHtml += '<span class="homeui-iface-ip is-ipv6"><span class="ip-tag">IPv6</span>' + escapeHtml(ip) + '</span>';
+        });
+        if (!ipv4Matches.length && !ipv6Matches.length && isUp) {
+          ipsHtml += '<span class="homeui-iface-ip is-none" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:11px;font-family:sans-serif">' +
+            (isChinese ? '未分配 IP' : 'No IP assigned') + '</span>';
+        }
+
+        var chipsHtml = '';
+        if (proto)
+          chipsHtml += '<span class="homeui-chip"><span class="chip-lbl">' + (isChinese ? '协议' : 'Proto') + ':</span> ' + escapeHtml(proto) + '</span>';
+        if (uptime)
+          chipsHtml += '<span class="homeui-chip"><span class="chip-lbl">' + (isChinese ? '运行' : 'Uptime') + ':</span> ' + escapeHtml(uptime) + '</span>';
+        if (mac)
+          chipsHtml += '<span class="homeui-chip is-mac"><span class="chip-lbl">MAC:</span> ' + escapeHtml(mac) + '</span>';
+        if (rx)
+          chipsHtml += '<span class="homeui-chip is-rx"><svg viewBox="0 0 24 24"><path d="M12 4v16m0 0l-5-5m5 5l5-5"/></svg> ' + escapeHtml(rx) + '</span>';
+        if (tx)
+          chipsHtml += '<span class="homeui-chip is-tx"><svg viewBox="0 0 24 24"><path d="M12 20V4m0 0l5 5m-5-5l-5 5"/></svg> ' + escapeHtml(tx) + '</span>';
+        if (info)
+          chipsHtml += '<span class="homeui-chip is-info">' + escapeHtml(info) + '</span>';
+
+        existingCard.innerHTML =
+          '<div class="homeui-iface-headline">' +
+            '<span class="homeui-iface-status-pill ' + (isUp ? 'is-up' : 'is-down') + '">' +
+              '<span class="status-dot"></span>' +
+              (isUp ? (isChinese ? '已连接' : 'Connected') : (isChinese ? '未连接' : 'Disconnected')) +
+            '</span>' +
+            ipsHtml +
+          '</div>' +
+          (chipsHtml ? ('<div class="homeui-iface-chips">' + chipsHtml + '</div>') : '');
+      });
+    }
+
+    enhanceInterfaceRows(ifaceSection);
+
     var devRows = deviceSection ?
       deviceSection.querySelectorAll('.cbi-section-table-row') : [];
     enhanceSectionHead(
