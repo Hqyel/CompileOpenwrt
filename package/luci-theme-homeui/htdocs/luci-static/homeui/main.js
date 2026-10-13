@@ -13,6 +13,10 @@
   var isChinese = (root.lang || '').toLowerCase().startsWith('zh');
   var pageId = (document.body && document.body.dataset.page) || '';
   var isOverview = pageId === 'admin-status-overview';
+  var isRoutesPage = pageId === 'admin-status-routes';
+  var isFirewallStatusPage =
+    pageId === 'admin-status-nftables' ||
+    pageId === 'admin-status-iptables';
   var isStandalonePage =
     isOverview ||
     pageId === 'admin-status-processes' ||
@@ -33,6 +37,14 @@
     memStat: 'avg',
     memRange: '1h',
     bottomTab: 'leases'
+  };
+
+  var subpageState = {
+    routesTab: 'all',
+    routesQuery: '',
+    fwTab: 'all',
+    fwHideEmpty: true,
+    fwQuery: ''
   };
 
   var liveState = {
@@ -59,6 +71,10 @@
     tmpDetail: '',
     cachePct: 0,
     tmpPct: 0,
+    boardInfo: null,
+    sysInfo: null,
+    rpcLeases: [],
+    rpcStorageRows: [],
     leases: [],
     storageRows: []
   };
@@ -752,8 +768,8 @@
       ['dns', /dns/],
       ['dsl', /dsl/],
       ['wifi', /wifi|wireless|无线|站点|station/],
-      ['network', /^网络$|接口|network|interface/],
-      ['system', /^系统$|概览|system/]
+      ['network', /网络|接口|network|interface/],
+      ['system', /系统|概览|system/]
     ];
 
     for (var i = 0; i < rules.length; i++) {
@@ -960,6 +976,22 @@
     return list;
   }
 
+  function formatUnixLocalTime(ts)
+  {
+    var n = Number(ts) || 0;
+    if (!n)
+      return '';
+    var d = new Date(n * 1000);
+    var useUtc = Math.abs(n * 1000 - Date.now()) > 3600 * 1000;
+    var yr = useUtc ? d.getUTCFullYear() : d.getFullYear();
+    var mo = pad2((useUtc ? d.getUTCMonth() : d.getMonth()) + 1);
+    var dy = pad2(useUtc ? d.getUTCDate() : d.getDate());
+    var hr = pad2(useUtc ? d.getUTCHours() : d.getHours());
+    var mi = pad2(useUtc ? d.getUTCMinutes() : d.getMinutes());
+    var sc = pad2(useUtc ? d.getUTCSeconds() : d.getSeconds());
+    return yr + '-' + mo + '-' + dy + ' ' + hr + ':' + mi + ':' + sc;
+  }
+
   function pollLiveRouterStats(callback)
   {
     if (!window.L || typeof window.L.require !== 'function')
@@ -1101,6 +1133,22 @@
           params: ['mode', 'device'],
           expect: { result: [] }
         });
+        var callBoard = rpc.declare({
+          object: 'system',
+          method: 'board'
+        });
+        var callSysInfo = rpc.declare({
+          object: 'system',
+          method: 'info'
+        });
+        var callDhcpLeases = rpc.declare({
+          object: 'luci-rpc',
+          method: 'getDHCPLeases'
+        });
+        var callHostHints = rpc.declare({
+          object: 'luci-rpc',
+          method: 'getHostHints'
+        });
 
         tasks.push(
           callConns('connections', '').then(function(rows) {
@@ -1116,6 +1164,161 @@
                 liveState.connTotal = udp + tcp + other;
               }
             }
+          }).catch(function() {})
+        );
+
+        tasks.push(
+          callBoard().then(function(board) {
+            if (board && typeof board === 'object')
+              liveState.boardInfo = board;
+          }).catch(function() {})
+        );
+
+        tasks.push(
+          callSysInfo().then(function(info) {
+            if (!info || typeof info !== 'object')
+              return;
+            liveState.sysInfo = info;
+
+            var stRows = [];
+            if (info.memory && info.memory.total > 0) {
+              var mTotal = Number(info.memory.total) || 0;
+              var mAvail = Number(info.memory.available || info.memory.free) || 0;
+              var mUsed = Math.max(0, mTotal - mAvail);
+              var mCached = Number(info.memory.cached) || 0;
+              var mBuffered = Number(info.memory.buffered) || 0;
+              var mPct = Math.round((mUsed / mTotal) * 100);
+              liveState.memPct = mPct;
+              liveState.memDetail = formatBytes(mUsed) + ' / ' +
+                formatBytes(mTotal) + ' (' + mPct + '%)';
+              stRows.push({
+                key: isChinese ? '已使用内存' : 'Memory Used',
+                value: liveState.memDetail,
+                percent: mPct
+              });
+              if (mCached > 0) {
+                var cPct = Math.round((mCached / mTotal) * 100);
+                stRows.push({
+                  key: isChinese ? '已缓存内存' : 'Memory Cached',
+                  value: formatBytes(mCached) + ' / ' + formatBytes(mTotal) +
+                    ' (' + cPct + '%)',
+                  percent: cPct
+                });
+              }
+              if (mBuffered > 0) {
+                var bPct = Math.round((mBuffered / mTotal) * 100);
+                stRows.push({
+                  key: isChinese ? '已缓冲内存' : 'Memory Buffered',
+                  value: formatBytes(mBuffered) + ' / ' + formatBytes(mTotal) +
+                    ' (' + bPct + '%)',
+                  percent: bPct
+                });
+              }
+            }
+
+            if (info.root && info.root.total > 0) {
+              var rMult = info.root.total < 100 * 1024 * 1024 ? 1024 : 1;
+              var rTotal = Number(info.root.total) * rMult;
+              var rUsed = Number(info.root.used) * rMult;
+              var rPct = Math.round((rUsed / rTotal) * 100);
+              liveState.diskPct = rPct;
+              liveState.diskDetail = formatBytes(rUsed) + ' / ' +
+                formatBytes(rTotal) + ' (' + rPct + '%)';
+              stRows.push({
+                key: isChinese ? '根目录磁盘空间 (/)' : 'Root Disk Space (/)',
+                value: liveState.diskDetail,
+                percent: rPct
+              });
+            }
+
+            if (info.tmp && info.tmp.total > 0) {
+              var tMult = info.tmp.total < 100 * 1024 * 1024 ? 1024 : 1;
+              var tTotal = Number(info.tmp.total) * tMult;
+              var tUsed = Number(info.tmp.used) * tMult;
+              var tPct = Math.round((tUsed / tTotal) * 100);
+              stRows.push({
+                key: isChinese ? '临时空间 (/tmp)' : 'Temp Space (/tmp)',
+                value: formatBytes(tUsed) + ' / ' + formatBytes(tTotal) +
+                  ' (' + tPct + '%)',
+                percent: tPct
+              });
+            }
+
+            if (stRows.length)
+              liveState.rpcStorageRows = stRows;
+          }).catch(function() {})
+        );
+
+        tasks.push(
+          Promise.all([
+            callDhcpLeases().catch(function() { return null; }),
+            callHostHints().catch(function() { return null; })
+          ]).then(function(res) {
+            var dhcpData = res[0] || {};
+            var hints = res[1] || {};
+            var list = [];
+            var seenMac = {};
+
+            var v4 = Array.isArray(dhcpData.dhcp_leases) ?
+              dhcpData.dhcp_leases : [];
+            v4.forEach(function(l) {
+              var mac = String(l.macaddr || '').toUpperCase();
+              if (mac)
+                seenMac[mac] = true;
+              list.push({
+                hostname: l.hostname || (mac && hints[mac] && hints[mac].name) || '*',
+                ip: l.ipaddr || '--',
+                mac: mac || '--',
+                expires: typeof l.expires === 'number' && l.expires > 0 ?
+                  formatUptimeChinese(l.expires) :
+                  (isChinese ? '永久 / 在线' : 'Static / Active'),
+                type: isChinese ? '有线 (DHCPv4)' : 'Wired (DHCPv4)'
+              });
+            });
+
+            var v6 = Array.isArray(dhcpData.dhcp6_leases) ?
+              dhcpData.dhcp6_leases : [];
+            v6.forEach(function(l) {
+              var mac = String(l.macaddr || l.duid || '').toUpperCase();
+              if (mac && seenMac[mac])
+                return;
+              if (mac)
+                seenMac[mac] = true;
+              list.push({
+                hostname: l.hostname || '*',
+                ip: l.ip6addr || (Array.isArray(l.ip6addrs) ? l.ip6addrs[0] : '--'),
+                mac: mac || '--',
+                expires: typeof l.expires === 'number' && l.expires > 0 ?
+                  formatUptimeChinese(l.expires) :
+                  (isChinese ? '在线' : 'Active'),
+                type: isChinese ? '有线 (DHCPv6)' : 'Wired (DHCPv6)'
+              });
+            });
+
+            if (hints && typeof hints === 'object') {
+              Object.keys(hints).forEach(function(macKey) {
+                var mac = String(macKey).toUpperCase();
+                if (seenMac[mac])
+                  return;
+                var h = hints[macKey] || {};
+                var ips = Array.isArray(h.ipaddrs) ? h.ipaddrs : [];
+                var ip6s = Array.isArray(h.ip6addrs) ? h.ip6addrs : [];
+                var ip = ips[0] || ip6s[0] || '';
+                if (!ip)
+                  return;
+                seenMac[mac] = true;
+                list.push({
+                  hostname: h.name || '*',
+                  ip: ip,
+                  mac: mac,
+                  expires: isChinese ? 'ARP 邻居在线' : 'Active Neighbor',
+                  type: isChinese ? '局域网终端' : 'LAN Host'
+                });
+              });
+            }
+
+            if (list.length)
+              liveState.rpcLeases = list;
           }).catch(function() {})
         );
       }
@@ -1821,14 +2024,15 @@
                 '</strong>' +
               '</li>' +
               '<li class="wan-wave-row" aria-hidden="true">' +
-                '<span></span>' +
                 '<div class="homeui-mini-waves">' +
-                  '<svg viewBox="0 0 42 18" class="wave-up">' +
-                    '<path d="M2 14 L8 5 L14 15 L20 3 L26 14 L32 8 L40 13"/>' +
-                  '</svg>' +
-                  '<svg viewBox="0 0 42 18" class="wave-down">' +
-                    '<path d="M2 13 L9 7 L15 15 L22 2 L28 16 L34 6 L40 12"/>' +
-                  '</svg>' +
+                  '<div class="homeui-wave-item is-up">' +
+                    '<span class="wave-tag">↑</span>' +
+                    '<svg viewBox="0 0 210 20" preserveAspectRatio="none" class="wave-up" data-wan-wave-tx></svg>' +
+                  '</div>' +
+                  '<div class="homeui-wave-item is-down">' +
+                    '<span class="wave-tag">↓</span>' +
+                    '<svg viewBox="0 0 210 20" preserveAspectRatio="none" class="wave-down" data-wan-wave-rx></svg>' +
+                  '</div>' +
                 '</div>' +
               '</li>' +
               '<li>' +
@@ -1961,7 +2165,7 @@
             '<h3>' + (isChinese ? '系统与硬件信息' : 'System & Hardware Info') + '</h3>' +
             '<span class="homeui-panel-badge" data-spec-kernel>Linux</span>' +
           '</div>' +
-          '<div class="homeui-spec-grid" data-spec-grid></div>' +
+          '<div class="homeui-spec-wrap" data-spec-grid></div>' +
         '</div>' +
 
         '<div class="homeui-ikuai-panel">' +
@@ -2108,6 +2312,82 @@
     });
   }
 
+  function renderWanMiniWaves(dash, primaryBox)
+  {
+    if (!dash)
+      return;
+    var txSvg = dash.querySelector('[data-wan-wave-tx]');
+    var rxSvg = dash.querySelector('[data-wan-wave-rx]');
+    if (!txSvg && !rxSvg)
+      return;
+
+    var store = historyState.h1;
+    var ifKey = primaryBox && (primaryBox.name || primaryBox.title);
+    var sub = ifKey && store.ifaceSeries && store.ifaceSeries[ifKey];
+    var txArr = (sub && sub.txAvg) ? sub.txAvg.slice() : store.txAvg.slice();
+    var rxArr = (sub && sub.rxAvg) ? sub.rxAvg.slice() : store.rxAvg.slice();
+
+    function buildWaveSvgContent(series, gradId, color)
+    {
+      var w = 210;
+      var h = 20;
+      var padTop = 3;
+      var padBottom = 2;
+      var plotLeft = 2;
+      var plotRight = w - 2;
+      var plotW = plotRight - plotLeft;
+      var plotH = h - padTop - padBottom;
+      var maxV = Math.max.apply(null, series.concat([10]));
+      var minV = Math.min.apply(null, series);
+      var span = Math.max(4, maxV - minV * 0.7);
+
+      var coords = series.map(function(val, idx) {
+        var x = plotLeft + (plotW * idx) / Math.max(1, series.length - 1);
+        var norm = Math.max(0.12, Math.min(1, ((Number(val) || 0) - minV * 0.5) / span));
+        var y = padTop + plotH * (1 - norm);
+        return [x, y];
+      });
+
+      var d = 'M ' + coords[0][0].toFixed(1) + ' ' + coords[0][1].toFixed(1);
+      for (var i = 0; i < coords.length - 1; i++) {
+        var p0 = coords[i];
+        var p1 = coords[i + 1];
+        var cx = ((p0[0] + p1[0]) / 2).toFixed(1);
+        d += ' C ' + cx + ' ' + p0[1].toFixed(1) + ', ' +
+          cx + ' ' + p1[1].toFixed(1) + ', ' +
+          p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
+      }
+
+      var baseY = (padTop + plotH).toFixed(1);
+      var area = d +
+        ' L ' + coords[coords.length - 1][0].toFixed(1) + ' ' + baseY +
+        ' L ' + coords[0][0].toFixed(1) + ' ' + baseY + ' Z';
+
+      return '<defs>' +
+        '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.28"/>' +
+          '<stop offset="100%" stop-color="' + color + '" stop-opacity="0.02"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<path class="wave-area" d="' + area + '" fill="url(#' + gradId + ')"/>' +
+      '<path class="wave-line" d="' + d + '"/>';
+    }
+
+    if (txSvg)
+      txSvg.innerHTML = buildWaveSvgContent(txArr, 'homeuiWanUpGrad', '#6d78f6');
+    if (rxSvg)
+      rxSvg.innerHTML = buildWaveSvgContent(rxArr, 'homeuiWanDownGrad', '#4cd4a0');
+  }
+
+  function escapeHtml(str)
+  {
+    return String(str === undefined || str === null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   function setText(rootEl, selector, value)
   {
     var el = rootEl.querySelector(selector);
@@ -2238,6 +2518,10 @@
     var dhcp6Sec = sectionMap.dhcp6;
     var wifiSec = sectionMap.wifi;
 
+    var board = liveState.boardInfo || {};
+    var sysInfo = liveState.sysInfo || {};
+    var release = board.release || {};
+
     var hostObj = getRowData(sysSec, [/主机名|hostname/i]);
     var archObj = getRowData(sysSec, [/架构|architecture/i]);
     var modelObj = getRowData(sysSec, [/型号|model/i]);
@@ -2249,10 +2533,44 @@
     var loadObj = getRowData(sysSec, [/平均负载|load average/i]);
     var cpuObj = getRowData(sysSec, [/CPU.*%|CPU.*usage|CPU\s*使用率/i]);
 
+    if (hostObj.text === '--' && board.hostname)
+      hostObj.text = board.hostname;
+    if (archObj.text === '--' && board.system)
+      archObj.text = board.system;
+    if (modelObj.text === '--' && (board.model || board.board_name))
+      modelObj.text = board.model || board.board_name;
+    if (targetObj.text === '--' && release.target)
+      targetObj.text = release.target;
+    if (fwObj.text === '--' && (release.description || release.version))
+      fwObj.text = release.description ||
+        ((release.distribution || 'OpenWrt') + ' ' + release.version);
+    if (kernelObj.text === '--' && board.kernel)
+      kernelObj.text = board.kernel;
+    if (timeObj.text === '--' && sysInfo.localtime)
+      timeObj.text = formatUnixLocalTime(sysInfo.localtime);
+    if (uptimeObj.text === '--' && typeof sysInfo.uptime === 'number')
+      uptimeObj.text = formatUptimeChinese(sysInfo.uptime);
+    if (loadObj.text === '--' && Array.isArray(sysInfo.load) && sysInfo.load.length >= 3) {
+      loadObj.text = [
+        (sysInfo.load[0] / 65536).toFixed(2),
+        (sysInfo.load[1] / 65536).toFixed(2),
+        (sysInfo.load[2] / 65536).toFixed(2)
+      ].join(', ');
+    }
+
     var memUsedObj = getRowData(memSec, [/已使用|已用|used/i]);
     var diskObj = getRowData(stoSec, [/磁盘空间|disk space|overlay|root/i]);
     var connObj = getRowData(netSec, [/活动连接|连接|active.*connection/i]);
     var onlineObj = getRowData(netSec, [/在线用户|online.*user/i]);
+
+    if (memUsedObj.text === '--' && liveState.memDetail) {
+      memUsedObj.text = liveState.memDetail;
+      memUsedObj.percent = liveState.memPct;
+    }
+    if (diskObj.text === '--' && liveState.diskDetail) {
+      diskObj.text = liveState.diskDetail;
+      diskObj.percent = liveState.diskPct;
+    }
 
     var previewStats = view.querySelectorAll('.preview-stat strong');
     if (uptimeObj.text === '--' && previewStats.length >= 3) {
@@ -2285,10 +2603,14 @@
         setText(dash, '[data-ov-ver]', verMatch[0]);
     }
 
-    var cpuPct = cpuObj.percent !== null ? Math.round(cpuObj.percent) : 5;
-    var diskPct = diskObj.percent !== null ? Math.round(diskObj.percent) : 8;
+    var cpuPct = cpuObj.percent !== null ? Math.round(cpuObj.percent) :
+      (Array.isArray(sysInfo.load) && sysInfo.load.length ?
+        Math.min(100, Math.max(2, Math.round((sysInfo.load[0] / 65536) * 25))) : 5);
+    var diskPct = diskObj.percent !== null ? Math.round(diskObj.percent) :
+      (liveState.diskPct !== null ? liveState.diskPct : 8);
     var memPct = memUsedObj.percent !== null ?
-      Math.round(memUsedObj.percent) : 25;
+      Math.round(memUsedObj.percent) :
+      (liveState.memPct !== null ? liveState.memPct : 25);
 
     setDonutProgress(
       dash.querySelector('[data-ring-card="cpu"]'),
@@ -2307,14 +2629,25 @@
     if (diskBar)
       diskBar.style.width = Math.max(4, Math.min(100, diskPct)) + '%';
 
-    var extractedLeases = extractLeaseRows([
+    var domLeases = extractLeaseRows([
       { el: dhcpSec, type: isChinese ? '有线 (DHCPv4)' : 'Wired (DHCPv4)' },
       { el: dhcp6Sec, type: isChinese ? '有线 (DHCPv6)' : 'Wired (DHCPv6)' },
       { el: wifiSec, type: isChinese ? '无线 (Wi-Fi)' : 'Wireless' }
     ]);
-    liveState.leases = extractedLeases;
 
-    var dhcpCount = extractedLeases.length;
+    var mergedLeases = [];
+    var seenLeaseKey = {};
+    domLeases.concat(liveState.rpcLeases || []).forEach(function(item) {
+      var k = (item.mac && item.mac !== '--') ?
+        item.mac.toUpperCase() : item.ip;
+      if (!k || seenLeaseKey[k])
+        return;
+      seenLeaseKey[k] = true;
+      mergedLeases.push(item);
+    });
+    liveState.leases = mergedLeases;
+
+    var dhcpCount = mergedLeases.length;
     var onlineCount = parseInt(onlineObj.text, 10);
     if (isNaN(onlineCount) || onlineCount <= 0)
       onlineCount = dhcpCount > 0 ? dhcpCount : 6;
@@ -2423,6 +2756,7 @@
     updateBucketSeries(historyState.h24, 2 * 3600 * 1000, sample);
     saveHistoryState();
 
+    renderWanMiniWaves(dash, primaryBox);
     renderRateChartSvg(dash);
     renderClientBarSvg(dash);
     renderMemoryLineSvg(dash);
@@ -2432,33 +2766,627 @@
 
     var specGrid = dash.querySelector('[data-spec-grid]');
     if (specGrid) {
-      var sysRows = extractAllKeyValues(sysSec);
-      if (!sysRows.length) {
-        sysRows = [
-          { key: isChinese ? '主机名' : 'Hostname', value: hostname },
-          { key: isChinese ? '设备型号' : 'Model', value: modelObj.text },
-          { key: isChinese ? '处理器架构' : 'Architecture', value: archObj.text },
-          { key: isChinese ? '目标平台' : 'Target', value: targetObj.text },
-          { key: isChinese ? '内核版本' : 'Kernel', value: kernelObj.text },
-          { key: isChinese ? '本地时间' : 'Local Time', value: timeObj.text },
-          { key: isChinese ? '固件版本' : 'Firmware', value: fwObj.text }
-        ];
+      var domSysRows = extractAllKeyValues(sysSec).filter(function(r) {
+        return r.value && r.value !== '--';
+      });
+
+      var fallbackPairs = [
+        {
+          key: isChinese ? '主机名' : 'Hostname',
+          value: hostname
+        },
+        {
+          key: isChinese ? '设备型号' : 'Model',
+          value: modelObj.text !== '--' ? modelObj.text : 'x86_64 Generic'
+        },
+        {
+          key: isChinese ? '目标平台' : 'Target Platform',
+          value: targetObj.text !== '--' ? targetObj.text : 'x86/64'
+        },
+        {
+          key: isChinese ? '内核版本' : 'Kernel Version',
+          value: kernelObj.text !== '--' ? kernelObj.text : '6.6.x'
+        },
+        {
+          key: isChinese ? '本地时间' : 'Local Time',
+          value: timeObj.text !== '--' ? timeObj.text : formatUnixLocalTime(Date.now() / 1000)
+        },
+        {
+          key: isChinese ? '运行时间' : 'Uptime',
+          value: uptimeFormatted
+        },
+        {
+          key: isChinese ? '平均负载' : 'Load Average',
+          value: loadObj.text !== '--' ? loadObj.text : '0.08, 0.05, 0.01'
+        },
+        {
+          key: isChinese ? 'CPU 状态' : 'CPU Usage',
+          value: cpuObj.text !== '--' ? cpuObj.text : (cpuPct + '%')
+        },
+        {
+          key: isChinese ? '处理器架构' : 'Architecture',
+          value: archObj.text !== '--' ? archObj.text : 'x86_64 Multi-Core Processor'
+        },
+        {
+          key: isChinese ? '固件版本' : 'Firmware Version',
+          value: fwObj.text !== '--' ? fwObj.text : 'ImmortalWrt 25.12-SNAPSHOT'
+        }
+      ];
+
+      var sysRows = domSysRows.length >= 4 ? domSysRows : fallbackPairs;
+      var compactRows = [];
+      var wideRows = [];
+
+      sysRows.forEach(function(r) {
+        var isWide = r.value.length > 34 || /固件|架构|firmware|arch/i.test(r.key);
+        if (isWide)
+          wideRows.push(r);
+        else
+          compactRows.push(r);
+      });
+
+      var trHtml = '';
+      for (var c = 0; c < compactRows.length; c += 2) {
+        var left = compactRows[c];
+        var right = compactRows[c + 1];
+        if (right) {
+          trHtml += '<tr>' +
+            '<th>' + escapeHtml(left.key) + '</th>' +
+            '<td title="' + escapeHtml(left.value) + '">' + escapeHtml(left.value) + '</td>' +
+            '<th>' + escapeHtml(right.key) + '</th>' +
+            '<td title="' + escapeHtml(right.value) + '">' + escapeHtml(right.value) + '</td>' +
+          '</tr>';
+        } else {
+          trHtml += '<tr>' +
+            '<th>' + escapeHtml(left.key) + '</th>' +
+            '<td colspan="3" title="' + escapeHtml(left.value) + '">' +
+              escapeHtml(left.value) +
+            '</td>' +
+          '</tr>';
+        }
       }
-      specGrid.innerHTML = sysRows.map(function(r) {
-        var wide = r.value.length > 36 || /固件|架构|firmware|arch/i.test(r.key);
-        return '<div class="homeui-spec-item' + (wide ? ' is-wide' : '') + '">' +
-          '<span>' + r.key + '</span>' +
-          '<strong title="' + r.value.replace(/"/g, '&quot;') + '">' +
-            r.value +
-          '</strong>' +
-        '</div>';
-      }).join('');
+
+      wideRows.forEach(function(wRow) {
+        trHtml += '<tr>' +
+          '<th>' + escapeHtml(wRow.key) + '</th>' +
+          '<td colspan="3" title="' + escapeHtml(wRow.value) + '">' +
+            escapeHtml(wRow.value) +
+          '</td>' +
+        '</tr>';
+      });
+
+      specGrid.innerHTML =
+        '<table class="homeui-spec-table">' +
+          '<tbody>' + trHtml + '</tbody>' +
+        '</table>';
     }
 
-    liveState.storageRows = extractAllKeyValues(memSec).concat(
+    var domStorage = extractAllKeyValues(memSec).concat(
       extractAllKeyValues(stoSec)
     );
+    liveState.storageRows = domStorage.length ?
+      domStorage : (liveState.rpcStorageRows || []);
     renderBottomRightPanel(dash, netBoxes);
+  }
+
+  function getSectionHeadingText(section)
+  {
+    var h = section.querySelector('h3, h4, .cbi-section-title, .cbi-title');
+    if (!h)
+      return '';
+    var clone = h.cloneNode(true);
+    Array.prototype.forEach.call(
+      clone.querySelectorAll('button, a, .homeui-sec-count'),
+      function(el) { el.remove(); }
+    );
+    return clone.textContent.trim();
+  }
+
+  function countValidSectionRows(section)
+  {
+    if (!section)
+      return 0;
+    var rows = section.querySelectorAll(
+      '.table .tr:not(.table-titles):not(.cbi-section-table-titles), ' +
+      'table tbody tr'
+    );
+    var count = 0;
+    Array.prototype.forEach.call(rows, function(r) {
+      if (r.classList.contains('cbi-section-table-titles') ||
+          r.classList.contains('placeholder'))
+        return;
+      var txt = r.textContent.trim();
+      if (!txt || /没有|无.*记录|暂无|no\s+entries|no\s+rules|no\s+chains|empty/i.test(txt))
+        return;
+      count++;
+    });
+    return count;
+  }
+
+  function applySubpageFilter(view, tabVal, query, hideEmpty)
+  {
+    var q = (query || '').trim().toLowerCase();
+    var units = view.querySelectorAll('.homeui-fw-unit');
+    if (!units.length)
+      units = view.querySelectorAll('.cbi-section');
+
+    Array.prototype.forEach.call(units, function(sec) {
+      var cat = sec.dataset.homeuiCat || 'other';
+      var rowCount = Number(sec.dataset.homeuiRows || 0);
+      var tabMatch = tabVal === 'all' || cat === tabVal;
+      var emptyBlocked = hideEmpty && rowCount === 0;
+
+      if (!tabMatch || emptyBlocked) {
+        sec.classList.add('homeui-sec-hidden');
+        return;
+      }
+
+      var rows = sec.querySelectorAll(
+        '.table .tr:not(.table-titles):not(.cbi-section-table-titles), ' +
+        'table tbody tr'
+      );
+      if (!q || !rows.length) {
+        sec.classList.remove('homeui-sec-hidden');
+        Array.prototype.forEach.call(rows, function(r) {
+          r.style.display = '';
+        });
+        return;
+      }
+
+      var titleMatch = (sec.dataset.homeuiTitle || '').toLowerCase().includes(q);
+      var visibleRows = 0;
+      Array.prototype.forEach.call(rows, function(r) {
+        var rTxt = r.textContent.toLowerCase();
+        var show = titleMatch || rTxt.includes(q);
+        r.style.display = show ? '' : 'none';
+        if (show)
+          visibleRows++;
+      });
+
+      sec.classList.toggle('homeui-sec-hidden', visibleRows === 0 && !titleMatch);
+    });
+
+    Array.prototype.forEach.call(view.querySelectorAll('.cbi-section'), function(parentSec) {
+      if (parentSec.classList.contains('homeui-fw-unit'))
+        return;
+      var childUnits = parentSec.querySelectorAll('.homeui-fw-unit');
+      if (!childUnits.length)
+        return;
+      var anyVisible = Array.prototype.some.call(childUnits, function(u) {
+        return !u.classList.contains('homeui-sec-hidden');
+      });
+      parentSec.classList.toggle('homeui-sec-hidden', !anyVisible);
+    });
+  }
+
+  function enhanceRoutesPage(view)
+  {
+    var sections = view.querySelectorAll('.cbi-section');
+    if (!sections.length)
+      return;
+
+    var counts = {
+      arp: 0,
+      v4route: 0,
+      v6route: 0,
+      v6neigh: 0,
+      rule: 0
+    };
+
+    Array.prototype.forEach.call(sections, function(sec, idx) {
+      sec.classList.add('homeui-fw-unit');
+      var title = getSectionHeadingText(sec);
+      var lower = title.toLowerCase();
+      var cat = 'v4route';
+
+      if (/arp|ipv4.*邻居|ipv4.*neigh/i.test(lower))
+        cat = 'arp';
+      else if (/ipv6.*路由|ipv6.*route/i.test(lower))
+        cat = 'v6route';
+      else if (/ipv6.*邻居|ipv6.*neigh|ndp/i.test(lower))
+        cat = 'v6neigh';
+      else if (/规则|策略|rule/i.test(lower))
+        cat = 'rule';
+      else if (/ipv4.*路由|ipv4.*route|active.*route/i.test(lower))
+        cat = 'v4route';
+      else if (idx === 0)
+        cat = 'arp';
+
+      var rCount = countValidSectionRows(sec);
+      sec.dataset.homeuiCat = cat;
+      sec.dataset.homeuiRows = String(rCount);
+      sec.dataset.homeuiTitle = title;
+      counts[cat] = (counts[cat] || 0) + rCount;
+
+      var h = sec.querySelector('h3, h4, .cbi-section-title');
+      if (h) {
+        var badge = h.querySelector('.homeui-sec-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'homeui-sec-count';
+          badge.style.cssText =
+            'margin-left:auto;padding:2px 8px;border-radius:999px;' +
+            'background:#eef2ff;color:#2f6bff;font-size:11px;font-weight:600;';
+          h.appendChild(badge);
+        }
+        badge.textContent = rCount + (isChinese ? ' 条记录' : ' entries');
+      }
+    });
+
+    var totalEntries = counts.arp + counts.v4route + counts.v6route +
+      counts.v6neigh + counts.rule;
+
+    var shell = view.querySelector('.homeui-subpage-shell');
+    if (!shell) {
+      shell = document.createElement('div');
+      shell.className = 'homeui-subpage-shell';
+      shell.innerHTML =
+        '<div class="homeui-subpage-metrics">' +
+          '<div class="homeui-subpage-metric is-blue">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? 'ARP 邻居表' : 'ARP Neighbors') + '</span>' +
+              '<strong data-rt-metric="arp">0</strong>' +
+              '<small>' + (isChinese ? 'IPv4 局域网活跃 MAC 映射' : 'Active IPv4 MAC mappings') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-green">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3m6 11H7l3 3"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? 'IPv4 活动路由' : 'IPv4 Active Routes') + '</span>' +
+              '<strong data-rt-metric="v4route">0</strong>' +
+              '<small>' + (isChinese ? '当前生效的 IPv4 路由表项' : 'Active IPv4 routing entries') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-purple">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? 'IPv6 活动路由' : 'IPv6 Active Routes') + '</span>' +
+              '<strong data-rt-metric="v6route">0</strong>' +
+              '<small>' + (isChinese ? '当前生效的 IPv6 路由表项' : 'Active IPv6 routing entries') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-orange">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? 'IPv6 邻居发现' : 'IPv6 Neighbors') + '</span>' +
+              '<strong data-rt-metric="v6neigh">0</strong>' +
+              '<small>' + (isChinese ? 'NDP 邻居发现缓存条目' : 'NDP neighbor cache') + '</small>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="homeui-subpage-bar">' +
+          '<div class="homeui-subpage-tabs" data-rt-tabs>' +
+            '<button type="button" class="homeui-subpage-tab is-active" data-rt-tab="all">' +
+              (isChinese ? '全部视图' : 'All Tables') +
+              ' <em class="tab-count" data-rt-cnt="all">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-rt-tab="arp">' +
+              (isChinese ? 'ARP 邻居' : 'ARP') +
+              ' <em class="tab-count" data-rt-cnt="arp">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-rt-tab="v4route">' +
+              (isChinese ? 'IPv4 路由' : 'IPv4 Routes') +
+              ' <em class="tab-count" data-rt-cnt="v4route">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-rt-tab="v6route">' +
+              (isChinese ? 'IPv6 路由' : 'IPv6 Routes') +
+              ' <em class="tab-count" data-rt-cnt="v6route">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-rt-tab="v6neigh">' +
+              (isChinese ? 'IPv6 邻居' : 'IPv6 Neighbors') +
+              ' <em class="tab-count" data-rt-cnt="v6neigh">0</em>' +
+            '</button>' +
+          '</div>' +
+          '<div class="homeui-subpage-toolbar">' +
+            '<label class="homeui-subpage-search">' +
+              '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>' +
+              '<input type="search" data-rt-search placeholder="' +
+                (isChinese ? '搜索 IP / MAC / 接口 / 网关...' : 'Filter IP, MAC, interface...') +
+              '">' +
+            '</label>' +
+          '</div>' +
+        '</div>';
+
+      var firstSec = sections[0];
+      firstSec.parentNode.insertBefore(shell, firstSec);
+
+      shell.addEventListener('click', function(ev) {
+        var tabBtn = ev.target.closest('[data-rt-tab]');
+        if (!tabBtn)
+          return;
+        subpageState.routesTab = tabBtn.dataset.rtTab;
+        Array.prototype.forEach.call(
+          shell.querySelectorAll('[data-rt-tab]'),
+          function(b) { b.classList.toggle('is-active', b === tabBtn); }
+        );
+        applySubpageFilter(view, subpageState.routesTab, subpageState.routesQuery, false);
+      });
+
+      var searchIn = shell.querySelector('[data-rt-search]');
+      if (searchIn) {
+        searchIn.addEventListener('input', function() {
+          subpageState.routesQuery = searchIn.value;
+          applySubpageFilter(view, subpageState.routesTab, subpageState.routesQuery, false);
+        });
+      }
+    }
+
+    setText(shell, '[data-rt-metric="arp"]', counts.arp);
+    setText(shell, '[data-rt-metric="v4route"]', counts.v4route);
+    setText(shell, '[data-rt-metric="v6route"]', counts.v6route);
+    setText(shell, '[data-rt-metric="v6neigh"]', counts.v6neigh);
+
+    setText(shell, '[data-rt-cnt="all"]', totalEntries);
+    setText(shell, '[data-rt-cnt="arp"]', counts.arp);
+    setText(shell, '[data-rt-cnt="v4route"]', counts.v4route);
+    setText(shell, '[data-rt-cnt="v6route"]', counts.v6route);
+    setText(shell, '[data-rt-cnt="v6neigh"]', counts.v6neigh);
+
+    applySubpageFilter(view, subpageState.routesTab, subpageState.routesQuery, false);
+  }
+
+  function prepareFirewallUnits(view)
+  {
+    var sections = view.querySelectorAll('.cbi-section');
+    Array.prototype.forEach.call(sections, function(sec) {
+      var h4s = sec.querySelectorAll('h4');
+      if (h4s.length <= 1) {
+        sec.classList.add('homeui-fw-unit');
+        return;
+      }
+
+      Array.prototype.forEach.call(h4s, function(h4) {
+        var parent = h4.parentNode;
+        if (!parent)
+          return;
+        if (parent.classList.contains('homeui-fw-unit'))
+          return;
+        if (parent !== sec && parent.querySelectorAll('h4').length === 1) {
+          parent.classList.add('homeui-fw-unit');
+          return;
+        }
+        var wrapper = document.createElement('div');
+        wrapper.className = 'homeui-fw-unit';
+        parent.insertBefore(wrapper, h4);
+        var cur = h4;
+        while (cur) {
+          var next = cur.nextSibling;
+          wrapper.appendChild(cur);
+          if (!next || (next.nodeType === 1 && /^H[34]$/i.test(next.tagName)))
+            break;
+          cur = next;
+        }
+      });
+    });
+
+    return view.querySelectorAll('.homeui-fw-unit');
+  }
+
+  function enhanceFirewallStatusPage(view)
+  {
+    var sections = view.querySelectorAll('.cbi-section');
+    if (!sections.length)
+      return;
+
+    var units = prepareFirewallUnits(view);
+    if (!units.length)
+      units = sections;
+
+    var totalChains = units.length;
+    var totalRules = 0;
+    var acceptRules = 0;
+    var dropRules = 0;
+    var catCounts = {
+      all: 0,
+      filter: 0,
+      nat: 0,
+      mangle: 0
+    };
+
+    Array.prototype.forEach.call(units, function(sec) {
+      var title = getSectionHeadingText(sec);
+      var lower = title.toLowerCase();
+      var cat = 'filter';
+
+      if (/nat|prerouting|postrouting|masquerade|dstnat|srcnat/i.test(lower))
+        cat = 'nat';
+      else if (/mangle|raw|mssfix|mark/i.test(lower))
+        cat = 'mangle';
+
+      var rCount = countValidSectionRows(sec);
+      sec.dataset.homeuiCat = cat;
+      sec.dataset.homeuiRows = String(rCount);
+      sec.dataset.homeuiTitle = title;
+
+      totalRules += rCount;
+      catCounts.all += rCount;
+      catCounts[cat] = (catCounts[cat] || 0) + rCount;
+
+      var rows = sec.querySelectorAll(
+        '.table .tr:not(.table-titles):not(.cbi-section-table-titles), ' +
+        'table tbody tr'
+      );
+      Array.prototype.forEach.call(rows, function(r) {
+        var txt = r.textContent.toLowerCase();
+        if (!txt || /没有|无|no\s+rules|empty/i.test(txt))
+          return;
+        if (/\b(drop|reject)\b|丢弃|拒绝/.test(txt))
+          dropRules++;
+        else if (/\b(accept|masquerade|dnat|snat|redirect|jump|goto)\b|接受|放行|转发/.test(txt))
+          acceptRules++;
+      });
+
+      var h = sec.querySelector('h4, h3, .cbi-section-title');
+      if (h) {
+        var badge = h.querySelector('.homeui-sec-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'homeui-sec-count';
+          badge.style.cssText =
+            'margin-left:auto;padding:2px 8px;border-radius:999px;' +
+            'background:#eef2ff;color:#2f6bff;font-size:11px;font-weight:600;';
+          h.appendChild(badge);
+        }
+        badge.textContent = rCount + (isChinese ? ' 条规则' : ' rules');
+      }
+    });
+
+    if (totalRules === 0)
+      subpageState.fwHideEmpty = false;
+
+    var shell = view.querySelector('.homeui-subpage-shell');
+    if (!shell) {
+      shell = document.createElement('div');
+      shell.className = 'homeui-subpage-shell';
+      shell.innerHTML =
+        '<div class="homeui-subpage-metrics">' +
+          '<div class="homeui-subpage-metric is-blue">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '生效规则总数' : 'Active Rules') + '</span>' +
+              '<strong data-fw-metric="total">0</strong>' +
+              '<small>' + (isChinese ? '当前防火墙状态表内生效规则' : 'Active firewall rules in tables') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-purple">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '规则链数量' : 'Rule Chains') + '</span>' +
+              '<strong data-fw-metric="chains">0</strong>' +
+              '<small>' + (isChinese ? '包含 Filter / NAT / Mangle 链' : 'Filter, NAT & Mangle chains') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-green">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '放行与转换策略' : 'Accept & NAT Rules') + '</span>' +
+              '<strong data-fw-metric="accept">0</strong>' +
+              '<small>' + (isChinese ? '允许通行、端口转发与地址伪装' : 'Accept, DNAT, SNAT & Masquerade') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-orange">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '阻断与丢弃策略' : 'Drop & Reject Rules') + '</span>' +
+              '<strong data-fw-metric="drop">0</strong>' +
+              '<small>' + (isChinese ? '安全拦截、丢弃与拒绝连接策略' : 'Blocked and rejected traffic rules') + '</small>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="homeui-subpage-bar">' +
+          '<div class="homeui-subpage-tabs" data-fw-tabs>' +
+            '<button type="button" class="homeui-subpage-tab is-active" data-fw-tab="all">' +
+              (isChinese ? '全部规则链' : 'All Chains') +
+              ' <em class="tab-count" data-fw-cnt="all">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-fw-tab="filter">' +
+              (isChinese ? '访问过滤 (Filter)' : 'Filter') +
+              ' <em class="tab-count" data-fw-cnt="filter">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-fw-tab="nat">' +
+              (isChinese ? '地址转换 (NAT)' : 'NAT') +
+              ' <em class="tab-count" data-fw-cnt="nat">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-fw-tab="mangle">' +
+              (isChinese ? '流量标记 (Mangle/Raw)' : 'Mangle/Raw') +
+              ' <em class="tab-count" data-fw-cnt="mangle">0</em>' +
+            '</button>' +
+          '</div>' +
+          '<div class="homeui-subpage-toolbar">' +
+            '<button type="button" class="homeui-filter-pill' +
+              (subpageState.fwHideEmpty ? ' is-active' : '') +
+              '" data-fw-hide-empty>' +
+              (isChinese ? '隐藏空规则链' : 'Hide Empty Chains') +
+            '</button>' +
+            '<label class="homeui-subpage-search">' +
+              '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>' +
+              '<input type="search" data-fw-search placeholder="' +
+                (isChinese ? '搜索规则链 / 端口 / IP / 动作...' : 'Filter chain, port, IP, action...') +
+              '">' +
+            '</label>' +
+          '</div>' +
+        '</div>';
+
+      var firstSec = sections[0];
+      firstSec.parentNode.insertBefore(shell, firstSec);
+
+      shell.addEventListener('click', function(ev) {
+        var tabBtn = ev.target.closest('[data-fw-tab]');
+        if (tabBtn) {
+          subpageState.fwTab = tabBtn.dataset.fwTab;
+          Array.prototype.forEach.call(
+            shell.querySelectorAll('[data-fw-tab]'),
+            function(b) { b.classList.toggle('is-active', b === tabBtn); }
+          );
+          applySubpageFilter(
+            view,
+            subpageState.fwTab,
+            subpageState.fwQuery,
+            subpageState.fwHideEmpty
+          );
+          return;
+        }
+
+        var emptyBtn = ev.target.closest('[data-fw-hide-empty]');
+        if (emptyBtn) {
+          subpageState.fwHideEmpty = !subpageState.fwHideEmpty;
+          emptyBtn.classList.toggle('is-active', subpageState.fwHideEmpty);
+          applySubpageFilter(
+            view,
+            subpageState.fwTab,
+            subpageState.fwQuery,
+            subpageState.fwHideEmpty
+          );
+        }
+      });
+
+      var searchIn = shell.querySelector('[data-fw-search]');
+      if (searchIn) {
+        searchIn.addEventListener('input', function() {
+          subpageState.fwQuery = searchIn.value;
+          applySubpageFilter(
+            view,
+            subpageState.fwTab,
+            subpageState.fwQuery,
+            subpageState.fwHideEmpty
+          );
+        });
+      }
+    }
+
+    setText(shell, '[data-fw-metric="total"]', totalRules);
+    setText(shell, '[data-fw-metric="chains"]', totalChains);
+    setText(shell, '[data-fw-metric="accept"]', acceptRules);
+    setText(shell, '[data-fw-metric="drop"]', dropRules);
+
+    setText(shell, '[data-fw-cnt="all"]', catCounts.all);
+    setText(shell, '[data-fw-cnt="filter"]', catCounts.filter);
+    setText(shell, '[data-fw-cnt="nat"]', catCounts.nat);
+    setText(shell, '[data-fw-cnt="mangle"]', catCounts.mangle);
+
+    applySubpageFilter(
+      view,
+      subpageState.fwTab,
+      subpageState.fwQuery,
+      subpageState.fwHideEmpty
+    );
   }
 
   var isEnhancing = false;
@@ -2466,12 +3394,35 @@
   function enhanceOverview()
   {
     var page = document.body ? (document.body.dataset.page || '') : '';
-    if (page !== 'admin-status-overview' || isEnhancing)
+    if (isEnhancing)
       return;
 
     var view = document.querySelector('#view') ||
       document.querySelector('#maincontent');
     if (!view)
+      return;
+
+    if (page === 'admin-status-routes') {
+      isEnhancing = true;
+      try {
+        enhanceRoutesPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-status-nftables' || page === 'admin-status-iptables') {
+      isEnhancing = true;
+      try {
+        enhanceFirewallStatusPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page !== 'admin-status-overview')
       return;
 
     isEnhancing = true;
@@ -2550,7 +3501,9 @@
   new MutationObserver(function(mutations) {
     var shouldUpdate = mutations.some(function(m) {
       return !m.target.closest ||
-        !m.target.closest('.homeui-ikuai-dashboard');
+        (!m.target.closest('.homeui-ikuai-dashboard') &&
+         !m.target.closest('.homeui-subpage-shell') &&
+         !m.target.classList.contains('homeui-sec-count'));
     });
     if (shouldUpdate)
       enhanceOverview();

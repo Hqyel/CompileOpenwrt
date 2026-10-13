@@ -290,7 +290,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 6px 8px 8px;
+  padding: 0;
   background: var(--homeui-surface);
 }
 
@@ -298,7 +298,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 6px 0;
+  padding: 6px 8px;
   border-top: 1px solid var(--homeui-border);
   border-bottom: 1px solid var(--homeui-border);
 }
@@ -343,11 +343,12 @@ a:hover {
 }
 
 .homeui-rail-bottombar {
+  min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 2px;
-  padding-top: 6px;
+  padding: 6px 10px;
 }
 
 #homeui-collapse {
@@ -535,13 +536,14 @@ a:hover {
 
 .homeui-panel-footer {
   flex: 0 0 auto;
+  display: none;
   padding: 8px 10px;
   border-top: 1px solid var(--homeui-border);
   background: var(--homeui-surface-soft);
 }
 
-.homeui-panel-footer:not(:has(#modemenu > li)) {
-  display: none;
+.homeui-panel-footer.is-visible {
+  display: block;
 }
 
 #homeui-color-toggle {

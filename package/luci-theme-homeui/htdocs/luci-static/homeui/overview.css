@@ -501,31 +501,67 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
 }
 
 .wan-wave-row {
-  padding: 2px 0 6px !important;
+  display: block !important;
+  padding: 4px 0 8px !important;
 }
 
 .homeui-mini-waves {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 6px;
+  background: var(--homeui-surface-soft);
+}
+
+.homeui-wave-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.homeui-wave-tag,
+.homeui-wave-item .wave-tag {
+  flex: 0 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.homeui-wave-tag.is-up,
+.homeui-wave-item.is-up .wave-tag {
+  color: #597ef7;
+}
+
+.homeui-wave-tag.is-down,
+.homeui-wave-item.is-down .wave-tag {
+  color: #28c76f;
 }
 
 .homeui-mini-waves svg {
-  width: 34px;
-  height: 15px;
+  flex: 1;
+  width: 100%;
+  height: 18px;
+  display: block;
+  overflow: visible;
+}
+
+.homeui-mini-waves .wave-line {
   fill: none;
-  stroke-width: 1.4;
+  stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.homeui-mini-waves .wave-up {
-  stroke: #597ef7;
+.homeui-mini-waves .wave-up .wave-line {
+  stroke: #6d78f6;
 }
 
-.homeui-mini-waves .wave-down {
-  stroke: #28c76f;
+.homeui-mini-waves .wave-down .wave-line {
+  stroke: #4cd4a0;
 }
 
 .homeui-quick-grid {
@@ -881,7 +917,7 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
 /* Integrated Bottom iKuai Cards (System Specs & Active Leases/Interfaces) */
 .homeui-ikuai-bottom {
   display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.35fr);
+  grid-template-columns: minmax(420px, 1.05fr) minmax(440px, 1.25fr);
   gap: 14px;
   align-items: stretch;
 }
@@ -947,7 +983,7 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
 .homeui-panel-badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: #edf5ff;
   color: #2f89ff;
@@ -960,40 +996,53 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
   color: #69b1ff;
 }
 
-.homeui-spec-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 18px;
+/* iKuai Structured Spec Descriptions Table */
+.homeui-spec-wrap {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--homeui-border);
+  border-radius: 6px;
 }
 
-.homeui-spec-item {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 6px;
-  background: var(--homeui-surface-soft);
+.homeui-spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
   font-size: 12px;
 }
 
-.homeui-spec-item.is-wide {
-  grid-column: 1 / -1;
+.homeui-spec-table tr {
+  border-bottom: 1px solid var(--homeui-border);
 }
 
-.homeui-spec-item span {
-  flex: 0 0 auto;
+.homeui-spec-table tr:last-child {
+  border-bottom: 0;
+}
+
+.homeui-spec-table th {
+  width: 96px;
+  padding: 9px 12px;
+  border-right: 1px solid var(--homeui-border);
+  background: var(--homeui-surface-soft);
   color: var(--text-color-medium);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.homeui-spec-item strong {
-  min-width: 0;
-  overflow: hidden;
+.homeui-spec-table td {
+  padding: 9px 12px;
+  border-right: 1px solid var(--homeui-border);
+  background: var(--homeui-surface);
   color: var(--text-color-highest);
   font-weight: 500;
-  text-align: right;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.homeui-spec-table td:last-child {
+  border-right: 0;
 }
 
 .homeui-ikuai-table-wrap {
@@ -1048,6 +1097,16 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
 .homeui-tag.is-blue {
   background: #edf5ff;
   color: #2f89ff;
+}
+
+.homeui-tag.is-red {
+  background: rgba(238, 94, 104, .12);
+  color: #ee5e68;
+}
+
+.homeui-tag.is-orange {
+  background: rgba(245, 159, 0, .14);
+  color: #f59f00;
 }
 
 :root[data-darkmode="true"] .homeui-tag.is-blue {
@@ -1224,8 +1283,369 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
   gap: 8px;
 }
 
+/* ==========================================================================
+   iKuai 4.0 Subpages Adaptation:
+   - Monitoring -> Routes (admin-status-routes)
+   - Monitoring -> Firewall (admin-status-nftables / admin-status-iptables)
+   ========================================================================== */
+body[data-page="admin-status-routes"] #maincontent > h2:first-of-type,
+body[data-page="admin-status-routes"] #view > h2:first-of-type,
+body[data-page="admin-status-routes"] .cbi-map > h2:first-of-type,
+body[data-page="admin-status-routes"] .cbi-map-descr,
+body[data-page^="admin-status-nftables"] #maincontent > h2:first-of-type,
+body[data-page^="admin-status-nftables"] #view > h2:first-of-type,
+body[data-page^="admin-status-iptables"] #maincontent > h2:first-of-type,
+body[data-page^="admin-status-iptables"] #view > h2:first-of-type {
+  display: none;
+}
+
+.homeui-subpage-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.homeui-subpage-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 8px;
+  background: var(--homeui-surface);
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03);
+}
+
+.homeui-submetric-card,
+.homeui-subpage-metric {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.homeui-submetric-card.is-blue,
+.homeui-subpage-metric.is-blue {
+  background: #f2f7fe;
+}
+
+.homeui-submetric-card.is-green,
+.homeui-subpage-metric.is-green {
+  background: #f0fdf6;
+}
+
+.homeui-submetric-card.is-purple,
+.homeui-subpage-metric.is-purple {
+  background: #f5f4fe;
+}
+
+.homeui-submetric-card.is-orange,
+.homeui-subpage-metric.is-orange {
+  background: #fff9f0;
+}
+
+:root[data-darkmode="true"] .homeui-submetric-card.is-blue,
+:root[data-darkmode="true"] .homeui-subpage-metric.is-blue {
+  background: color-mix(in srgb, #2f89ff 14%, var(--homeui-surface));
+}
+
+:root[data-darkmode="true"] .homeui-submetric-card.is-green,
+:root[data-darkmode="true"] .homeui-subpage-metric.is-green {
+  background: color-mix(in srgb, #28c76f 14%, var(--homeui-surface));
+}
+
+:root[data-darkmode="true"] .homeui-submetric-card.is-purple,
+:root[data-darkmode="true"] .homeui-subpage-metric.is-purple {
+  background: color-mix(in srgb, #6c5ce7 15%, var(--homeui-surface));
+}
+
+:root[data-darkmode="true"] .homeui-submetric-card.is-orange,
+:root[data-darkmode="true"] .homeui-subpage-metric.is-orange {
+  background: color-mix(in srgb, #f59f00 14%, var(--homeui-surface));
+}
+
+.homeui-subpage-metric .metric-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .85);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .05);
+}
+
+:root[data-darkmode="true"] .homeui-subpage-metric .metric-icon {
+  background: rgba(255, 255, 255, .08);
+}
+
+.homeui-subpage-metric .metric-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.homeui-subpage-metric.is-blue .metric-icon {
+  color: #2f89ff;
+}
+
+.homeui-subpage-metric.is-green .metric-icon {
+  color: #28c76f;
+}
+
+.homeui-subpage-metric.is-purple .metric-icon {
+  color: #6c5ce7;
+}
+
+.homeui-subpage-metric.is-orange .metric-icon {
+  color: #f59f00;
+}
+
+.homeui-subpage-metric .metric-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.homeui-subpage-metric .metric-meta span {
+  color: var(--text-color-medium);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.homeui-subpage-metric .metric-meta strong {
+  color: var(--text-color-highest);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.homeui-subpage-metric .metric-meta small {
+  color: var(--homeui-muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homeui-subpage-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 18px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 8px;
+  background: var(--homeui-surface);
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03);
+}
+
+.homeui-subpage-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.homeui-subpage-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-color-medium);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.homeui-subpage-tab:hover {
+  color: #2f89ff;
+}
+
+.homeui-subpage-tab.active,
+.homeui-subpage-tab.is-active {
+  border-bottom-color: #2f89ff;
+  color: #2f89ff;
+  font-weight: 600;
+}
+
+.homeui-subpage-tab em {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--homeui-surface-soft);
+  color: var(--homeui-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.homeui-subpage-tab.active em,
+.homeui-subpage-tab.is-active em {
+  background: #edf5ff;
+  color: #2f89ff;
+}
+
+.homeui-subpage-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.homeui-subpage-search {
+  position: relative;
+  width: 260px;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.homeui-subpage-search input {
+  width: 100%;
+  min-height: 32px !important;
+  height: 32px;
+  padding: 0 30px 0 12px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  font-size: 12px;
+}
+
+.homeui-subpage-search svg {
+  position: absolute;
+  right: 9px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--homeui-muted);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.homeui-filter-pill {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 4px;
+  background: var(--homeui-surface);
+  color: var(--text-color-medium);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.homeui-filter-pill:hover {
+  border-color: #2f89ff;
+  color: #2f89ff;
+}
+
+.homeui-filter-pill.active,
+.homeui-filter-pill.is-active {
+  border-color: #2f89ff;
+  background: var(--homeui-accent-soft);
+  color: #2f89ff;
+  font-weight: 500;
+}
+
+/* Styled sections on Routes and Firewall status pages */
+body[data-page="admin-status-routes"] .cbi-section,
+body[data-page^="admin-status-nftables"] .cbi-section,
+body[data-page^="admin-status-iptables"] .cbi-section {
+  padding: 0;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid var(--homeui-border);
+  border-radius: 8px;
+  background: var(--homeui-surface);
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03);
+}
+
+body[data-page="admin-status-routes"] .cbi-section > h3:first-child,
+body[data-page="admin-status-routes"] .cbi-section > legend,
+body[data-page^="admin-status-nftables"] .cbi-section > h3:first-child,
+body[data-page^="admin-status-iptables"] .cbi-section > h3:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--homeui-border);
+  background: var(--homeui-surface);
+  color: var(--text-color-highest);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body[data-page^="admin-status-nftables"] .cbi-section h4,
+body[data-page^="admin-status-iptables"] .cbi-section h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 10px 18px;
+  border-top: 1px solid var(--homeui-border);
+  border-bottom: 1px solid var(--homeui-border);
+  background: #fafbfe;
+  color: var(--text-color-highest);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+:root[data-darkmode="true"] body[data-page^="admin-status-nftables"] .cbi-section h4,
+:root[data-darkmode="true"] body[data-page^="admin-status-iptables"] .cbi-section h4 {
+  background: var(--homeui-surface-soft);
+}
+
+body[data-page="admin-status-routes"] .cbi-section .table,
+body[data-page^="admin-status-nftables"] .cbi-section .table,
+body[data-page^="admin-status-iptables"] .cbi-section .table {
+  border-radius: 0;
+}
+
+body[data-page="admin-status-routes"] .cbi-section .table .th,
+body[data-page^="admin-status-nftables"] .cbi-section .table .th,
+body[data-page^="admin-status-iptables"] .cbi-section .table .th {
+  padding: 10px 16px;
+  background: var(--homeui-surface-soft);
+  color: var(--text-color-medium);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body[data-page="admin-status-routes"] .cbi-section .table .td,
+body[data-page^="admin-status-nftables"] .cbi-section .table .td,
+body[data-page^="admin-status-iptables"] .cbi-section .table .td {
+  padding: 10px 16px;
+  font-size: 12px;
+}
+
+.homeui-sec-hidden,
+.homeui-hidden-by-filter {
+  display: none !important;
+}
+
 @media screen and (max-width: 1280px) {
-  .homeui-ikuai-topcard {
+  .homeui-ikuai-topcard,
+  .homeui-subpage-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1247,7 +1667,7 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
   .homeui-ikuai-topcard,
   .homeui-ikuai-body,
   .homeui-ikuai-bottom,
-  .homeui-spec-grid {
+  .homeui-subpage-metrics {
     grid-template-columns: 1fr;
   }
 

@@ -159,7 +159,7 @@ return baseclass.extend({
     const list = document.querySelector('#modemenu');
     const children = ui.menu.getChildren(tree);
 
-    if (!list)
+    if (!list || children.length <= 1)
       return;
 
     children.forEach((child, index) => {
@@ -171,8 +171,9 @@ return baseclass.extend({
       ]));
     });
 
-    if (children.length > 1)
-      list.style.display = '';
+    list.style.display = '';
+    if (list.parentElement)
+      list.parentElement.classList.add('is-visible');
   },
 
   renderMainMenu(tree, url)
@@ -211,8 +212,12 @@ return baseclass.extend({
 
     if (procUtil)
       procUtil.classList.toggle('active', isProcessesPage);
-    if (logsUtil)
+    if (logsUtil) {
       logsUtil.classList.toggle('active', isLogsPage);
+      const logSpan = logsUtil.querySelector('span');
+      if (logSpan)
+        logSpan.textContent = isChinese ? '日志' : _('Logs');
+    }
     if (sysUtil)
       sysUtil.classList.toggle('active', isSystemBasicPage);
 
