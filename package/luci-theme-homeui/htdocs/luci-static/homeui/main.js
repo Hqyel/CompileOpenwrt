@@ -34,6 +34,15 @@
       bodyPage = 'admin-status-iptables';
     else if (/admin-status-wireguard/.test(bodyPage))
       bodyPage = 'admin-status-wireguard';
+    else if (/admin-status-processes/.test(bodyPage))
+      bodyPage = 'admin-status-processes';
+    else if (/admin-system-system/.test(bodyPage))
+      bodyPage = 'admin-system-system';
+    else if (/admin-status-(?:logs|syslog|dmesg)/.test(bodyPage) &&
+             bodyPage.indexOf('admin-status-') !== 0) {
+      var logMatch = bodyPage.match(/admin-status-(?:logs(?:-[a-z0-9_]+)?|syslog|dmesg)/i);
+      bodyPage = logMatch ? logMatch[0] : 'admin-status-logs';
+    }
     else if (/admin-status-realtime/.test(bodyPage) &&
              bodyPage.indexOf('admin-status-realtime') !== 0) {
       var rtMatch = bodyPage.match(/admin-status-realtime(?:-[a-z0-9_]+)?/i);
@@ -56,12 +65,14 @@
     pageId === 'admin-status-iptables';
   var isRealtimePage = /^admin-status-realtime/.test(pageId);
   var isWireguardPage = pageId === 'admin-status-wireguard';
+  var isSystemPage = pageId === 'admin-system-system';
+  var isLogsPage = /^admin-status-(?:logs|syslog|dmesg)/.test(pageId);
+  var isProcessesPage = pageId === 'admin-status-processes';
   var isStandalonePage =
     isOverview ||
-    pageId === 'admin-status-processes' ||
-    pageId === 'admin-status-logs' ||
-    pageId === 'admin-status-syslog' ||
-    pageId === 'admin-system-system';
+    isProcessesPage ||
+    isLogsPage ||
+    isSystemPage;
 
   if (isStandalonePage)
     root.classList.add('homeui-overview-single-rail');
@@ -85,7 +96,10 @@
     fwHideEmpty: true,
     fwQuery: '',
     wgTab: 'all',
-    wgQuery: ''
+    wgQuery: '',
+    procTab: 'all',
+    procQuery: '',
+    dmesgQuery: ''
   };
 
   var liveState = {
@@ -4194,6 +4208,651 @@
     applyWireguardFilter(view, subpageState.wgTab, subpageState.wgQuery);
   }
 
+  function readFormFieldText(view, namePattern, fallback)
+  {
+    var row = view.querySelector('.cbi-value[data-name="' + namePattern + '"]');
+    if (!row) {
+      var rows = view.querySelectorAll('.cbi-value[data-name]');
+      for (var i = 0; i < rows.length; i++) {
+        if ((rows[i].getAttribute('data-name') || '').indexOf(namePattern) !== -1) {
+          row = rows[i];
+          break;
+        }
+      }
+    }
+    if (!row)
+      return fallback;
+
+    var sel = row.querySelector('select');
+    if (sel) {
+      var opt = sel.options[sel.selectedIndex];
+      var txt = opt ? (opt.textContent || opt.value || '').trim() : (sel.value || '').trim();
+      return txt || fallback;
+    }
+
+    var ddItem = row.querySelector('.cbi-dropdown > ul > li[selected], .cbi-dropdown > ul > li[display]');
+    if (ddItem) {
+      var dTxt = ddItem.textContent.trim();
+      if (dTxt)
+        return dTxt;
+    }
+
+    var inp = row.querySelector('input:not([type="checkbox"]):not([type="radio"])');
+    if (inp && inp.value)
+      return inp.value.trim();
+
+    return fallback;
+  }
+
+  function enhanceSystemSettingsPage(view)
+  {
+    var sections = view.querySelectorAll('.cbi-section');
+    if (!sections.length)
+      return;
+
+    Array.prototype.forEach.call(sections, function(sec) {
+      var h = sec.querySelector(':scope > h3:first-child');
+      if (!h)
+        return;
+
+      var catBadge = h.querySelector('.homeui-sec-cat');
+      if (!catBadge) {
+        catBadge = document.createElement('span');
+        catBadge.className = 'homeui-sec-cat';
+        h.insertBefore(catBadge, h.firstChild);
+      }
+      catBadge.textContent = 'SYSTEM';
+
+      var tabsCount = sec.querySelectorAll('.cbi-tabmenu > li').length;
+      var countBadge = h.querySelector('.homeui-sec-count');
+      if (!countBadge) {
+        countBadge = document.createElement('span');
+        countBadge.className = 'homeui-sec-count';
+        h.appendChild(countBadge);
+      }
+      countBadge.textContent = tabsCount ?
+        (tabsCount + (isChinese ? ' 个配置分组' : ' tabs')) :
+        (isChinese ? '基础参数' : 'Settings');
+    });
+
+    var mainEl = document.querySelector('#maincontent') || view.parentNode;
+    var shell = mainEl ? mainEl.querySelector('.homeui-sys-shell') : null;
+    if (!shell && mainEl) {
+      shell = document.createElement('div');
+      shell.className = 'homeui-subpage-shell homeui-sys-shell';
+      shell.innerHTML =
+        '<div class="homeui-subpage-metrics">' +
+          '<div class="homeui-subpage-metric is-blue">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '设备主机名' : 'Device Hostname') + '</span>' +
+              '<strong data-sys-metric="hostname">HomeWrt</strong>' +
+              '<small>' + (isChinese ? '局域网与系统网络标识名称' : 'System & LAN hostname') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-green">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '系统时区与时间' : 'System Timezone') + '</span>' +
+              '<strong data-sys-metric="timezone">Asia/Shanghai</strong>' +
+              '<small data-sys-metric="localtime-sub">--</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-purple">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? 'NTP 时间同步' : 'NTP Time Sync') + '</span>' +
+              '<strong data-sys-metric="ntp">--</strong>' +
+              '<small data-sys-metric="ntp-sub">--</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-orange">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '界面主题与语言' : 'Theme & Language') + '</span>' +
+              '<strong data-sys-metric="theme">HomeUI</strong>' +
+              '<small data-sys-metric="lang-sub">--</small>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      mainEl.insertBefore(shell, view);
+
+      view.addEventListener('change', function() {
+        enhanceSystemSettingsPage(view);
+      });
+      view.addEventListener('input', function() {
+        enhanceSystemSettingsPage(view);
+      });
+    }
+
+    if (!shell)
+      return;
+
+    var hostVal = readFormFieldText(view, 'hostname', 'HomeWrt');
+    var tzVal = readFormFieldText(view, 'zonename', 'Asia/Shanghai');
+    var localtimeEl = view.querySelector('#localtime');
+    var localtimeVal = (localtimeEl && localtimeEl.value) ?
+      localtimeEl.value.trim() :
+      formatUnixLocalTime(Date.now() / 1000);
+
+    var ntpRow = view.querySelector('.cbi-value[data-name="enabled"]');
+    var ntpCb = ntpRow ? ntpRow.querySelector('input[type="checkbox"]') : null;
+    var ntpEnabled = ntpCb ? ntpCb.checked : true;
+    var ntpServers = view.querySelectorAll('.cbi-value[data-name="server"] .cbi-dynlist > .item').length;
+
+    var langVal = readFormFieldText(view, '_lang', isChinese ? '中文 (简体)' : 'Auto');
+    var themeVal = readFormFieldText(view, '_mediaurlbase', 'HomeUI');
+    if (/homeui/i.test(themeVal))
+      themeVal = 'HomeUI';
+
+    setText(shell, '[data-sys-metric="hostname"]', hostVal);
+    setText(shell, '[data-sys-metric="timezone"]', tzVal);
+    setText(shell, '[data-sys-metric="localtime-sub"]', localtimeVal);
+    setText(
+      shell,
+      '[data-sys-metric="ntp"]',
+      ntpEnabled ? (isChinese ? '客户端已启用' : 'Enabled') : (isChinese ? '未启用' : 'Disabled')
+    );
+    setText(
+      shell,
+      '[data-sys-metric="ntp-sub"]',
+      (ntpServers || 4) + (isChinese ? ' 个上游 NTP 候选服务器' : ' upstream NTP servers')
+    );
+    setText(shell, '[data-sys-metric="theme"]', themeVal);
+    setText(
+      shell,
+      '[data-sys-metric="lang-sub"]',
+      (isChinese ? '当前显示语言: ' : 'Language: ') + langVal
+    );
+  }
+
+  function enhanceLogsPage(view, page)
+  {
+    var contentSyslog = view.querySelector('#content_syslog');
+    var syslogEl = view.querySelector('#syslog');
+    if (!contentSyslog && !syslogEl)
+      return;
+
+    var isDmesg = /dmesg/i.test(page) ||
+      (!view.querySelector('#logFacilitySelect') &&
+       /内核|kernel|dmesg/i.test((view.querySelector('h2') || {}).textContent || ''));
+
+    if (contentSyslog && contentSyslog.dataset.homeuiEnhanced !== 'true') {
+      contentSyslog.dataset.homeuiEnhanced = 'true';
+
+      var head = document.createElement('div');
+      head.className = 'homeui-log-card-head';
+      head.innerHTML =
+        '<div class="homeui-log-card-title">' +
+          '<span class="homeui-sec-cat' + (isDmesg ? ' is-purple' : '') + '">' +
+            (isDmesg ? 'DMESG' : 'SYSLOG') +
+          '</span>' +
+          '<span>' +
+            (isDmesg ?
+              (isChinese ? 'Linux 内核环形缓冲区日志 (dmesg)' : 'Kernel Ring Buffer Log (dmesg)') :
+              (isChinese ? '系统运行日志实时视图 (syslog)' : 'System Runtime Log (syslog)')) +
+          '</span>' +
+        '</div>' +
+        '<span class="homeui-sec-count" data-log-visible-count>0 ' +
+          (isChinese ? '条记录' : 'lines') +
+        '</span>';
+
+      var toolbar = document.createElement('div');
+      toolbar.className = 'homeui-log-toolbar';
+
+      var facSelect = contentSyslog.querySelector('#logFacilitySelect');
+      var facLabel = contentSyslog.querySelector('label[for="logFacilitySelect"]');
+      var facInvert = contentSyslog.querySelector('#invertLogFacilitySearch');
+      var facInvLabel = contentSyslog.querySelector('label[for="invertLogFacilitySearch"]');
+
+      var sevSelect = contentSyslog.querySelector('#logSeveritySelect');
+      var sevLabel = contentSyslog.querySelector('label[for="logSeveritySelect"]');
+      var sevInvert = contentSyslog.querySelector('#invertLogSeveritySearch');
+      var sevInvLabel = contentSyslog.querySelector('label[for="invertLogSeveritySearch"]');
+
+      var txtInput = contentSyslog.querySelector('#logTextFilter');
+      var txtLabel = contentSyslog.querySelector('label[for="logTextFilter"]');
+      var txtInvert = contentSyslog.querySelector('#invertLogTextSearch');
+      var txtInvLabel = contentSyslog.querySelector('label[for="invertLogTextSearch"]');
+
+      var maxInput = contentSyslog.querySelector('#logMaxRows');
+      var maxLabel = contentSyslog.querySelector('label[for="logMaxRows"]');
+
+      var scrollDownBtn = contentSyslog.querySelector('#scrollDownButton');
+      var scrollDownWrap = scrollDownBtn ? scrollDownBtn.parentNode : null;
+
+      function createInvertChip(cb, lbl) {
+        var chip = document.createElement('span');
+        chip.className = 'homeui-log-invert';
+        if (cb)
+          chip.appendChild(cb);
+        if (lbl) {
+          lbl.removeAttribute('style');
+          chip.appendChild(lbl);
+        }
+        return chip;
+      }
+
+      if (facSelect) {
+        facSelect.removeAttribute('style');
+        var g1 = document.createElement('div');
+        g1.className = 'homeui-log-filter-group';
+        if (facLabel) {
+          facLabel.removeAttribute('style');
+          g1.appendChild(facLabel);
+        }
+        g1.appendChild(facSelect);
+        if (facInvert)
+          g1.appendChild(createInvertChip(facInvert, facInvLabel));
+        toolbar.appendChild(g1);
+      }
+
+      if (sevSelect) {
+        var g2 = document.createElement('div');
+        g2.className = 'homeui-log-filter-group';
+        if (sevLabel) {
+          sevLabel.removeAttribute('style');
+          g2.appendChild(sevLabel);
+        }
+        g2.appendChild(sevSelect);
+        if (sevInvert)
+          g2.appendChild(createInvertChip(sevInvert, sevInvLabel));
+        toolbar.appendChild(g2);
+      }
+
+      if (txtInput) {
+        if (!txtInput.placeholder)
+          txtInput.placeholder = isChinese ? '输入关键字筛选日志...' : 'Filter log text...';
+        var g3 = document.createElement('div');
+        g3.className = 'homeui-log-filter-group';
+        if (txtLabel) {
+          txtLabel.removeAttribute('style');
+          g3.appendChild(txtLabel);
+        }
+        g3.appendChild(txtInput);
+        if (txtInvert)
+          g3.appendChild(createInvertChip(txtInvert, txtInvLabel));
+        toolbar.appendChild(g3);
+      }
+
+      if (maxInput) {
+        if (!maxInput.placeholder)
+          maxInput.placeholder = '1000';
+        var g4 = document.createElement('div');
+        g4.className = 'homeui-log-filter-group';
+        if (maxLabel) {
+          maxLabel.removeAttribute('style');
+          g4.appendChild(maxLabel);
+        }
+        g4.appendChild(maxInput);
+        toolbar.appendChild(g4);
+      }
+
+      if (!facSelect && syslogEl) {
+        var dmesgGroup = document.createElement('div');
+        dmesgGroup.className = 'homeui-log-filter-group';
+        dmesgGroup.innerHTML =
+          '<label>' + (isChinese ? '关键字过滤：' : 'Keyword:') + '</label>' +
+          '<input type="search" data-dmesg-search placeholder="' +
+            (isChinese ? '搜索内核日志关键字 / 驱动 / 接口...' : 'Search kernel log...') +
+          '" style="width:240px">';
+        toolbar.appendChild(dmesgGroup);
+
+        var dmesgInput = dmesgGroup.querySelector('[data-dmesg-search]');
+        if (dmesgInput) {
+          dmesgInput.addEventListener('input', function() {
+            if (syslogEl.dataset.fullText === undefined)
+              syslogEl.dataset.fullText = syslogEl.value || '';
+            var q = (dmesgInput.value || '').trim().toLowerCase();
+            var rawLines = (syslogEl.dataset.fullText || '').split(/\r?\n/);
+            var filtered = q ?
+              rawLines.filter(function(l) { return l.toLowerCase().includes(q); }) :
+              rawLines;
+            syslogEl.value = filtered.join('\n');
+            syslogEl.rows = Math.max(12, filtered.length + 1);
+            enhanceLogsPage(view, page);
+          });
+        }
+      }
+
+      var actionsBox = document.createElement('div');
+      actionsBox.className = 'homeui-log-actions';
+      if (scrollDownBtn)
+        actionsBox.appendChild(scrollDownBtn);
+      toolbar.appendChild(actionsBox);
+
+      Array.prototype.forEach.call(
+        contentSyslog.querySelectorAll(':scope > div[style*="margin-bottom"]'),
+        function(oldRow) {
+          if (!oldRow.children.length)
+            oldRow.remove();
+        }
+      );
+
+      if (scrollDownWrap &&
+          scrollDownWrap !== contentSyslog &&
+          !scrollDownWrap.children.length) {
+        scrollDownWrap.remove();
+      }
+
+      contentSyslog.insertBefore(toolbar, contentSyslog.firstChild);
+      contentSyslog.insertBefore(head, toolbar);
+    }
+
+    var mainEl = document.querySelector('#maincontent') || view.parentNode;
+    var shell = mainEl ? mainEl.querySelector('.homeui-logs-shell') : null;
+    if (!shell && mainEl) {
+      shell = document.createElement('div');
+      shell.className = 'homeui-subpage-shell homeui-logs-shell';
+      shell.innerHTML =
+        '<div class="homeui-subpage-metrics">' +
+          '<div class="homeui-subpage-metric is-blue">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '日志记录总数' : 'Total Log Lines') + '</span>' +
+              '<strong data-log-metric="total">0</strong>' +
+              '<small>' + (isChinese ? '当前视图匹配显示的日志总行数' : 'Matching log lines in buffer') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-green">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '常规与通知 (Info)' : 'Info & Notice') + '</span>' +
+              '<strong data-log-metric="info">0</strong>' +
+              '<small>' + (isChinese ? '系统常规运行与服务状态通知' : 'Routine system & service events') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-orange">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="m10.29 3.86-8.47 14.14A2 2 0 0 0 3.53 21h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '告警事件 (Warning)' : 'Warnings') + '</span>' +
+              '<strong data-log-metric="warn">0</strong>' +
+              '<small>' + (isChinese ? '需要注意的配置或运行期告警' : 'Configuration or runtime warnings') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-purple">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '错误与异常 (Error)' : 'Errors & Critical') + '</span>' +
+              '<strong data-log-metric="err">0</strong>' +
+              '<small>' + (isChinese ? '错误、严重异常及失败事件记录' : 'Errors, critical & failure events') + '</small>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      var topTabs = mainEl.querySelector(':scope > .tabs');
+      if (topTabs)
+        mainEl.insertBefore(shell, topTabs);
+      else
+        mainEl.insertBefore(shell, view);
+    }
+
+    var rawText = syslogEl ? (syslogEl.value || syslogEl.textContent || '') : '';
+    var lines = rawText ?
+      rawText.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; }) :
+      [];
+    var totalCount = lines.length;
+    var warnCount = 0;
+    var errCount = 0;
+    var infoCount = 0;
+
+    lines.forEach(function(line) {
+      if (/\.(?:err|crit|alert|emerg)\b|\b(?:error|failed|fatal|panic|segfault)\b/i.test(line))
+        errCount++;
+      else if (/\.(?:warn|warning)\b|\bwarning\b/i.test(line))
+        warnCount++;
+      else
+        infoCount++;
+    });
+
+    if (shell) {
+      setText(shell, '[data-log-metric="total"]', totalCount);
+      setText(shell, '[data-log-metric="info"]', infoCount);
+      setText(shell, '[data-log-metric="warn"]', warnCount);
+      setText(shell, '[data-log-metric="err"]', errCount);
+    }
+
+    if (contentSyslog) {
+      setText(
+        contentSyslog,
+        '[data-log-visible-count]',
+        totalCount + (isChinese ? ' 条记录' : ' lines')
+      );
+    }
+  }
+
+  function applyProcessesFilter(view, tabVal, query)
+  {
+    var q = (query || '').trim().toLowerCase();
+    var table = view.querySelector('.table');
+    if (!table)
+      return;
+
+    var rows = table.querySelectorAll('.tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder)');
+    var visibleCount = 0;
+
+    Array.prototype.forEach.call(rows, function(row) {
+      var cat = row.dataset.procCat || 'user';
+      var isActive = row.dataset.procActive === 'true';
+      var tabMatch =
+        tabVal === 'all' ||
+        (tabVal === 'active' ? isActive : cat === tabVal);
+      var textMatch = !q || row.textContent.toLowerCase().includes(q);
+      var show = tabMatch && textMatch;
+      row.style.display = show ? '' : 'none';
+      if (show)
+        visibleCount++;
+    });
+
+    setText(
+      view,
+      '[data-proc-visible-count]',
+      visibleCount + (isChinese ? ' 个进程' : ' processes')
+    );
+  }
+
+  function enhanceProcessesPage(view)
+  {
+    var table = view.querySelector('.table');
+    if (!table)
+      return;
+
+    var card = view.querySelector('.homeui-proc-card');
+    if (!card) {
+      card = document.createElement('section');
+      card.className = 'homeui-proc-card';
+      card.innerHTML =
+        '<div class="homeui-proc-card-head">' +
+          '<div class="homeui-proc-card-title">' +
+            '<span class="homeui-sec-cat">PROCESS</span>' +
+            '<span>' + (isChinese ? '系统活动进程实时监控列表' : 'Active System Processes') + '</span>' +
+          '</div>' +
+          '<span class="homeui-sec-count" data-proc-visible-count>0 ' +
+            (isChinese ? '个进程' : 'processes') +
+          '</span>' +
+        '</div>';
+      table.parentNode.insertBefore(card, table);
+      card.appendChild(table);
+    }
+
+    var actionTh = table.querySelector('.tr.table-titles .th:nth-child(6)');
+    if (actionTh && !actionTh.textContent.trim())
+      actionTh.textContent = isChinese ? '操作控制' : 'Actions';
+
+    var rows = table.querySelectorAll('.tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder)');
+    var totalProcs = 0;
+    var userProcs = 0;
+    var kernelProcs = 0;
+    var activeProcs = 0;
+    var sumCpu = 0;
+    var sumMem = 0;
+
+    Array.prototype.forEach.call(rows, function(row) {
+      var cells = row.querySelectorAll('.td');
+      if (cells.length < 5)
+        return;
+
+      var cmdTxt = (cells[2] ? cells[2].textContent : '').trim();
+      var cpuVal = parseFloat((cells[3] ? cells[3].textContent : '0').replace('%', '')) || 0;
+      var memVal = parseFloat((cells[4] ? cells[4].textContent : '0').replace('%', '')) || 0;
+
+      totalProcs++;
+      sumCpu += cpuVal;
+      sumMem += memVal;
+
+      var isKernel = /^\[.*\]$/.test(cmdTxt);
+      var isActive = cpuVal > 0 || memVal > 0;
+
+      row.dataset.procCat = isKernel ? 'kernel' : 'user';
+      row.dataset.procActive = isActive ? 'true' : 'false';
+
+      if (isKernel)
+        kernelProcs++;
+      else
+        userProcs++;
+
+      if (isActive)
+        activeProcs++;
+    });
+
+    var mainEl = document.querySelector('#maincontent') || view.parentNode;
+    var shell = mainEl ? mainEl.querySelector('.homeui-proc-shell') : null;
+    if (!shell && mainEl) {
+      shell = document.createElement('div');
+      shell.className = 'homeui-subpage-shell homeui-proc-shell';
+      shell.innerHTML =
+        '<div class="homeui-subpage-metrics">' +
+          '<div class="homeui-subpage-metric is-blue">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '运行进程总数' : 'Total Processes') + '</span>' +
+              '<strong data-proc-metric="total">0</strong>' +
+              '<small>' + (isChinese ? '当前系统活跃进程与内核线程' : 'Total active processes & threads') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-green">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4z"/><path d="M8 7h.01M8 17h.01"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '用户态服务进程' : 'User Space Daemons') + '</span>' +
+              '<strong data-proc-metric="user">0</strong>' +
+              '<small>' + (isChinese ? '系统守护服务与应用程序实例' : 'System services & user applications') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-purple">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '内核工作线程' : 'Kernel Threads') + '</span>' +
+              '<strong data-proc-metric="kernel">0</strong>' +
+              '<small>' + (isChinese ? 'Linux 内核调度与工作队列线程' : 'Kernel scheduling & kworker threads') + '</small>' +
+            '</div>' +
+          '</div>' +
+          '<div class="homeui-subpage-metric is-orange">' +
+            '<div class="metric-icon">' +
+              '<svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>' +
+            '</div>' +
+            '<div class="metric-meta">' +
+              '<span>' + (isChinese ? '活跃资源占用进程' : 'Active Resource Tasks') + '</span>' +
+              '<strong data-proc-metric="active">0</strong>' +
+              '<small data-proc-metric="load-sub">CPU 0% · MEM 0%</small>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="homeui-subpage-bar">' +
+          '<div class="homeui-subpage-tabs" data-proc-tabs>' +
+            '<button type="button" class="homeui-subpage-tab is-active" data-proc-tab="all">' +
+              (isChinese ? '全部进程' : 'All Processes') +
+              ' <em class="tab-count" data-proc-cnt="all">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-proc-tab="user">' +
+              (isChinese ? '用户态服务' : 'User Daemons') +
+              ' <em class="tab-count" data-proc-cnt="user">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-proc-tab="kernel">' +
+              (isChinese ? '内核工作线程' : 'Kernel Threads') +
+              ' <em class="tab-count" data-proc-cnt="kernel">0</em>' +
+            '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-proc-tab="active">' +
+              (isChinese ? '非零资源占用' : 'Active Load') +
+              ' <em class="tab-count" data-proc-cnt="active">0</em>' +
+            '</button>' +
+          '</div>' +
+          '<div class="homeui-subpage-toolbar">' +
+            '<label class="homeui-subpage-search">' +
+              '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>' +
+              '<input type="search" data-proc-search placeholder="' +
+                (isChinese ? '搜索 PID / 用户名 / 进程命令...' : 'Filter PID, user, command...') +
+              '">' +
+            '</label>' +
+          '</div>' +
+        '</div>';
+
+      mainEl.insertBefore(shell, view);
+
+      shell.addEventListener('click', function(ev) {
+        var tabBtn = ev.target.closest('[data-proc-tab]');
+        if (!tabBtn)
+          return;
+        subpageState.procTab = tabBtn.dataset.procTab;
+        Array.prototype.forEach.call(
+          shell.querySelectorAll('[data-proc-tab]'),
+          function(b) { b.classList.toggle('is-active', b === tabBtn); }
+        );
+        applyProcessesFilter(view, subpageState.procTab, subpageState.procQuery);
+      });
+
+      var searchIn = shell.querySelector('[data-proc-search]');
+      if (searchIn) {
+        searchIn.addEventListener('input', function() {
+          subpageState.procQuery = searchIn.value;
+          applyProcessesFilter(view, subpageState.procTab, subpageState.procQuery);
+        });
+      }
+    }
+
+    if (shell) {
+      setText(shell, '[data-proc-metric="total"]', totalProcs);
+      setText(shell, '[data-proc-metric="user"]', userProcs);
+      setText(shell, '[data-proc-metric="kernel"]', kernelProcs);
+      setText(shell, '[data-proc-metric="active"]', activeProcs);
+      setText(
+        shell,
+        '[data-proc-metric="load-sub"]',
+        (isChinese ? '累计 CPU: ' : 'CPU: ') + Math.min(100, Math.round(sumCpu)) + '% · ' +
+        (isChinese ? '累计内存: ' : 'MEM: ') + Math.min(100, Math.round(sumMem)) + '%'
+      );
+
+      setText(shell, '[data-proc-cnt="all"]', totalProcs);
+      setText(shell, '[data-proc-cnt="user"]', userProcs);
+      setText(shell, '[data-proc-cnt="kernel"]', kernelProcs);
+      setText(shell, '[data-proc-cnt="active"]', activeProcs);
+    }
+
+    applyProcessesFilter(view, subpageState.procTab, subpageState.procQuery);
+  }
+
   var isEnhancing = false;
 
   function enhanceOverview()
@@ -4241,6 +4900,36 @@
       isEnhancing = true;
       try {
         enhanceWireguardPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-system-system') {
+      isEnhancing = true;
+      try {
+        enhanceSystemSettingsPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (/^admin-status-(?:logs|syslog|dmesg)/.test(page)) {
+      isEnhancing = true;
+      try {
+        enhanceLogsPage(view, page);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-status-processes') {
+      isEnhancing = true;
+      try {
+        enhanceProcessesPage(view);
       } finally {
         isEnhancing = false;
       }
@@ -4329,6 +5018,8 @@
         (!m.target.closest('.homeui-ikuai-dashboard') &&
          !m.target.closest('.homeui-subpage-shell') &&
          !m.target.closest('.homeui-rt-card-head') &&
+         !m.target.closest('.homeui-log-card-head') &&
+         !m.target.closest('.homeui-proc-card-head') &&
          !m.target.classList.contains('homeui-sec-count') &&
          !m.target.classList.contains('homeui-sec-cat'));
     });
@@ -4347,7 +5038,8 @@
     setInterval(function() {
       pollLiveRouterStats(enhanceOverview);
     }, 3000);
-  } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage || isWireguardPage) {
+  } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage ||
+             isWireguardPage || isSystemPage || isLogsPage || isProcessesPage) {
     setInterval(enhanceOverview, 1000);
   }
 

@@ -753,12 +753,32 @@ legend {
 .cbi-section > h3:first-child,
 .panel-title,
 .cbi-section > legend {
-  margin: -16px -16px 14px;
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -16px -16px 16px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--homeui-border);
+  border-radius: 8px 8px 0 0;
+  background: #fafbfe;
   color: var(--text-color-highest);
   font-size: 13px;
   font-weight: 600;
+}
+
+:root[data-darkmode="true"] .cbi-section > h3:first-child,
+:root[data-darkmode="true"] .panel-title,
+:root[data-darkmode="true"] .cbi-section > legend {
+  background: var(--homeui-surface-soft);
+}
+
+.cbi-section-node,
+.cbi-section-node-tabbed {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .table {
@@ -780,6 +800,11 @@ legend {
 
 .table .tr:last-child {
   border-bottom: 0;
+}
+
+.cbi-rowstyle-1,
+.cbi-rowstyle-2 {
+  background: transparent !important;
 }
 
 .table .th {
@@ -815,6 +840,20 @@ legend {
   );
 }
 
+.td.cbi-section-actions > * {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+}
+
+.td.cbi-section-actions > :not(.cbi-dropdown) > *,
+.td.cbi-section-actions > * > form > * {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
 .ifacebox {
   border: 1px solid var(--homeui-border);
   border-radius: 6px;
@@ -834,42 +873,354 @@ legend {
   background: var(--homeui-surface);
 }
 
-input,
-textarea,
-select,
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="reset"]):not([type="submit"]):not([type="file"]):not([type="range"]):not([type="color"]),
+select:not(.cbi-select select),
 .cbi-select,
 .cbi-dropdown:not(.btn):not(.cbi-button) {
   min-height: 34px;
-  padding: 6px 10px;
-  border: 1px solid var(--border-color-high);
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: var(--homeui-surface);
+  background-image: none;
+  color: var(--homeui-text);
+  font-size: 13px;
+  box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.cbi-select {
+  padding: 0 !important;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cbi-select select,
+.cbi-select select:focus {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 28px 0 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--homeui-text);
+  font-size: 13px;
+}
+
+.cbi-select::before {
+  right: 8px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--homeui-muted) !important;
+}
+
+.cbi-dropdown:not(.btn):not(.cbi-button) {
+  padding: 0 8px 0 10px !important;
+  align-items: center;
+}
+
+textarea {
+  min-height: 84px;
+  padding: 8px 12px;
+  border: 1px solid #dcdfe6;
   border-radius: 4px;
   background: var(--homeui-surface);
   color: var(--homeui-text);
+  font-size: 13px;
+  line-height: 1.55;
   box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+:root[data-darkmode="true"] input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="reset"]):not([type="submit"]),
+:root[data-darkmode="true"] textarea,
+:root[data-darkmode="true"] select:not(.cbi-select select),
+:root[data-darkmode="true"] .cbi-select,
+:root[data-darkmode="true"] .cbi-dropdown:not(.btn):not(.cbi-button) {
+  border-color: var(--homeui-border);
 }
 
 input:disabled,
 input[readonly],
 select:disabled,
 textarea:disabled {
-  background: var(--homeui-surface-soft);
-  color: var(--homeui-muted);
+  background: var(--homeui-surface-soft) !important;
+  color: var(--homeui-muted) !important;
 }
 
-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus,
 textarea:focus,
-select:focus,
+select:not(.cbi-select select):focus,
 .cbi-select.focus,
+.cbi-select:focus-within,
 .cbi-dropdown:focus,
 .cbi-dropdown[open] {
   border-color: var(--homeui-accent) !important;
   box-shadow: 0 0 0 2px rgba(47, 137, 255, .12) !important;
+  outline: none !important;
+}
+
+/* Crisp iKuai checkboxes and radios without height/padding distortion */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 16px !important;
+  flex: 0 0 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle !important;
+  cursor: pointer;
+}
+
+input[type="checkbox"]::before,
+input[type="radio"]::before {
+  top: 0 !important;
+  left: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  transition: border-color .15s ease, background .15s ease !important;
+}
+
+:root[data-darkmode="true"] input[type="checkbox"]::before,
+:root[data-darkmode="true"] input[type="radio"]::before {
+  border-color: var(--homeui-border) !important;
+}
+
+input[type="radio"],
+input[type="radio"]::before {
+  border-radius: 50% !important;
+}
+
+input[type="checkbox"]:hover::before,
+input[type="radio"]:hover::before,
+input[type="checkbox"]:focus::before,
+input[type="radio"]:focus::before {
+  border-color: #2f89ff !important;
+  box-shadow: none !important;
+}
+
+input[type="checkbox"]:checked::before,
+input[type="radio"]:checked::before {
+  border-color: #2f89ff !important;
+  background: #2f89ff !important;
+}
+
+input[type="checkbox"]::after,
+input[type="radio"]::after {
+  top: 3px !important;
+  left: 3px !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+input[type="checkbox"]:checked::after,
+input[type="radio"]:checked::after {
+  background: #ffffff !important;
+}
+
+/* Unified CBI Form Layout & Spacing */
+.cbi-value {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  margin: 0 0 18px 0 !important;
+  padding: 0;
+}
+
+.cbi-value:last-child,
+.cbi-value.cbi-value-last {
+  margin-bottom: 4px !important;
 }
 
 .cbi-value label.cbi-value-title {
-  color: var(--text-color-medium);
-  font-size: 12px;
-  font-weight: 500;
+  flex: 0 0 180px !important;
+  min-height: 34px;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding: 0 18px 0 0 !important;
+  margin: 0 !important;
+  color: var(--text-color-medium) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  text-align: right !important;
+}
+
+.cbi-value > .cbi-value-field {
+  flex: 1 1 340px !important;
+  min-width: 0;
+  margin-left: 0 !important;
+}
+
+.cbi-value > .cbi-value-field input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="reset"]):not([type="submit"]):not([type="file"]):not([type="range"]):not([type="color"]),
+.cbi-value > .cbi-value-field select:not(.cbi-select select),
+.cbi-value > .cbi-value-field .cbi-select,
+.cbi-value > .cbi-value-field .cbi-dropdown:not(.btn):not(.cbi-button) {
+  width: min(360px, 100%) !important;
+  max-width: 100%;
+}
+
+.cbi-value > .cbi-value-field textarea {
+  width: min(520px, 100%) !important;
+  min-height: 86px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.cbi-value > .cbi-value-field > .cbi-checkbox,
+.cbi-value > .cbi-value-field > div > .cbi-checkbox,
+.cbi-value > .cbi-value-field > div > .cbi-radio {
+  min-height: 34px !important;
+  height: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.cbi-value[data-widget="CBI.Flag"] > .cbi-value-field {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 6px 10px !important;
+  min-height: 34px;
+}
+
+.cbi-value[data-widget="CBI.Flag"] > .cbi-value-field > .cbi-value-description {
+  width: auto !important;
+  margin: 0 0 0 18px !important;
+}
+
+.cbi-value-description {
+  width: 100%;
+  margin: 6px 0 0 18px !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+.cbi-value-description:not(:empty)::before {
+  top: 2px;
+  background: #2f89ff !important;
+  opacity: .75;
+}
+
+/* DynamicList (e.g. NTP servers, DNS lists) */
+.cbi-dynlist {
+  width: min(360px, 100%) !important;
+  max-width: 100% !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.cbi-dynlist > .item {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  margin: 0 !important;
+  padding: 4px 34px 4px 12px !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  font-size: 13px;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] .cbi-dynlist > .item {
+  border-color: var(--homeui-border) !important;
+}
+
+.cbi-dynlist > .item::after {
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 30px;
+  justify-content: center;
+  padding: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid #eef1f6 !important;
+  border-radius: 0 4px 4px 0 !important;
+  background: transparent !important;
+  color: var(--homeui-muted) !important;
+  box-shadow: none !important;
+}
+
+.cbi-dynlist > .item:hover::after {
+  background: rgba(238, 94, 104, .08) !important;
+  color: var(--homeui-danger) !important;
+  box-shadow: none !important;
+}
+
+.cbi-dynlist > .add-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.cbi-dynlist > .add-item > input,
+.cbi-dynlist > .add-item > .cbi-dropdown {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.cbi-dynlist > .add-item > .btn,
+.cbi-dynlist > .add-item > .cbi-button,
+.cbi-dynlist > .add-item > button {
+  flex: 0 0 auto !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 14px !important;
+}
+
+.control-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+#localtime {
+  vertical-align: middle;
+}
+
+#localtime + br {
+  display: none !important;
+}
+
+#localtime ~ .control-group {
+  margin-left: 10px !important;
+  vertical-align: middle;
+}
+
+#localtime ~ .control-group .btn,
+#localtime ~ .control-group .cbi-button {
+  height: 34px !important;
+  min-height: 34px !important;
 }
 
 .btn,
@@ -994,11 +1345,17 @@ button.cbi-button:active {
 
 .actions,
 .cbi-page-actions {
-  margin: 14px 0 0;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--homeui-border);
-  border-radius: 0;
-  background: transparent;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 14px 0 0 !important;
+  padding: 12px 18px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
 }
 
 .tabs,
@@ -1016,6 +1373,22 @@ button.cbi-button:active {
   box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
   list-style: none !important;
   overflow-x: auto;
+}
+
+.cbi-section > .cbi-tabmenu,
+.cbi-section .cbi-tabmenu {
+  margin: -16px -16px 22px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  border-radius: 0 !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] .cbi-section > .cbi-tabmenu,
+:root[data-darkmode="true"] .cbi-section .cbi-tabmenu {
+  background: var(--homeui-surface) !important;
 }
 
 .tabs > li,
