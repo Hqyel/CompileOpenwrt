@@ -1,0 +1,113 @@
+name: Build HomeUI theme
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build-theme.yml
+      - package/luci-theme-homeui/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homeui-theme-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SDK_FILE: >-
+    immortalwrt-sdk-25.12.0-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+  SDK_SHA256: >-
+    c228059aa1e58c3b3ae58ce8dcc7549fd08379d8e231daf80fcca15b677564cb
+  SDK_URL: >-
+    https://downloads.immortalwrt.org/releases/25.12.0/targets/x86/64
+
+jobs:
+  build:
+    name: Build HomeUI APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out theme source
+        uses: actions/checkout@v4
+
+      - name: Install SDK dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            bison build-essential clang file flex gawk gettext git \
+            libncurses-dev libssl-dev python3 rsync unzip zlib1g-dev zstd
+
+      - name: Cache ImmortalWrt SDK
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/immortalwrt-sdk
+          key: immortalwrt-sdk-25.12.0-x86-64-gcc-14.3.0
+
+      - name: Download and verify SDK
+        run: |
+          cache_dir="$HOME/.cache/immortalwrt-sdk"
+          archive="$cache_dir/$SDK_FILE"
+          mkdir -p "$cache_dir"
+
+          if [ ! -f "$archive" ]; then
+            curl --fail --location --retry 3 \
+              --output "$archive.part" "$SDK_URL/$SDK_FILE"
+            mv "$archive.part" "$archive"
+          fi
+
+          echo "$SDK_SHA256  $archive" | sha256sum --check
+          mkdir sdk
+          tar --use-compress-program=unzstd \
+            --extract --file "$archive" --directory sdk \
+            --strip-components=1
+
+      - name: Install LuCI build definitions
+        working-directory: sdk
+        run: |
+          ./scripts/feeds update luci
+          ./scripts/feeds install luci-base luci-theme-bootstrap
+
+      - name: Add HomeUI package
+        run: |
+          cp -a package/luci-theme-homeui sdk/package/luci-theme-homeui
+          sed -i 's/\r$//' \
+            sdk/package/luci-theme-homeui/root/etc/uci-defaults/*
+          chmod +x \
+            sdk/package/luci-theme-homeui/root/etc/uci-defaults/*
+
+      - name: Configure SDK
+        working-directory: sdk
+        run: |
+          echo 'CONFIG_PACKAGE_luci-theme-homeui=m' > .config
+          make defconfig
+
+      - name: Build HomeUI package
+        working-directory: sdk
+        run: |
+          make package/luci-theme-homeui/clean
+          make package/luci-theme-homeui/compile \
+            -j"$(nproc)" V=s
+
+      - name: Collect APK
+        run: |
+          mkdir artifacts
+          find sdk/bin/packages -type f \
+            -name 'luci-theme-homeui*.apk' \
+            -exec cp -v {} artifacts/ \;
+          test -n "$(find artifacts -type f -name '*.apk' -print -quit)"
+          sha256sum artifacts/*.apk > artifacts/SHA256SUMS
+          ls -lh artifacts
+
+      - name: Upload theme artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-theme-homeui-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30
