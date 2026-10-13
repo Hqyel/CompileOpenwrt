@@ -22,6 +22,8 @@ const ICONS = {
     '<path d="M12 7v4M5 17v-3h14v3"/>',
   vpn: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
     '<path d="m9 12 2 2 4-4"/>',
+  logout: '<path d="M10 17l5-5-5-5M15 12H3"/>' +
+    '<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>',
   default: '<rect x="4" y="4" width="6" height="6" rx="1"/>' +
     '<rect x="14" y="4" width="6" height="6" rx="1"/>' +
     '<rect x="4" y="14" width="6" height="6" rx="1"/>' +
@@ -98,6 +100,7 @@ return baseclass.extend({
   {
     const rail = document.querySelector('#topmenu');
     const side = document.querySelector('#sidemenu');
+    const logoutSlot = document.querySelector('#homeui-logout-slot');
     const sections = ui.menu.getChildren(tree);
     const currentName = L.env.dispatchpath[1];
     let activeSection = null;
@@ -111,6 +114,12 @@ return baseclass.extend({
         'title': _(section.title),
         'aria-label': _(section.title)
       }, [icon, E('span', {}, [_(section.title)])]);
+
+      if (section.name === 'logout' || /logout|退出/i.test(section.title)) {
+        link.classList.add('homeui-logout-link');
+        logoutSlot.appendChild(link);
+        return;
+      }
 
       rail.appendChild(E('li', {
         'class': active ? 'active' : '',

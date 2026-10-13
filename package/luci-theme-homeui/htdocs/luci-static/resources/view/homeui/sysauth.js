@@ -11,6 +11,8 @@ return view.extend({
     const button = document.querySelector('button.cbi-button-positive');
     const brand = document.querySelector('.homeui-login-brand');
     const alert = source.querySelector('.alert-message');
+    const username = document.querySelector('#luci_username');
+    const password = document.querySelector('#luci_password');
     const title = isChinese ? '欢迎回来' : 'Welcome back';
     const subtitle = isChinese ?
       '登录 HomeWrt 路由管理后台' :
@@ -23,6 +25,8 @@ return view.extend({
       'Keep system status, network services and devices in one place.';
 
     document.body.classList.add('homeui-login-page');
+    username.placeholder = isChinese ? '用户名' : _('Username');
+    password.placeholder = isChinese ? '密码' : _('Password');
     button.type = 'submit';
     button.classList.add('homeui-login-submit');
     form.appendChild(button);

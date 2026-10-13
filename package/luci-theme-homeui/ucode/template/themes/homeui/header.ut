@@ -91,6 +91,7 @@
             <span class="homeui-color-label">{{ _('Appearance') }}</span>
           </button>
           <div id="indicators"></div>
+          <div id="homeui-logout-slot"></div>
         </div>
 
         <nav class="homeui-panel" aria-label="{{ _('Secondary menu') }}">

@@ -2,11 +2,193 @@ body[data-page="admin-status-overview"] #maincontent.container {
   padding-top: 18px;
 }
 
+body[data-page="admin-status-overview"] #maincontent > h2:first-of-type {
+  display: none;
+}
+
 body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
   align-items: start;
+}
+
+.homeui-overview-hero {
+  position: relative;
+  min-height: 174px;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 28px 30px 68px;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(
+      circle at 82% 22%,
+      rgba(255, 255, 255, .2),
+      transparent 22%
+    ),
+    linear-gradient(125deg, #126fe7 0%, #2f89ff 54%, #55b6ff 100%);
+  box-shadow: 0 18px 42px rgba(30, 111, 220, .18);
+  color: #ffffff;
+}
+
+.homeui-overview-hero::before,
+.homeui-overview-hero::after {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  content: "";
+}
+
+.homeui-overview-hero::before {
+  top: -96px;
+  right: 12%;
+  width: 250px;
+  height: 250px;
+}
+
+.homeui-overview-hero::after {
+  right: -64px;
+  bottom: -128px;
+  width: 280px;
+  height: 280px;
+}
+
+.homeui-overview-hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.homeui-overview-eyebrow {
+  color: rgba(255, 255, 255, .72);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 1.5px;
+}
+
+.homeui-overview-hero h1 {
+  margin: 8px 0 3px;
+  color: #ffffff;
+  font-size: 27px;
+  font-weight: 680;
+  line-height: 1.25;
+  letter-spacing: -.4px;
+}
+
+.homeui-overview-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, .74);
+  font-size: 12px;
+}
+
+.homeui-overview-health {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .13);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 550;
+  backdrop-filter: blur(8px);
+}
+
+.homeui-overview-health::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #72f1bc;
+  box-shadow: 0 0 0 4px rgba(114, 241, 188, .16);
+  content: "";
+}
+
+.homeui-overview-metrics {
+  position: relative;
+  z-index: 2;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: -66px 20px 2px;
+}
+
+.homeui-overview-metric {
+  min-width: 0;
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 17px;
+  border: 1px solid rgba(223, 231, 241, .9);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--homeui-surface) 94%, transparent);
+  box-shadow: 0 11px 30px rgba(31, 66, 108, .11);
+  backdrop-filter: blur(14px);
+}
+
+.homeui-overview-metric-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  background: var(--homeui-accent-soft);
+  color: var(--homeui-accent);
+}
+
+.homeui-overview-metric-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.metric-memory .homeui-overview-metric-icon {
+  background: rgba(124, 109, 242, .11);
+  color: #7464ef;
+}
+
+.metric-uptime .homeui-overview-metric-icon {
+  background: rgba(242, 163, 58, .12);
+  color: #e9982f;
+}
+
+.metric-clients .homeui-overview-metric-icon {
+  background: rgba(36, 189, 131, .11);
+  color: var(--homeui-success);
+}
+
+.homeui-overview-metric-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.homeui-overview-metric strong {
+  overflow: hidden;
+  color: var(--text-color-highest);
+  font-size: 18px;
+  font-weight: 680;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homeui-overview-metric small {
+  margin-top: 3px;
+  color: var(--homeui-muted);
+  font-size: 10px;
 }
 
 .homeui-overview-card {
@@ -15,17 +197,20 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden;
-  border-color: var(--homeui-border) !important;
-  border-radius: 12px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 14px !important;
   background: var(--homeui-surface) !important;
-  box-shadow: 0 7px 24px rgba(41, 62, 88, .055) !important;
+  box-shadow: 0 7px 24px rgba(41, 62, 88, .045) !important;
 }
 
 .homeui-overview-system {
-  grid-column: span 8;
+  grid-column: span 7;
 }
 
-.homeui-overview-memory,
+.homeui-overview-memory {
+  grid-column: span 5;
+}
+
 .homeui-overview-storage {
   grid-column: span 4;
 }
@@ -34,13 +219,14 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   grid-column: span 8;
 }
 
-.homeui-overview-network,
-.homeui-overview-dhcp,
-.homeui-overview-wifi {
+.homeui-overview-network {
   grid-column: 1 / -1;
 }
 
-.homeui-overview-dsl {
+.homeui-overview-dhcp,
+.homeui-overview-dns,
+.homeui-overview-dsl,
+.homeui-overview-wifi {
   grid-column: span 6;
 }
 
@@ -50,58 +236,54 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 }
 
 .homeui-overview-card > .cbi-title > h3 {
-  min-height: 52px;
+  min-height: 50px;
   margin: 0 !important;
   padding: 0 16px;
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid var(--homeui-border);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--homeui-accent-soft) 58%, transparent),
-    transparent 58%
-  );
+  background: var(--homeui-surface);
   color: var(--text-color-highest);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: .1px;
 }
 
 .homeui-overview-card > .cbi-title > h3::before {
-  width: 9px;
-  height: 9px;
-  flex: 0 0 9px;
-  border-radius: 3px;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
   background: var(--homeui-accent);
-  box-shadow: 0 0 0 5px rgba(47, 137, 255, .1);
+  box-shadow: 0 0 0 4px rgba(47, 137, 255, .09);
   content: "";
 }
 
 .homeui-overview-memory > .cbi-title > h3::before {
-  background: #7c6df2;
-  box-shadow: 0 0 0 5px rgba(124, 109, 242, .1);
+  background: #7464ef;
+  box-shadow: 0 0 0 4px rgba(116, 100, 239, .1);
 }
 
 .homeui-overview-storage > .cbi-title > h3::before {
-  background: #f0a13c;
-  box-shadow: 0 0 0 5px rgba(240, 161, 60, .1);
+  background: #e9982f;
+  box-shadow: 0 0 0 4px rgba(233, 152, 47, .1);
 }
 
 .homeui-overview-network > .cbi-title > h3::before {
   background: var(--homeui-success);
-  box-shadow: 0 0 0 5px rgba(36, 189, 131, .1);
+  box-shadow: 0 0 0 4px rgba(36, 189, 131, .1);
 }
 
 .homeui-overview-card > .cbi-title .label {
-  min-width: 52px !important;
-  min-height: 27px;
+  min-width: 48px !important;
+  min-height: 25px;
   margin-left: auto;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border: 1px solid var(--homeui-border);
   border-radius: 999px;
-  background: var(--homeui-surface);
+  background: var(--homeui-surface-soft);
   color: var(--homeui-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -124,7 +306,7 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 .homeui-overview-card .table .tr {
   min-height: 42px;
   display: grid;
-  grid-template-columns: minmax(126px, 34%) minmax(0, 1fr);
+  grid-template-columns: minmax(112px, 35%) minmax(0, 1fr);
   align-items: center;
   border-bottom: 1px solid var(--homeui-border);
 }
@@ -135,41 +317,34 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 
 .homeui-overview-card .table .td {
   min-width: 0;
-  padding: 9px 8px;
+  padding: 9px 7px;
   overflow-wrap: anywhere;
 }
 
 .homeui-overview-card .table .td:first-child {
   color: var(--homeui-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 .homeui-overview-card .table .td:last-child {
   color: var(--text-color-highest);
-  font-weight: 530;
+  font-size: 12px;
+  font-weight: 550;
 }
 
 .homeui-overview-system > div:not(.cbi-title) > .table {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0 24px;
 }
 
 .homeui-overview-system .table .tr {
-  min-height: 54px;
-  grid-template-columns: minmax(108px, 38%) minmax(0, 1fr);
-  border: 1px solid var(--homeui-border);
-  border-radius: 9px;
-  background: var(--homeui-surface-soft);
-}
-
-.homeui-overview-system .table .td {
-  background: transparent !important;
+  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
 }
 
 .homeui-overview-card .cbi-progressbar {
-  height: 9px;
+  height: 7px;
   margin: 5px 0;
   overflow: hidden;
   border: 0;
@@ -183,15 +358,15 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   height: 100%;
   border: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    var(--homeui-accent),
-    color-mix(in srgb, var(--homeui-accent) 55%, #6dd9ff)
-  );
+  background: linear-gradient(90deg, #2f89ff, #6fc5ff);
 }
 
 .homeui-overview-memory .cbi-progressbar > div {
   background: linear-gradient(90deg, #7464ef, #a895ff);
+}
+
+.homeui-overview-storage .cbi-progressbar > div {
+  background: linear-gradient(90deg, #e9982f, #ffc76f);
 }
 
 .homeui-overview-network .network-status-table {
@@ -208,7 +383,9 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 
 .homeui-overview-network .ifacebox {
   min-width: 0;
-  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--homeui-border);
+  border-radius: 11px;
   background: var(--homeui-surface-soft);
 }
 
@@ -219,7 +396,7 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   justify-content: space-between;
   padding: 8px 12px;
   border-bottom: 1px solid var(--homeui-border);
-  background: transparent;
+  background: var(--homeui-surface);
   color: var(--homeui-muted);
   text-align: left;
 }
@@ -229,8 +406,8 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 }
 
 .homeui-overview-network .ifacebox-head::after {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--homeui-muted);
   content: "";
@@ -238,17 +415,17 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 
 .homeui-overview-network .ifacebox-head.active::after {
   background: var(--homeui-success);
-  box-shadow: 0 0 0 4px rgba(36, 189, 131, .11);
+  box-shadow: 0 0 0 4px rgba(36, 189, 131, .1);
 }
 
 .homeui-overview-network .ifacebox-body {
-  padding: 12px;
+  padding: 13px;
   background: transparent;
 }
 
 .homeui-overview-network .ifacebox-body > span {
   display: grid;
-  grid-template-columns: minmax(110px, 32%) minmax(0, 1fr);
+  grid-template-columns: minmax(105px, 31%) minmax(0, 1fr);
   gap: 7px 10px;
 }
 
@@ -269,22 +446,34 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
   box-shadow: none;
 }
 
+:root[data-darkmode="true"] .homeui-overview-hero {
+  background:
+    radial-gradient(
+      circle at 82% 22%,
+      rgba(255, 255, 255, .11),
+      transparent 22%
+    ),
+    linear-gradient(125deg, #155db9 0%, #236fc5 55%, #277da9 100%);
+}
+
+:root[data-darkmode="true"] .homeui-overview-metric,
 :root[data-darkmode="true"] .homeui-overview-card {
   box-shadow: 0 10px 30px rgba(0, 0, 0, .16) !important;
 }
 
 @media screen and (max-width: 1280px) {
   .homeui-overview-system,
+  .homeui-overview-memory,
+  .homeui-overview-storage,
   .homeui-overview-ports,
-  .homeui-overview-network,
-  .homeui-overview-dhcp,
-  .homeui-overview-wifi {
+  .homeui-overview-network {
     grid-column: 1 / -1;
   }
 
-  .homeui-overview-memory,
-  .homeui-overview-storage,
-  .homeui-overview-dsl {
+  .homeui-overview-dhcp,
+  .homeui-overview-dns,
+  .homeui-overview-dsl,
+  .homeui-overview-wifi {
     grid-column: span 6;
   }
 }
@@ -292,6 +481,17 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 @media screen and (max-width: 900px) {
   body[data-page="admin-status-overview"] #view.homeui-overview-grid {
     display: block;
+  }
+
+  .homeui-overview-hero {
+    min-height: 180px;
+    margin-bottom: 0;
+    padding: 24px 24px 72px;
+  }
+
+  .homeui-overview-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: -62px 14px 14px;
   }
 
   .homeui-overview-card {
@@ -310,12 +510,55 @@ body[data-page="admin-status-overview"] #view.homeui-overview-grid {
 }
 
 @media screen and (max-width: 560px) {
+  .homeui-overview-hero {
+    min-height: 166px;
+    padding: 21px 20px 68px;
+    border-radius: 13px;
+  }
+
+  .homeui-overview-hero h1 {
+    font-size: 23px;
+  }
+
+  .homeui-overview-health {
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+
+  .homeui-overview-metrics {
+    gap: 8px;
+    margin: -56px 9px 12px;
+  }
+
+  .homeui-overview-metric {
+    min-height: 72px;
+    gap: 9px;
+    padding: 11px;
+    border-radius: 10px;
+  }
+
+  .homeui-overview-metric-icon {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 9px;
+  }
+
+  .homeui-overview-metric-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .homeui-overview-metric strong {
+    font-size: 14px;
+  }
+
   .homeui-overview-card > div:not(.cbi-title) {
     padding: 10px 12px 12px;
   }
 
   .homeui-overview-card .table .tr,
   .homeui-overview-system .table .tr {
-    grid-template-columns: minmax(98px, 38%) minmax(0, 1fr);
+    grid-template-columns: minmax(94px, 37%) minmax(0, 1fr);
   }
 }
