@@ -11,7 +11,37 @@
   var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
   var isChinese = (root.lang || '').toLowerCase().startsWith('zh');
-  var pageId = (document.body && document.body.dataset.page) || '';
+
+  function resolveCurrentPageId()
+  {
+    var bodyPage = (document.body && document.body.dataset.page) || '';
+    if (!bodyPage && window.L && window.L.env) {
+      var dp = window.L.env.dispatchpath || window.L.env.requestpath;
+      if (Array.isArray(dp) && dp.length)
+        bodyPage = dp.join('-');
+    }
+    if (!bodyPage) {
+      var pathname = (window.location && window.location.pathname) || '';
+      var m = pathname.match(/\/admin\/[a-z0-9_/-]+/i);
+      if (m)
+        bodyPage = m[0].replace(/^\/+|\/+$/g, '').replace(/\//g, '-');
+    }
+    if (/admin-status-routes/.test(bodyPage))
+      bodyPage = 'admin-status-routes';
+    else if (/admin-status-nftables/.test(bodyPage))
+      bodyPage = 'admin-status-nftables';
+    else if (/admin-status-iptables/.test(bodyPage))
+      bodyPage = 'admin-status-iptables';
+    else if (/admin-status-overview/.test(bodyPage))
+      bodyPage = 'admin-status-overview';
+
+    if (bodyPage && document.body && document.body.dataset.page !== bodyPage)
+      document.body.dataset.page = bodyPage;
+
+    return bodyPage;
+  }
+
+  var pageId = resolveCurrentPageId();
   var isOverview = pageId === 'admin-status-overview';
   var isRoutesPage = pageId === 'admin-status-routes';
   var isFirewallStatusPage =
@@ -49,7 +79,9 @@
 
   var liveState = {
     lastTick: 0,
+    pollTicks: 0,
     devCounters: {},
+    wanWaves: {},
     ifaces: [],
     selectedWanIdx: 0,
     totalRxSpeed: 0,
@@ -250,7 +282,7 @@
   function loadHistoryState()
   {
     try {
-      var raw = localStorage.getItem('homeui-overview-history-v3');
+      var raw = localStorage.getItem('homeui-overview-history-v4');
       if (raw) {
         var parsed = JSON.parse(raw);
         if (parsed && parsed.h1 && parsed.h24 &&
@@ -269,7 +301,7 @@
   {
     try {
       localStorage.setItem(
-        'homeui-overview-history-v3',
+        'homeui-overview-history-v4',
         JSON.stringify(historyState)
       );
     } catch (e) {}
@@ -992,6 +1024,57 @@
     return yr + '-' + mo + '-' + dy + ' ' + hr + ':' + mi + ':' + sc;
   }
 
+  function pushWanWaveSample(key, txBps, rxBps)
+  {
+    if (!key)
+      return;
+    var tx = Math.max(0, Number(txBps) || 0);
+    var rx = Math.max(0, Number(rxBps) || 0);
+    var entry = liveState.wanWaves[key];
+
+    if (!entry) {
+      var initTx = [];
+      var initRx = [];
+      for (var i = 0; i < 20; i++) {
+        var factor = 0.55 + 0.32 * Math.sin(i * 0.65) + (i / 20) * 0.15;
+        initTx.push(Math.max(0, tx * factor));
+        initRx.push(
+          Math.max(0, rx * (0.58 + 0.30 * Math.cos(i * 0.6) + (i / 20) * 0.14))
+        );
+      }
+      initTx[19] = tx;
+      initRx[19] = rx;
+      liveState.wanWaves[key] = {
+        tx: initTx,
+        rx: initRx,
+        seededWithTraffic: tx > 0 || rx > 0,
+        tick: 1
+      };
+      return;
+    }
+
+    entry.tick = (entry.tick || 0) + 1;
+    if (!entry.seededWithTraffic && (tx > 0 || rx > 0)) {
+      for (var j = 0; j < 19; j++) {
+        var f = 0.52 + 0.34 * Math.sin((j + entry.tick) * 0.7) + (j / 19) * 0.16;
+        entry.tx[j] = Math.max(0, tx * f);
+        entry.rx[j] = Math.max(
+          0,
+          rx * (0.56 + 0.32 * Math.cos((j + entry.tick) * 0.65) + (j / 19) * 0.15)
+        );
+      }
+      entry.tx[19] = tx;
+      entry.rx[19] = rx;
+      entry.seededWithTraffic = true;
+      return;
+    }
+
+    entry.tx.shift();
+    entry.tx.push(tx);
+    entry.rx.shift();
+    entry.rx.push(rx);
+  }
+
   function pollLiveRouterStats(callback)
   {
     if (!window.L || typeof window.L.require !== 'function')
@@ -1032,9 +1115,9 @@
               var rx = Number(d.getRXBytes && d.getRXBytes()) || 0;
               var tx = Number(d.getTXBytes && d.getTXBytes()) || 0;
               var prev = liveState.devCounters[dname];
-              var rxSpd = 0;
-              var txSpd = 0;
-              if (prev && dt >= 0.8 && rx >= prev.rx && tx >= prev.tx) {
+              var rxSpd = prev ? (prev.rxSpeed || 0) : 0;
+              var txSpd = prev ? (prev.txSpeed || 0) : 0;
+              if (prev && dt >= 0.6 && rx >= prev.rx && tx >= prev.tx) {
                 rxSpd = (rx - prev.rx) / dt;
                 txSpd = (tx - prev.tx) / dt;
               }
@@ -1060,6 +1143,10 @@
               totalTxSpd = devMap['br-lan'].txSpeed;
             }
 
+            if (liveState.lastTick > 0 && dt >= 0.6) {
+              liveState.pollTicks = (liveState.pollTicks || 0) + 1;
+              pushWanWaveSample('__total__', totalTxSpd, totalRxSpd);
+            }
             liveState.lastTick = now;
             liveState.totalBytes = totalRx + totalTx;
             liveState.totalRxSpeed = totalRxSpd;
@@ -1083,6 +1170,12 @@
               var up = (n.isUp && n.isUp()) !== false;
               var uptime = (n.getUptime && n.getUptime()) || 0;
 
+              var ifRxSpd = cnt.rxSpeed || totalRxSpd || 0;
+              var ifTxSpd = cnt.txSpeed || totalTxSpd || 0;
+              if (dt >= 0.6) {
+                pushWanWaveSample(name, ifTxSpd, ifRxSpd);
+              }
+
               if (ip || up) {
                 parsedIfaces.push({
                   name: name,
@@ -1094,10 +1187,10 @@
                   gw: gw || '--',
                   dns: dnsArr.slice(0, 2).join(', ') || '--',
                   uptime: uptime,
-                  rxBytes: cnt.rx,
-                  txBytes: cnt.tx,
-                  rxSpeed: cnt.rxSpeed,
-                  txSpeed: cnt.txSpeed
+                  rxBytes: cnt.rx || totalRx,
+                  txBytes: cnt.tx || totalTx,
+                  rxSpeed: ifRxSpd,
+                  txSpeed: ifTxSpd
                 });
               }
             });
@@ -2321,29 +2414,46 @@
     if (!txSvg && !rxSvg)
       return;
 
-    var store = historyState.h1;
-    var ifKey = primaryBox && (primaryBox.name || primaryBox.title);
-    var sub = ifKey && store.ifaceSeries && store.ifaceSeries[ifKey];
-    var txArr = (sub && sub.txAvg) ? sub.txAvg.slice() : store.txAvg.slice();
-    var rxArr = (sub && sub.rxAvg) ? sub.rxAvg.slice() : store.rxAvg.slice();
+    var ifKey = (primaryBox && (primaryBox.name || primaryBox.title)) || '__total__';
+    var curTx = (primaryBox && primaryBox.txSpeed) || liveState.totalTxSpeed || 0;
+    var curRx = (primaryBox && primaryBox.rxSpeed) || liveState.totalRxSpeed || 0;
 
-    function buildWaveSvgContent(series, gradId, color)
+    if (!liveState.wanWaves[ifKey] && !liveState.wanWaves.__total__) {
+      var initTxBps = !window.L ? 48 * 1024 : curTx;
+      var initRxBps = !window.L ? 136 * 1024 : curRx;
+      pushWanWaveSample(ifKey, initTxBps, initRxBps);
+    }
+
+    var waveEntry = liveState.wanWaves[ifKey] || liveState.wanWaves.__total__;
+    var txArr = waveEntry ? waveEntry.tx.slice() : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var rxArr = waveEntry ? waveEntry.rx.slice() : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var waveTick = (waveEntry && waveEntry.tick) || 1;
+
+    function buildWaveSvgContent(series, gradId, color, phase)
     {
       var w = 210;
       var h = 20;
       var padTop = 3;
       var padBottom = 2;
       var plotLeft = 2;
-      var plotRight = w - 2;
+      var plotRight = w - 3;
       var plotW = plotRight - plotLeft;
       var plotH = h - padTop - padBottom;
-      var maxV = Math.max.apply(null, series.concat([10]));
+      var maxV = Math.max.apply(null, series.concat([512]));
       var minV = Math.min.apply(null, series);
-      var span = Math.max(4, maxV - minV * 0.7);
+      var span = Math.max(256, maxV - minV * 0.45);
 
-      var coords = series.map(function(val, idx) {
+      var coords = series.map(function(rawVal, idx) {
+        var val = Math.max(0, Number(rawVal) || 0);
         var x = plotLeft + (plotW * idx) / Math.max(1, series.length - 1);
-        var norm = Math.max(0.12, Math.min(1, ((Number(val) || 0) - minV * 0.5) / span));
+        var norm;
+        if (val <= 0) {
+          norm = 0.08 + 0.03 * Math.sin((idx + waveTick) * 0.8 + phase);
+        } else {
+          var baseRatio = (val - minV * 0.35) / span;
+          var liveRipple = 0.05 * Math.sin((idx + waveTick) * 0.9 + phase);
+          norm = Math.max(0.16, Math.min(0.98, baseRatio + liveRipple));
+        }
         var y = padTop + plotH * (1 - norm);
         return [x, y];
       });
@@ -2358,25 +2468,28 @@
           p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
       }
 
+      var lastPt = coords[coords.length - 1];
       var baseY = (padTop + plotH).toFixed(1);
       var area = d +
-        ' L ' + coords[coords.length - 1][0].toFixed(1) + ' ' + baseY +
+        ' L ' + lastPt[0].toFixed(1) + ' ' + baseY +
         ' L ' + coords[0][0].toFixed(1) + ' ' + baseY + ' Z';
 
       return '<defs>' +
         '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.28"/>' +
+          '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.32"/>' +
           '<stop offset="100%" stop-color="' + color + '" stop-opacity="0.02"/>' +
         '</linearGradient>' +
       '</defs>' +
       '<path class="wave-area" d="' + area + '" fill="url(#' + gradId + ')"/>' +
-      '<path class="wave-line" d="' + d + '"/>';
+      '<path class="wave-line" d="' + d + '"/>' +
+      '<circle cx="' + lastPt[0].toFixed(1) + '" cy="' + lastPt[1].toFixed(1) +
+        '" r="1.8" fill="' + color + '"/>';
     }
 
     if (txSvg)
-      txSvg.innerHTML = buildWaveSvgContent(txArr, 'homeuiWanUpGrad', '#6d78f6');
+      txSvg.innerHTML = buildWaveSvgContent(txArr, 'homeuiWanUpGrad', '#6d78f6', 0);
     if (rxSvg)
-      rxSvg.innerHTML = buildWaveSvgContent(rxArr, 'homeuiWanDownGrad', '#4cd4a0');
+      rxSvg.innerHTML = buildWaveSvgContent(rxArr, 'homeuiWanDownGrad', '#4cd4a0', 1.6);
   }
 
   function escapeHtml(str)
@@ -2398,16 +2511,17 @@
   function updateBucketSeries(store, slotDurationMs, sample)
   {
     var nowSlot = Math.floor(Date.now() / slotDurationMs);
+    var isLiveReady = !window.L || (liveState.pollTicks && liveState.pollTicks >= 1);
 
     if (!store.seeded) {
       for (var i = 0; i < 12; i++) {
         var wave = 0.85 + ((i % 4) * 0.08);
-        var txV = Math.max(1, Math.round(sample.txKB * wave));
-        var rxV = Math.max(1, Math.round(sample.rxKB * wave));
+        var txV = sample.txKB > 0 ? Math.max(1, Math.round(sample.txKB * wave)) : 0;
+        var rxV = sample.rxKB > 0 ? Math.max(1, Math.round(sample.rxKB * wave)) : 0;
         store.txAvg[i] = txV;
-        store.txPeak[i] = Math.max(txV + 12, Math.round(txV * 1.45));
+        store.txPeak[i] = txV > 0 ? Math.max(txV + 4, Math.round(txV * 1.35)) : 0;
         store.rxAvg[i] = rxV;
-        store.rxPeak[i] = Math.max(rxV + 18, Math.round(rxV * 1.52));
+        store.rxPeak[i] = rxV > 0 ? Math.max(rxV + 6, Math.round(rxV * 1.42)) : 0;
 
         store.wiredAvg[i] = sample.wired;
         store.wiredPeak[i] = sample.wired + (i % 3 === 0 && sample.wired > 0 ? 1 : 0);
@@ -2418,7 +2532,8 @@
         store.memPeak[i] = Math.min(100, sample.memPct + (i % 3 === 0 ? 3 : 2));
       }
       store.bucketSlot = nowSlot;
-      store.seeded = true;
+      if (isLiveReady)
+        store.seeded = true;
     } else if (nowSlot > store.bucketSlot) {
       var steps = Math.min(12, nowSlot - store.bucketSlot);
       for (var s = 0; s < steps; s++) {
@@ -2446,12 +2561,10 @@
         store.memPeak.push(sample.memPct);
       }
       store.bucketSlot = nowSlot;
-    } else {
-      store.txAvg[11] = sample.txKB > 0 ?
-        Math.round((store.txAvg[11] + sample.txKB) / 2) : store.txAvg[11];
+    } else if (isLiveReady) {
+      store.txAvg[11] = sample.txKB;
       store.txPeak[11] = Math.max(store.txPeak[11], sample.txKB, store.txAvg[11]);
-      store.rxAvg[11] = sample.rxKB > 0 ?
-        Math.round((store.rxAvg[11] + sample.rxKB) / 2) : store.rxAvg[11];
+      store.rxAvg[11] = sample.rxKB;
       store.rxPeak[11] = Math.max(store.rxPeak[11], sample.rxKB, store.rxAvg[11]);
 
       store.wiredAvg[11] = sample.wired;
@@ -2472,7 +2585,7 @@
         return;
       var iTx = Math.max(0, Math.round((iface.txSpeed || 0) / 1024));
       var iRx = Math.max(0, Math.round((iface.rxSpeed || 0) / 1024));
-      if (!store.ifaceSeries[key]) {
+      if (!store.ifaceSeries[key] || !isLiveReady) {
         var initTxAvg = [];
         var initTxPeak = [];
         var initRxAvg = [];
@@ -2482,9 +2595,9 @@
           var baseTx = iTx || Math.round(sample.txKB * w);
           var baseRx = iRx || Math.round(sample.rxKB * w);
           initTxAvg.push(baseTx);
-          initTxPeak.push(Math.max(baseTx + 8, Math.round(baseTx * 1.4)));
+          initTxPeak.push(baseTx > 0 ? Math.max(baseTx + 4, Math.round(baseTx * 1.35)) : 0);
           initRxAvg.push(baseRx);
-          initRxPeak.push(Math.max(baseRx + 12, Math.round(baseRx * 1.45)));
+          initRxPeak.push(baseRx > 0 ? Math.max(baseRx + 6, Math.round(baseRx * 1.4)) : 0);
         }
         store.ifaceSeries[key] = {
           txAvg: initTxAvg,
@@ -2494,12 +2607,10 @@
         };
       } else {
         var sObj = store.ifaceSeries[key];
-        if (iTx > 0 || iRx > 0) {
-          sObj.txAvg[11] = iTx;
-          sObj.txPeak[11] = Math.max(sObj.txPeak[11], iTx);
-          sObj.rxAvg[11] = iRx;
-          sObj.rxPeak[11] = Math.max(sObj.rxPeak[11], iRx);
-        }
+        sObj.txAvg[11] = iTx;
+        sObj.txPeak[11] = Math.max(sObj.txPeak[11], iTx);
+        sObj.rxAvg[11] = iRx;
+        sObj.rxPeak[11] = Math.max(sObj.rxPeak[11], iRx);
       }
     });
   }
@@ -2740,8 +2851,13 @@
       setText(dash, '[data-wan-rx]', primaryBox.rxText || '136.50 KB/s');
     }
 
-    var txKB = curTxSpeed > 0 ? Math.max(1, Math.round(curTxSpeed / 1024)) : 48;
-    var rxKB = curRxSpeed > 0 ? Math.max(1, Math.round(curRxSpeed / 1024)) : 136;
+    var isMockPreview = !window.L;
+    var txKB = curTxSpeed > 0 ?
+      Math.max(1, Math.round(curTxSpeed / 1024)) :
+      (isMockPreview ? 48 : 0);
+    var rxKB = curRxSpeed > 0 ?
+      Math.max(1, Math.round(curRxSpeed / 1024)) :
+      (isMockPreview ? 136 : 0);
 
     var sample = {
       txKB: txKB,
@@ -2876,7 +2992,7 @@
       return '';
     var clone = h.cloneNode(true);
     Array.prototype.forEach.call(
-      clone.querySelectorAll('button, a, .homeui-sec-count'),
+      clone.querySelectorAll('button, a, .homeui-sec-count, .homeui-sec-cat'),
       function(el) { el.remove(); }
     );
     return clone.textContent.trim();
@@ -2893,10 +3009,11 @@
     var count = 0;
     Array.prototype.forEach.call(rows, function(r) {
       if (r.classList.contains('cbi-section-table-titles') ||
+          r.classList.contains('table-titles') ||
           r.classList.contains('placeholder'))
         return;
       var txt = r.textContent.trim();
-      if (!txt || /没有|无.*记录|暂无|no\s+entries|no\s+rules|no\s+chains|empty/i.test(txt))
+      if (!txt || /没有|无.*记录|无.*规则|暂无|no\s+entries|no\s+rules|no\s+chains|empty/i.test(txt))
         return;
       count++;
     });
@@ -2908,7 +3025,7 @@
     var q = (query || '').trim().toLowerCase();
     var units = view.querySelectorAll('.homeui-fw-unit');
     if (!units.length)
-      units = view.querySelectorAll('.cbi-section');
+      units = view.querySelectorAll('.cbi-section:not(.homeui-nft-table-head)');
 
     Array.prototype.forEach.call(units, function(sec) {
       var cat = sec.dataset.homeuiCat || 'other';
@@ -2933,9 +3050,13 @@
         return;
       }
 
-      var titleMatch = (sec.dataset.homeuiTitle || '').toLowerCase().includes(q);
+      var titleMatch = (sec.dataset.homeuiTitle || '').toLowerCase().includes(q) ||
+        (sec.dataset.homeuiTableTitle || '').toLowerCase().includes(q);
       var visibleRows = 0;
       Array.prototype.forEach.call(rows, function(r) {
+        if (r.classList.contains('cbi-section-table-titles') ||
+            r.classList.contains('table-titles'))
+          return;
         var rTxt = r.textContent.toLowerCase();
         var show = titleMatch || rTxt.includes(q);
         r.style.display = show ? '' : 'none';
@@ -2946,23 +3067,77 @@
       sec.classList.toggle('homeui-sec-hidden', visibleRows === 0 && !titleMatch);
     });
 
-    Array.prototype.forEach.call(view.querySelectorAll('.cbi-section'), function(parentSec) {
-      if (parentSec.classList.contains('homeui-fw-unit'))
+    Array.prototype.forEach.call(
+      view.querySelectorAll('.nft-table, .homeui-routes-tabpane, .cbi-section'),
+      function(parentSec) {
+        if (parentSec.classList.contains('homeui-fw-unit') ||
+            parentSec.classList.contains('homeui-nft-table-head'))
+          return;
+        var childUnits = parentSec.querySelectorAll('.homeui-fw-unit');
+        if (!childUnits.length)
+          return;
+        var anyVisible = Array.prototype.some.call(childUnits, function(u) {
+          return !u.classList.contains('homeui-sec-hidden');
+        });
+        parentSec.classList.toggle('homeui-sec-hidden', !anyVisible);
+      }
+    );
+  }
+
+  function prepareRoutesUnits(view)
+  {
+    Array.prototype.forEach.call(
+      view.querySelectorAll('.cbi-tabmenu'),
+      function(tm) { tm.classList.add('homeui-sec-hidden'); }
+    );
+
+    Array.prototype.forEach.call(
+      view.querySelectorAll('.cbi-section[data-tab]'),
+      function(pane) {
+        pane.classList.add('homeui-routes-tabpane');
+        pane.setAttribute('data-tab-active', 'true');
+        pane.style.display = '';
+      }
+    );
+
+    var headings = view.querySelectorAll('h3');
+    Array.prototype.forEach.call(headings, function(h3) {
+      if (h3.closest('.homeui-subpage-card') ||
+          h3.closest('.homeui-subpage-shell'))
         return;
-      var childUnits = parentSec.querySelectorAll('.homeui-fw-unit');
-      if (!childUnits.length)
+      var parent = h3.parentNode;
+      if (!parent)
         return;
-      var anyVisible = Array.prototype.some.call(childUnits, function(u) {
-        return !u.classList.contains('homeui-sec-hidden');
-      });
-      parentSec.classList.toggle('homeui-sec-hidden', !anyVisible);
+      if (parent.classList.contains('cbi-section') &&
+          !parent.hasAttribute('data-tab') &&
+          parent.querySelectorAll('h3').length === 1) {
+        parent.classList.add('homeui-subpage-card', 'homeui-fw-unit');
+        return;
+      }
+
+      var card = document.createElement('section');
+      card.className = 'homeui-subpage-card homeui-fw-unit';
+      parent.insertBefore(card, h3);
+      var cur = h3;
+      while (cur) {
+        var next = cur.nextSibling;
+        card.appendChild(cur);
+        if (!next || (next.nodeType === 1 && /^H[234]$/i.test(next.tagName)))
+          break;
+        cur = next;
+      }
     });
+
+    return view.querySelectorAll('.homeui-fw-unit');
   }
 
   function enhanceRoutesPage(view)
   {
-    var sections = view.querySelectorAll('.cbi-section');
-    if (!sections.length)
+    if (!view.querySelector('.table, table, .cbi-section'))
+      return;
+
+    var units = prepareRoutesUnits(view);
+    if (!units.length)
       return;
 
     var counts = {
@@ -2973,8 +3148,15 @@
       rule: 0
     };
 
-    Array.prototype.forEach.call(sections, function(sec, idx) {
-      sec.classList.add('homeui-fw-unit');
+    var catTagLabels = {
+      arp: 'IPv4 ARP',
+      v4route: 'IPv4 Route',
+      v6route: 'IPv6 Route',
+      v6neigh: 'IPv6 NDP',
+      rule: 'Policy Rule'
+    };
+
+    Array.prototype.forEach.call(units, function(sec, idx) {
       var title = getSectionHeadingText(sec);
       var lower = title.toLowerCase();
       var cat = 'v4route';
@@ -3000,13 +3182,18 @@
 
       var h = sec.querySelector('h3, h4, .cbi-section-title');
       if (h) {
+        var catBadge = h.querySelector('.homeui-sec-cat');
+        if (!catBadge) {
+          catBadge = document.createElement('span');
+          catBadge.className = 'homeui-sec-cat is-' + cat;
+          h.insertBefore(catBadge, h.firstChild);
+        }
+        catBadge.textContent = catTagLabels[cat] || 'Route';
+
         var badge = h.querySelector('.homeui-sec-count');
         if (!badge) {
           badge = document.createElement('span');
           badge.className = 'homeui-sec-count';
-          badge.style.cssText =
-            'margin-left:auto;padding:2px 8px;border-radius:999px;' +
-            'background:#eef2ff;color:#2f6bff;font-size:11px;font-weight:600;';
           h.appendChild(badge);
         }
         badge.textContent = rCount + (isChinese ? ' 条记录' : ' entries');
@@ -3085,6 +3272,10 @@
               (isChinese ? 'IPv6 邻居' : 'IPv6 Neighbors') +
               ' <em class="tab-count" data-rt-cnt="v6neigh">0</em>' +
             '</button>' +
+            '<button type="button" class="homeui-subpage-tab" data-rt-tab="rule">' +
+              (isChinese ? '策略规则' : 'Rules') +
+              ' <em class="tab-count" data-rt-cnt="rule">0</em>' +
+            '</button>' +
           '</div>' +
           '<div class="homeui-subpage-toolbar">' +
             '<label class="homeui-subpage-search">' +
@@ -3096,8 +3287,7 @@
           '</div>' +
         '</div>';
 
-      var firstSec = sections[0];
-      firstSec.parentNode.insertBefore(shell, firstSec);
+      view.insertBefore(shell, view.firstChild);
 
       shell.addEventListener('click', function(ev) {
         var tabBtn = ev.target.closest('[data-rt-tab]');
@@ -3130,20 +3320,43 @@
     setText(shell, '[data-rt-cnt="v4route"]', counts.v4route);
     setText(shell, '[data-rt-cnt="v6route"]', counts.v6route);
     setText(shell, '[data-rt-cnt="v6neigh"]', counts.v6neigh);
+    setText(shell, '[data-rt-cnt="rule"]', counts.rule);
 
     applySubpageFilter(view, subpageState.routesTab, subpageState.routesQuery, false);
   }
 
   function prepareFirewallUnits(view)
   {
+    var nftTables = view.querySelectorAll('.nft-table');
+    if (nftTables.length) {
+      Array.prototype.forEach.call(nftTables, function(nt) {
+        var topSec = nt.querySelector(':scope > .cbi-section');
+        if (topSec && !topSec.classList.contains('nft-chain')) {
+          topSec.classList.add('homeui-nft-table-head');
+          topSec.classList.remove('homeui-fw-unit');
+        }
+        var tableTitle = topSec ? getSectionHeadingText(topSec) : '';
+        var chains = nt.querySelectorAll('.nft-chain');
+        Array.prototype.forEach.call(chains, function(ch) {
+          ch.classList.add('homeui-fw-unit', 'homeui-subpage-card');
+          if (tableTitle)
+            ch.dataset.homeuiTableTitle = tableTitle;
+        });
+      });
+      return view.querySelectorAll('.homeui-fw-unit');
+    }
+
     var sections = view.querySelectorAll('.cbi-section');
     Array.prototype.forEach.call(sections, function(sec) {
+      if (sec.classList.contains('homeui-nft-table-head'))
+        return;
       var h4s = sec.querySelectorAll('h4');
       if (h4s.length <= 1) {
-        sec.classList.add('homeui-fw-unit');
+        sec.classList.add('homeui-fw-unit', 'homeui-subpage-card');
         return;
       }
 
+      var tableTitle = getSectionHeadingText(sec);
       Array.prototype.forEach.call(h4s, function(h4) {
         var parent = h4.parentNode;
         if (!parent)
@@ -3151,11 +3364,15 @@
         if (parent.classList.contains('homeui-fw-unit'))
           return;
         if (parent !== sec && parent.querySelectorAll('h4').length === 1) {
-          parent.classList.add('homeui-fw-unit');
+          parent.classList.add('homeui-fw-unit', 'homeui-subpage-card');
+          if (tableTitle)
+            parent.dataset.homeuiTableTitle = tableTitle;
           return;
         }
         var wrapper = document.createElement('div');
-        wrapper.className = 'homeui-fw-unit';
+        wrapper.className = 'homeui-fw-unit homeui-subpage-card';
+        if (tableTitle)
+          wrapper.dataset.homeuiTableTitle = tableTitle;
         parent.insertBefore(wrapper, h4);
         var cur = h4;
         while (cur) {
@@ -3173,13 +3390,20 @@
 
   function enhanceFirewallStatusPage(view)
   {
-    var sections = view.querySelectorAll('.cbi-section');
+    var sections = view.querySelectorAll('.cbi-section, .nft-chain');
     if (!sections.length)
       return;
 
+    var mainEl = document.querySelector('#maincontent');
+    if (mainEl) {
+      var legacyWarn = mainEl.querySelector(':scope > .alert-message.warning');
+      if (legacyWarn)
+        legacyWarn.classList.add('homeui-legacy-fw-banner');
+    }
+
     var units = prepareFirewallUnits(view);
     if (!units.length)
-      units = sections;
+      units = view.querySelectorAll('.cbi-section:not(.homeui-nft-table-head)');
 
     var totalChains = units.length;
     var totalRules = 0;
@@ -3192,15 +3416,24 @@
       mangle: 0
     };
 
+    var fwCatLabels = {
+      filter: 'FILTER',
+      nat: 'NAT',
+      mangle: 'MANGLE'
+    };
+
     Array.prototype.forEach.call(units, function(sec) {
       var title = getSectionHeadingText(sec);
-      var lower = title.toLowerCase();
+      var tableTitle = sec.dataset.homeuiTableTitle || '';
+      var hookEl = sec.querySelector('.nft-chain-hook');
+      var hookTxt = hookEl ? hookEl.textContent : '';
+      var combined = (tableTitle + ' ' + title + ' ' + hookTxt).toLowerCase();
       var cat = 'filter';
 
-      if (/nat|prerouting|postrouting|masquerade|dstnat|srcnat/i.test(lower))
-        cat = 'nat';
-      else if (/mangle|raw|mssfix|mark/i.test(lower))
+      if (/mangle|raw|mssfix|mark|-150|-300/i.test(combined))
         cat = 'mangle';
+      else if (/nat|masquerade|dstnat|srcnat|-100|\b100\b/i.test(combined))
+        cat = 'nat';
 
       var rCount = countValidSectionRows(sec);
       sec.dataset.homeuiCat = cat;
@@ -3216,24 +3449,32 @@
         'table tbody tr'
       );
       Array.prototype.forEach.call(rows, function(r) {
+        if (r.classList.contains('cbi-section-table-titles') ||
+            r.classList.contains('table-titles'))
+          return;
         var txt = r.textContent.toLowerCase();
         if (!txt || /没有|无|no\s+rules|empty/i.test(txt))
           return;
         if (/\b(drop|reject)\b|丢弃|拒绝/.test(txt))
           dropRules++;
-        else if (/\b(accept|masquerade|dnat|snat|redirect|jump|goto)\b|接受|放行|转发/.test(txt))
+        else if (/\b(accept|masquerade|dnat|snat|redirect|jump|goto)\b|接受|放行|转发|跳转/.test(txt))
           acceptRules++;
       });
 
       var h = sec.querySelector('h4, h3, .cbi-section-title');
       if (h) {
+        var catBadge = h.querySelector('.homeui-sec-cat');
+        if (!catBadge) {
+          catBadge = document.createElement('span');
+          catBadge.className = 'homeui-sec-cat is-' + cat;
+          h.insertBefore(catBadge, h.firstChild);
+        }
+        catBadge.textContent = fwCatLabels[cat] || 'CHAIN';
+
         var badge = h.querySelector('.homeui-sec-count');
         if (!badge) {
           badge = document.createElement('span');
           badge.className = 'homeui-sec-count';
-          badge.style.cssText =
-            'margin-left:auto;padding:2px 8px;border-radius:999px;' +
-            'background:#eef2ff;color:#2f6bff;font-size:11px;font-weight:600;';
           h.appendChild(badge);
         }
         badge.textContent = rCount + (isChinese ? ' 条规则' : ' rules');
@@ -3324,8 +3565,7 @@
           '</div>' +
         '</div>';
 
-      var firstSec = sections[0];
-      firstSec.parentNode.insertBefore(shell, firstSec);
+      view.insertBefore(shell, view.firstChild);
 
       shell.addEventListener('click', function(ev) {
         var tabBtn = ev.target.closest('[data-fw-tab]');
@@ -3393,7 +3633,7 @@
 
   function enhanceOverview()
   {
-    var page = document.body ? (document.body.dataset.page || '') : '';
+    var page = resolveCurrentPageId();
     if (isEnhancing)
       return;
 
@@ -3503,7 +3743,8 @@
       return !m.target.closest ||
         (!m.target.closest('.homeui-ikuai-dashboard') &&
          !m.target.closest('.homeui-subpage-shell') &&
-         !m.target.classList.contains('homeui-sec-count'));
+         !m.target.classList.contains('homeui-sec-count') &&
+         !m.target.classList.contains('homeui-sec-cat'));
     });
     if (shouldUpdate)
       enhanceOverview();
@@ -3514,11 +3755,17 @@
 
   if (isOverview) {
     pollLiveRouterStats(enhanceOverview);
+    setTimeout(function() {
+      pollLiveRouterStats(enhanceOverview);
+    }, 1000);
     setInterval(function() {
       pollLiveRouterStats(enhanceOverview);
     }, 3000);
+  } else if (isRoutesPage || isFirewallStatusPage) {
+    setInterval(enhanceOverview, 1000);
   }
 
+  window.addEventListener('load', enhanceOverview);
   applyColorMode(root.dataset.colorMode || 'auto');
   labelIndicators();
   enhanceOverview();

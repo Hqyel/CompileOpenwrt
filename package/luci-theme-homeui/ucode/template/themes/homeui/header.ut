@@ -59,7 +59,7 @@
 
   <body class="lang_{{ dispatcher.lang }} {{
     entityencode(striptags(node?.title ?? ''), true) }}"
-    data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+    data-page="{{ entityencode(join('-', length(ctx.request_path) ? ctx.request_path : ctx.path), true) }}">
     {% if (!blank_page): %}
       <header class="homeui-shell">
         <div class="homeui-brand">

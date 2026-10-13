@@ -1290,13 +1290,70 @@ body[data-page="admin-status-overview"] #maincontent .cbi-section {
    ========================================================================== */
 body[data-page="admin-status-routes"] #maincontent > h2:first-of-type,
 body[data-page="admin-status-routes"] #view > h2:first-of-type,
+body[data-page="admin-status-routes"] #view > p:first-of-type,
 body[data-page="admin-status-routes"] .cbi-map > h2:first-of-type,
 body[data-page="admin-status-routes"] .cbi-map-descr,
+body[data-page="admin-status-routes"] .cbi-tabmenu,
 body[data-page^="admin-status-nftables"] #maincontent > h2:first-of-type,
 body[data-page^="admin-status-nftables"] #view > h2:first-of-type,
+body[data-page^="admin-status-nftables"] #view > div > h2:first-of-type,
+body[data-page^="admin-status-nftables"] #view > div > p:first-of-type,
 body[data-page^="admin-status-iptables"] #maincontent > h2:first-of-type,
-body[data-page^="admin-status-iptables"] #view > h2:first-of-type {
-  display: none;
+body[data-page^="admin-status-iptables"] #view > h2:first-of-type,
+body[data-page^="admin-status-iptables"] #view > div > h2:first-of-type,
+body[data-page^="admin-status-iptables"] .cbi-map-descr {
+  display: none !important;
+}
+
+/* Compact iKuai banner for legacy iptables warning on nftables status page */
+.homeui-legacy-fw-banner,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  padding: 10px 18px !important;
+  margin: 0 0 14px 0 !important;
+  border: 1px solid rgba(245, 159, 0, .32) !important;
+  border-left: 4px solid #f59f00 !important;
+  border-radius: 8px !important;
+  background: #fffbeb !important;
+  color: #78350f !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .03) !important;
+}
+
+:root[data-darkmode="true"] .homeui-legacy-fw-banner,
+:root[data-darkmode="true"] body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning {
+  background: color-mix(in srgb, #f59f00 12%, var(--homeui-surface)) !important;
+  color: var(--text-color-highest) !important;
+}
+
+.homeui-legacy-fw-banner h3,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning h3 {
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: inherit !important;
+}
+
+.homeui-legacy-fw-banner p,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning p {
+  flex: 1 1 360px;
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  color: inherit !important;
+  opacity: .9;
+}
+
+.homeui-legacy-fw-banner .btn,
+body[data-page^="admin-status-nftables"] #maincontent > .alert-message.warning .btn {
+  margin: 0 !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
 }
 
 .homeui-subpage-shell {
@@ -1566,76 +1623,204 @@ body[data-page^="admin-status-iptables"] #view > h2:first-of-type {
   font-weight: 500;
 }
 
-/* Styled sections on Routes and Firewall status pages */
-body[data-page="admin-status-routes"] .cbi-section,
-body[data-page^="admin-status-nftables"] .cbi-section,
+/* Transparent tab-pane wrapper on Routes page when split into cards */
+.homeui-routes-tabpane {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Nftables table group header banner */
+.nft-table {
+  margin-bottom: 18px;
+}
+
+.nft-table > .homeui-nft-table-head.cbi-section {
+  padding: 0 !important;
+  margin: 0 0 10px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-left: 3.5px solid #2f89ff !important;
+  border-radius: 6px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .03) !important;
+}
+
+.nft-table > .homeui-nft-table-head.cbi-section > h3 {
+  margin: 0 !important;
+  padding: 9px 16px !important;
+  border: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-color-highest) !important;
+}
+
+.nft-table > .nft-chains {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Styled sections and cards on Routes and Firewall status pages */
+.homeui-subpage-card,
+body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane),
+body[data-page^="admin-status-nftables"] .nft-chain.cbi-section,
 body[data-page^="admin-status-iptables"] .cbi-section {
-  padding: 0;
-  margin-bottom: 14px;
+  padding: 0 !important;
+  margin: 0 0 14px 0 !important;
   overflow: hidden;
-  border: 1px solid var(--homeui-border);
-  border-radius: 8px;
-  background: var(--homeui-surface);
-  box-shadow: 0 2px 10px rgba(27, 46, 75, .03);
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
 }
 
-body[data-page="admin-status-routes"] .cbi-section > h3:first-child,
-body[data-page="admin-status-routes"] .cbi-section > legend,
-body[data-page^="admin-status-nftables"] .cbi-section > h3:first-child,
-body[data-page^="admin-status-iptables"] .cbi-section > h3:first-child {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--homeui-border);
-  background: var(--homeui-surface);
-  color: var(--text-color-highest);
-  font-size: 13px;
-  font-weight: 600;
+.nft-table > .nft-chains > .nft-chain.cbi-section {
+  margin-bottom: 0 !important;
 }
 
-body[data-page^="admin-status-nftables"] .cbi-section h4,
+.homeui-subpage-card > h3:first-child,
+.homeui-subpage-card > h4:first-child,
+body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane) > h3:first-child,
+body[data-page="admin-status-routes"] .cbi-section:not(.homeui-routes-tabpane) > legend,
+body[data-page^="admin-status-nftables"] .nft-chain.cbi-section > h4:first-child,
+body[data-page^="admin-status-iptables"] .cbi-section > h3:first-child,
 body[data-page^="admin-status-iptables"] .cbi-section h4 {
-  display: flex;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 11px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: #fafbfe !important;
+  color: var(--text-color-highest) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+:root[data-darkmode="true"] .homeui-subpage-card > h3:first-child,
+:root[data-darkmode="true"] .homeui-subpage-card > h4:first-child,
+:root[data-darkmode="true"] body[data-page^="admin-status-nftables"] .nft-chain.cbi-section > h4:first-child,
+:root[data-darkmode="true"] body[data-page^="admin-status-iptables"] .cbi-section h4 {
+  background: var(--homeui-surface-soft) !important;
+}
+
+.homeui-sec-cat {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  padding: 10px 18px;
-  border-top: 1px solid var(--homeui-border);
-  border-bottom: 1px solid var(--homeui-border);
-  background: #fafbfe;
-  color: var(--text-color-highest);
-  font-size: 12.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #edf5ff;
+  color: #2f89ff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.35;
+}
+
+.homeui-sec-cat.is-v4route,
+.homeui-sec-cat.is-nat {
+  background: rgba(40, 199, 111, .12);
+  color: #28c76f;
+}
+
+.homeui-sec-cat.is-v6route,
+.homeui-sec-cat.is-mangle {
+  background: rgba(108, 92, 231, .12);
+  color: #6c5ce7;
+}
+
+.homeui-sec-cat.is-v6neigh,
+.homeui-sec-cat.is-rule {
+  background: rgba(245, 159, 0, .14);
+  color: #f59f00;
+}
+
+.homeui-sec-count {
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #2f6bff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+:root[data-darkmode="true"] .homeui-sec-count {
+  background: #1a3354;
+  color: #69b1ff;
+}
+
+/* Nftables chain hook metadata strip */
+body[data-page^="admin-status-nftables"] .nft-chain-hook {
+  margin: 0 !important;
+  padding: 7px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: var(--homeui-surface) !important;
+}
+
+body[data-page^="admin-status-nftables"] .nft-chain-hook ul {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  color: var(--text-color-medium);
+  font-size: 12px;
+}
+
+body[data-page^="admin-status-nftables"] .nft-chain-hook li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 !important;
+}
+
+body[data-page^="admin-status-nftables"] .nft-chain-hook strong {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--homeui-surface-soft);
+  color: #2f89ff;
   font-weight: 600;
 }
 
-:root[data-darkmode="true"] body[data-page^="admin-status-nftables"] .cbi-section h4,
-:root[data-darkmode="true"] body[data-page^="admin-status-iptables"] .cbi-section h4 {
-  background: var(--homeui-surface-soft);
-}
-
+.homeui-subpage-card .table,
 body[data-page="admin-status-routes"] .cbi-section .table,
 body[data-page^="admin-status-nftables"] .cbi-section .table,
 body[data-page^="admin-status-iptables"] .cbi-section .table {
-  border-radius: 0;
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
 }
 
+.homeui-subpage-card .table .th,
 body[data-page="admin-status-routes"] .cbi-section .table .th,
 body[data-page^="admin-status-nftables"] .cbi-section .table .th,
 body[data-page^="admin-status-iptables"] .cbi-section .table .th {
-  padding: 10px 16px;
-  background: var(--homeui-surface-soft);
-  color: var(--text-color-medium);
-  font-size: 12px;
-  font-weight: 500;
+  padding: 10px 18px !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--text-color-medium) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
 }
 
+.homeui-subpage-card .table .td,
 body[data-page="admin-status-routes"] .cbi-section .table .td,
 body[data-page^="admin-status-nftables"] .cbi-section .table .td,
 body[data-page^="admin-status-iptables"] .cbi-section .table .td {
-  padding: 10px 16px;
-  font-size: 12px;
+  padding: 10px 18px !important;
+  font-size: 12px !important;
+  vertical-align: middle !important;
 }
 
 .homeui-sec-hidden,
