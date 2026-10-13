@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/package.mk
 
 ifeq ($(HOMEUI_PACKAGE_ONLY),1)
   HOMEUI_DEPENDS:=
-  HOMEUI_EXTRA_DEPENDS:=luci-base, luci-theme-bootstrap
+  HOMEUI_EXTRA_DEPENDS:=luci-base (>=0), luci-theme-bootstrap (>=0)
 else
   HOMEUI_DEPENDS:=+luci-base +luci-theme-bootstrap
   HOMEUI_EXTRA_DEPENDS:=
@@ -66,3 +66,4 @@ define Package/luci-theme-homeui/postrm
 endef
 
 $(eval $(call BuildPackage,luci-theme-homeui))
+
