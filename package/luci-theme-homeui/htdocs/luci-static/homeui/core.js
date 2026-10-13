@@ -82,13 +82,9 @@
 
   var chartState = {
     rateStat: 'avg',
-    rateIface: 'all',
-    rateRange: '1h',
     clientStat: 'avg',
     clientType: 'wired',
-    clientRange: '1h',
     memStat: 'avg',
-    memRange: '1h',
     bottomTab: 'leases'
   };
 
@@ -106,15 +102,16 @@
   };
 
   var liveState = {
-    lastTick: 0,
-    pollTicks: 0,
-    devCounters: {},
-    wanWaves: {},
+    interfaceStats: {},
+    clientSamples: [],
+    memorySamples: [],
     ifaces: [],
-    selectedWanIdx: 0,
-    totalRxSpeed: 0,
-    totalTxSpeed: 0,
-    totalBytes: 0,
+    selectedWanKey: '',
+    statsPollBusy: false,
+    memoryPollBusy: false,
+    throughputPollBusy: false,
+    clientSamplePending: false,
+    memorySamplePending: false,
     tcpCount: 0,
     udpCount: 0,
     icmpCount: 0,

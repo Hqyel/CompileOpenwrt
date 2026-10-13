@@ -17,67 +17,85 @@
   var escapeHtml = HomeUI.escapeHtml;
   var setText = HomeUI.setText;
 
-  function createEmptyRangeSeries()
-  {
-    return {
-      bucketSlot: 0,
-      txAvg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      txPeak: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      rxAvg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      rxPeak: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      ifaceSeries: {},
-      latency: [12, 12, 11, 12, 13, 12, 12, 11, 12, 12, 12, 12],
-      wiredAvg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      wiredPeak: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      wirelessAvg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      wirelessPeak: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      memAvg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      memPeak: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      seeded: false
-    };
-  }
+  var REALTIME_WINDOW_MS = 6 * 60 * 1000;
+  var REALTIME_BUCKET_COUNT = 12;
+  var MINI_SAMPLE_COUNT = 20;
+  var MAX_REALTIME_SAMPLES = 160;
 
-  function loadHistoryState()
+  function getRealtimeAxisLabels(now)
   {
-    try {
-      var raw = localStorage.getItem('homeui-overview-history-v4');
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        if (parsed && parsed.h1 && parsed.h24 &&
-            Array.isArray(parsed.h1.txAvg) && parsed.h1.txAvg.length === 12)
-          return parsed;
-      }
-    } catch (e) {}
-
-    return {
-      h1: createEmptyRangeSeries(),
-      h24: createEmptyRangeSeries()
-    };
-  }
-
-  function saveHistoryState()
-  {
-    try {
-      localStorage.setItem(
-        'homeui-overview-history-v4',
-        JSON.stringify(historyState)
-      );
-    } catch (e) {}
-  }
-
-  function getAxisLabels(range)
-  {
-    var now = Date.now();
-    var stepMs = range === '24h' ? 2 * 3600 * 1000 : 5 * 60 * 1000;
     var labels = [];
-    for (var i = 11; i >= 0; i--) {
-      var d = new Date(now - i * stepMs);
+    var bucketMs = REALTIME_WINDOW_MS / REALTIME_BUCKET_COUNT;
+    var start = now - REALTIME_WINDOW_MS;
+
+    for (var i = 0; i < REALTIME_BUCKET_COUNT; i++) {
+      var d = new Date(start + (i + 0.5) * bucketMs);
       labels.push(pad2(d.getHours()) + ':' + pad2(d.getMinutes()));
     }
+
     return labels;
   }
 
-  var historyState = loadHistoryState();
+  function appendLimitedSample(list, sample, limit)
+  {
+    if (!Array.isArray(list))
+      return;
+
+    var last = list.length ? list[list.length - 1] : null;
+    if (last && last.time === sample.time)
+      list[list.length - 1] = sample;
+    else
+      list.push(sample);
+
+    while (list.length > limit)
+      list.shift();
+  }
+
+  function aggregateSamples(samples, keys, stat, now)
+  {
+    var bucketMs = REALTIME_WINDOW_MS / REALTIME_BUCKET_COUNT;
+    var start = now - REALTIME_WINDOW_MS;
+    var buckets = [];
+
+    for (var i = 0; i < REALTIME_BUCKET_COUNT; i++) {
+      var values = {};
+      keys.forEach(function(key) {
+        values[key] = [];
+      });
+      buckets.push(values);
+    }
+
+    (samples || []).forEach(function(sample) {
+      var idx = Math.floor((sample.time - start) / bucketMs);
+      if (idx === REALTIME_BUCKET_COUNT)
+        idx = REALTIME_BUCKET_COUNT - 1;
+      if (idx < 0 || idx >= REALTIME_BUCKET_COUNT)
+        return;
+
+      keys.forEach(function(key) {
+        var value = Number(sample[key]);
+        if (isFinite(value))
+          buckets[idx][key].push(value);
+      });
+    });
+
+    var result = {};
+    keys.forEach(function(key) {
+      result[key] = buckets.map(function(bucket) {
+        var values = bucket[key];
+        if (!values.length)
+          return null;
+        if (stat === 'peak')
+          return Math.max.apply(null, values);
+        return values.reduce(function(sum, value) {
+          return sum + value;
+        }, 0) / values.length;
+      });
+    });
+
+    result.times = getRealtimeAxisLabels(now);
+    return result;
+  }
 
   function getSelectedShortcutIds()
   {
@@ -487,8 +505,8 @@
             active: true,
             proto: 'Static',
             addr: tds[1].textContent.trim(),
-            gw: '10.10.10.1',
-            dns: '10.10.10.1',
+            gw: '--',
+            dns: '--',
             uptime: '',
             rxText: tds[3] ? tds[3].textContent.trim() : '',
             txText: tds[4] ? tds[4].textContent.trim() : '',
@@ -504,63 +522,249 @@
     return list;
   }
 
-  function pushWanWaveSample(key, txBps, rxBps)
+  function normalizeRealtimeTimestamp(timestamp)
   {
-    if (!key)
-      return;
-    var tx = Math.max(0, Number(txBps) || 0);
-    var rx = Math.max(0, Number(rxBps) || 0);
-    var entry = liveState.wanWaves[key];
+    var value = Number(timestamp) || 0;
+    return value > 1000000000000 ? value : value * 1000;
+  }
 
-    if (!entry) {
-      var initTx = [];
-      var initRx = [];
-      for (var i = 0; i < 20; i++) {
-        var factor = 0.55 + 0.32 * Math.sin(i * 0.65) + (i / 20) * 0.15;
-        initTx.push(Math.max(0, tx * factor));
-        initRx.push(
-          Math.max(0, rx * (0.58 + 0.30 * Math.cos(i * 0.6) + (i / 20) * 0.14))
-        );
-      }
-      initTx[19] = tx;
-      initRx[19] = rx;
-      liveState.wanWaves[key] = {
-        tx: initTx,
-        rx: initRx,
-        seededWithTraffic: tx > 0 || rx > 0,
-        tick: 1
+  function updateRealtimeInterface(deviceName, rows)
+  {
+    if (!deviceName || !Array.isArray(rows) || !rows.length)
+      return;
+
+    var validRows = rows.filter(function(row) {
+      return Array.isArray(row) && row.length >= 4 &&
+        isFinite(Number(row[0]));
+    });
+    if (!validRows.length)
+      return;
+
+    var state = liveState.interfaceStats[deviceName];
+    if (!state) {
+      state = {
+        timestamp: 0,
+        rxBytes: 0,
+        txBytes: 0,
+        rxBps: 0,
+        txBps: 0,
+        rateReady: false,
+        clockOffsetMs: 0,
+        samples: []
       };
+      liveState.interfaceStats[deviceName] = state;
+    }
+
+    var newestTimestamp = Number(validRows[validRows.length - 1][0]) || 0;
+    if (state.timestamp && newestTimestamp < state.timestamp) {
+      state.timestamp = 0;
+      state.rxBps = 0;
+      state.txBps = 0;
+      state.rateReady = false;
+      state.samples = [];
+    }
+
+    if (!state.timestamp) {
+      var baseline = validRows[validRows.length - 1];
+      state.timestamp = Number(baseline[0]) || 0;
+      state.rxBytes = Number(baseline[1]) || 0;
+      state.txBytes = Number(baseline[3]) || 0;
+      state.clockOffsetMs = Date.now() -
+        normalizeRealtimeTimestamp(state.timestamp);
       return;
     }
 
-    entry.tick = (entry.tick || 0) + 1;
-    if (!entry.seededWithTraffic && (tx > 0 || rx > 0)) {
-      for (var j = 0; j < 19; j++) {
-        var f = 0.52 + 0.34 * Math.sin((j + entry.tick) * 0.7) + (j / 19) * 0.16;
-        entry.tx[j] = Math.max(0, tx * f);
-        entry.rx[j] = Math.max(
-          0,
-          rx * (0.56 + 0.32 * Math.cos((j + entry.tick) * 0.65) + (j / 19) * 0.15)
-        );
+    validRows.forEach(function(row) {
+      var timestamp = Number(row[0]) || 0;
+      var rxBytes = Number(row[1]) || 0;
+      var txBytes = Number(row[3]) || 0;
+      if (timestamp <= state.timestamp)
+        return;
+
+      var elapsed = timestamp - state.timestamp;
+      if (timestamp > 1000000000000 || state.timestamp > 1000000000000)
+        elapsed /= 1000;
+
+      if (elapsed > 0 && rxBytes >= state.rxBytes &&
+          txBytes >= state.txBytes) {
+        state.rxBps = Math.max(0, (rxBytes - state.rxBytes) / elapsed);
+        state.txBps = Math.max(0, (txBytes - state.txBytes) / elapsed);
+        appendLimitedSample(state.samples, {
+          time: normalizeRealtimeTimestamp(timestamp) + state.clockOffsetMs,
+          rxKB: state.rxBps / 1024,
+          txKB: state.txBps / 1024
+        }, MAX_REALTIME_SAMPLES);
+      } else {
+        state.rxBps = 0;
+        state.txBps = 0;
       }
-      entry.tx[19] = tx;
-      entry.rx[19] = rx;
-      entry.seededWithTraffic = true;
-      return;
+
+      state.timestamp = timestamp;
+      state.rxBytes = rxBytes;
+      state.txBytes = txBytes;
+      state.rateReady = true;
+    });
+  }
+
+  function pollLiveThroughput(callback)
+  {
+    if (!window.L || typeof window.L.require !== 'function' ||
+        liveState.throughputPollBusy)
+      return Promise.resolve();
+
+    var deviceNames = [];
+    var seen = {};
+    liveState.ifaces.forEach(function(iface) {
+      var name = iface.devName || iface.name;
+      if (name && !seen[name]) {
+        seen[name] = true;
+        deviceNames.push(name);
+      }
+    });
+    if (!deviceNames.length)
+      return Promise.resolve();
+
+    liveState.throughputPollBusy = true;
+
+    return window.L.require('rpc').then(function(rpc) {
+      var callRealtimeStats = rpc.declare({
+        object: 'luci',
+        method: 'getRealtimeStats',
+        params: ['mode', 'device'],
+        expect: { result: [] }
+      });
+
+      return Promise.all(deviceNames.map(function(deviceName) {
+        return callRealtimeStats('interface', deviceName).then(function(rows) {
+          updateRealtimeInterface(deviceName, rows);
+        }).catch(function() {});
+      }));
+    }).then(function() {
+      liveState.ifaces.forEach(function(iface) {
+        var state = liveState.interfaceStats[iface.devName];
+        if (!state)
+          return;
+        iface.rxBytes = state.rxBytes;
+        iface.txBytes = state.txBytes;
+        iface.rxSpeed = state.rxBps;
+        iface.txSpeed = state.txBps;
+        iface.rateReady = state.rateReady;
+      });
+
+      if (typeof callback === 'function')
+        callback();
+    }).catch(function() {}).then(function() {
+      liveState.throughputPollBusy = false;
+    });
+  }
+
+  function updateSystemInfoStats(info)
+  {
+    if (!info || typeof info !== 'object')
+      return false;
+
+    liveState.sysInfo = info;
+    var stRows = [];
+
+    if (info.memory && info.memory.total > 0) {
+      var mTotal = Number(info.memory.total) || 0;
+      var mAvail = Number(info.memory.available || info.memory.free) || 0;
+      var mUsed = Math.max(0, mTotal - mAvail);
+      var mCached = Number(info.memory.cached) || 0;
+      var mBuffered = Number(info.memory.buffered) || 0;
+      var mPct = Math.round((mUsed / mTotal) * 100);
+      liveState.memPct = mPct;
+      liveState.memDetail = formatBytes(mUsed) + ' / ' +
+        formatBytes(mTotal) + ' (' + mPct + '%)';
+      liveState.memorySamplePending = true;
+      stRows.push({
+        key: isChinese ? '已使用内存' : 'Memory Used',
+        value: liveState.memDetail,
+        percent: mPct
+      });
+      if (mCached > 0) {
+        var cPct = Math.round((mCached / mTotal) * 100);
+        stRows.push({
+          key: isChinese ? '已缓存内存' : 'Memory Cached',
+          value: formatBytes(mCached) + ' / ' + formatBytes(mTotal) +
+            ' (' + cPct + '%)',
+          percent: cPct
+        });
+      }
+      if (mBuffered > 0) {
+        var bPct = Math.round((mBuffered / mTotal) * 100);
+        stRows.push({
+          key: isChinese ? '已缓冲内存' : 'Memory Buffered',
+          value: formatBytes(mBuffered) + ' / ' + formatBytes(mTotal) +
+            ' (' + bPct + '%)',
+          percent: bPct
+        });
+      }
     }
 
-    entry.tx.shift();
-    entry.tx.push(tx);
-    entry.rx.shift();
-    entry.rx.push(rx);
+    if (info.root && info.root.total > 0) {
+      var rMult = info.root.total < 100 * 1024 * 1024 ? 1024 : 1;
+      var rTotal = Number(info.root.total) * rMult;
+      var rUsed = Number(info.root.used) * rMult;
+      var rPct = Math.round((rUsed / rTotal) * 100);
+      liveState.diskPct = rPct;
+      liveState.diskDetail = formatBytes(rUsed) + ' / ' +
+        formatBytes(rTotal) + ' (' + rPct + '%)';
+      stRows.push({
+        key: isChinese ? '根目录磁盘空间 (/)' : 'Root Disk Space (/)',
+        value: liveState.diskDetail,
+        percent: rPct
+      });
+    }
+
+    if (info.tmp && info.tmp.total > 0) {
+      var tMult = info.tmp.total < 100 * 1024 * 1024 ? 1024 : 1;
+      var tTotal = Number(info.tmp.total) * tMult;
+      var tUsed = Number(info.tmp.used) * tMult;
+      var tPct = Math.round((tUsed / tTotal) * 100);
+      stRows.push({
+        key: isChinese ? '临时空间 (/tmp)' : 'Temp Space (/tmp)',
+        value: formatBytes(tUsed) + ' / ' + formatBytes(tTotal) +
+          ' (' + tPct + '%)',
+        percent: tPct
+      });
+    }
+
+    liveState.rpcStorageRows = stRows;
+    return true;
+  }
+
+  function pollLiveMemory(callback)
+  {
+    if (!window.L || typeof window.L.require !== 'function' ||
+        liveState.memoryPollBusy)
+      return Promise.resolve();
+
+    liveState.memoryPollBusy = true;
+    return window.L.require('rpc').then(function(rpc) {
+      var callSysInfo = rpc.declare({
+        object: 'system',
+        method: 'info'
+      });
+      return callSysInfo();
+    }).then(function(info) {
+      if (updateSystemInfoStats(info) && typeof callback === 'function')
+        callback();
+    }).catch(function() {}).then(function() {
+      liveState.memoryPollBusy = false;
+    });
   }
 
   function pollLiveRouterStats(callback)
   {
     if (!window.L || typeof window.L.require !== 'function')
-      return;
+      return Promise.resolve();
+    if (liveState.statsPollBusy)
+      return Promise.resolve();
 
-    Promise.all([
+    liveState.statsPollBusy = true;
+
+    return Promise.all([
       window.L.require('network').catch(function() { return null; }),
       window.L.require('rpc').catch(function() { return null; })
     ]).then(function(mods) {
@@ -570,77 +774,44 @@
 
       if (network) {
         tasks.push(
-          Promise.all([
-            network.getNetworks ? network.getNetworks() : [],
-            network.getDevices ? network.getDevices() : [],
-            network.getWifiNetworks ? network.getWifiNetworks() : []
-          ]).then(function(netRes) {
-            var nets = netRes[0] || [];
-            var devs = netRes[1] || [];
-            var wifis = netRes[2] || [];
-            var devMap = {};
-            var now = Date.now();
-            var dt = liveState.lastTick > 0 ?
-              (now - liveState.lastTick) / 1000 : 0;
+          Promise.resolve(
+            network.flushCache ? network.flushCache() : null
+          ).then(function() {
+            return Promise.all([
+              network.getWANNetworks ? network.getWANNetworks() : [],
+              network.getWAN6Networks ? network.getWAN6Networks() : [],
+              network.getNetworks ? network.getNetworks() : [],
+              network.getWifiNetworks ? network.getWifiNetworks() : []
+            ]);
+          }).then(function(netRes) {
+            var wanNets = (netRes[0] || []).concat(netRes[1] || []);
+            var allNets = netRes[2] || [];
+            var wifis = netRes[3] || [];
+            var seenNets = {};
 
-            var totalRx = 0;
-            var totalTx = 0;
-            var totalRxSpd = 0;
-            var totalTxSpd = 0;
-
-            devs.forEach(function(d) {
-              var dname = (d.getName && d.getName()) || '';
-              if (!dname || dname === 'lo')
-                return;
-              var rx = Number(d.getRXBytes && d.getRXBytes()) || 0;
-              var tx = Number(d.getTXBytes && d.getTXBytes()) || 0;
-              var prev = liveState.devCounters[dname];
-              var rxSpd = prev ? (prev.rxSpeed || 0) : 0;
-              var txSpd = prev ? (prev.txSpeed || 0) : 0;
-              if (prev && dt >= 0.6 && rx >= prev.rx && tx >= prev.tx) {
-                rxSpd = (rx - prev.rx) / dt;
-                txSpd = (tx - prev.tx) / dt;
-              }
-              liveState.devCounters[dname] = {
-                rx: rx,
-                tx: tx,
-                rxSpeed: rxSpd,
-                txSpeed: txSpd
-              };
-              devMap[dname] = liveState.devCounters[dname];
-              if (!/^veth|^docker|^br-/.test(dname)) {
-                totalRx += rx;
-                totalTx += tx;
-                totalRxSpd += rxSpd;
-                totalTxSpd += txSpd;
-              }
-            });
-
-            if (totalRx === 0 && devMap['br-lan']) {
-              totalRx = devMap['br-lan'].rx;
-              totalTx = devMap['br-lan'].tx;
-              totalRxSpd = devMap['br-lan'].rxSpeed;
-              totalTxSpd = devMap['br-lan'].txSpeed;
+            if (!wanNets.length) {
+              wanNets = allNets.filter(function(n) {
+                var name = (n.getName && n.getName()) || '';
+                return /^wan/i.test(name);
+              });
+            }
+            if (!wanNets.length) {
+              wanNets = allNets.filter(function(n) {
+                var name = (n.getName && n.getName()) || '';
+                return name && name !== 'loopback' &&
+                  (!n.isUp || n.isUp() !== false);
+              });
             }
 
-            if (liveState.lastTick > 0 && dt >= 0.6) {
-              liveState.pollTicks = (liveState.pollTicks || 0) + 1;
-              pushWanWaveSample('__total__', totalTxSpd, totalRxSpd);
-            }
-            liveState.lastTick = now;
-            liveState.totalBytes = totalRx + totalTx;
-            liveState.totalRxSpeed = totalRxSpd;
-            liveState.totalTxSpeed = totalTxSpd;
-
-            var parsedIfaces = [];
-            nets.forEach(function(n) {
+            var ifaceMap = {};
+            wanNets.forEach(function(n) {
               var name = (n.getName && n.getName()) || '';
-              if (!name || name === 'loopback')
+              if (!name || seenNets[name])
                 return;
+              seenNets[name] = true;
               var l3 = (n.getL3Device && n.getL3Device()) ||
                 (n.getDevice && n.getDevice());
               var dname = (l3 && l3.getName && l3.getName()) || name;
-              var cnt = devMap[dname] || { rx: 0, tx: 0, rxSpeed: 0, txSpeed: 0 };
               var ip = (n.getIPAddr && n.getIPAddr()) ||
                 (n.getIP6Addr && n.getIP6Addr()) || '';
               var gw = (n.getGatewayAddr && n.getGatewayAddr()) ||
@@ -650,38 +821,64 @@
               var up = (n.isUp && n.isUp()) !== false;
               var uptime = (n.getUptime && n.getUptime()) || 0;
 
-              var ifRxSpd = cnt.rxSpeed || totalRxSpd || 0;
-              var ifTxSpd = cnt.txSpeed || totalTxSpd || 0;
-              if (dt >= 0.6) {
-                pushWanWaveSample(name, ifTxSpd, ifRxSpd);
+              if (!ifaceMap[dname]) {
+                ifaceMap[dname] = {
+                  name: dname,
+                  devName: dname,
+                  networkNames: [],
+                  active: false,
+                  proto: '',
+                  addr: '',
+                  gw: '--',
+                  dns: '--',
+                  uptime: 0,
+                  rxBytes: 0,
+                  txBytes: 0,
+                  rxSpeed: 0,
+                  txSpeed: 0,
+                  rateReady: false
+                };
               }
 
-              if (ip || up) {
-                parsedIfaces.push({
-                  name: name,
-                  devName: dname,
-                  title: name + (dname && dname !== name ? ' (' + dname + ')' : ''),
-                  active: up,
-                  proto: String(proto).toUpperCase(),
-                  addr: ip,
-                  gw: gw || '--',
-                  dns: dnsArr.slice(0, 2).join(', ') || '--',
-                  uptime: uptime,
-                  rxBytes: cnt.rx || totalRx,
-                  txBytes: cnt.tx || totalTx,
-                  rxSpeed: ifRxSpd,
-                  txSpeed: ifTxSpd
-                });
+              var iface = ifaceMap[dname];
+              iface.networkNames.push(name);
+              iface.active = iface.active || up;
+              iface.proto = iface.proto || String(proto).toUpperCase();
+              iface.addr = iface.addr || ip;
+              iface.gw = iface.gw === '--' ? (gw || '--') : iface.gw;
+              iface.dns = iface.dns === '--' ?
+                (dnsArr.slice(0, 2).join(', ') || '--') : iface.dns;
+              iface.uptime = Math.max(iface.uptime, uptime);
+            });
+
+            var parsedIfaces = Object.keys(ifaceMap).map(function(key) {
+              var iface = ifaceMap[key];
+              var names = iface.networkNames.join(' / ');
+              iface.title = names +
+                (iface.devName !== names ? ' (' + iface.devName + ')' : '');
+              var state = liveState.interfaceStats[iface.devName];
+              if (state) {
+                iface.rxBytes = state.rxBytes;
+                iface.txBytes = state.txBytes;
+                iface.rxSpeed = state.rxBps;
+                iface.txSpeed = state.txBps;
+                iface.rateReady = state.rateReady;
               }
+              return iface;
             });
 
             if (parsedIfaces.length) {
               parsedIfaces.sort(function(a, b) {
-                var aWan = /^wan/i.test(a.name) ? 0 : 1;
-                var bWan = /^wan/i.test(b.name) ? 0 : 1;
-                return aWan - bWan;
+                return a.title.localeCompare(b.title);
               });
               liveState.ifaces = parsedIfaces;
+              if (!parsedIfaces.some(function(iface) {
+                return iface.devName === liveState.selectedWanKey;
+              }))
+                liveState.selectedWanKey = parsedIfaces[0].devName;
+            } else {
+              liveState.ifaces = [];
+              liveState.selectedWanKey = '';
             }
 
             var wifiClients = 0;
@@ -695,6 +892,7 @@
               }
             });
             liveState.wirelessClients = wifiClients;
+            liveState.clientSamplePending = true;
           }).catch(function() {})
         );
       }
@@ -710,10 +908,6 @@
           object: 'system',
           method: 'board'
         });
-        var callSysInfo = rpc.declare({
-          object: 'system',
-          method: 'info'
-        });
         var callDhcpLeases = rpc.declare({
           object: 'luci-rpc',
           method: 'getDHCPLeases'
@@ -724,7 +918,7 @@
         });
 
         tasks.push(
-          callConns('connections', '').then(function(rows) {
+          callConns('conntrack', '').then(function(rows) {
             if (Array.isArray(rows) && rows.length) {
               var last = rows[rows.length - 1];
               if (Array.isArray(last) && last.length >= 4) {
@@ -740,87 +934,14 @@
           }).catch(function() {})
         );
 
-        tasks.push(
-          callBoard().then(function(board) {
-            if (board && typeof board === 'object')
-              liveState.boardInfo = board;
-          }).catch(function() {})
-        );
-
-        tasks.push(
-          callSysInfo().then(function(info) {
-            if (!info || typeof info !== 'object')
-              return;
-            liveState.sysInfo = info;
-
-            var stRows = [];
-            if (info.memory && info.memory.total > 0) {
-              var mTotal = Number(info.memory.total) || 0;
-              var mAvail = Number(info.memory.available || info.memory.free) || 0;
-              var mUsed = Math.max(0, mTotal - mAvail);
-              var mCached = Number(info.memory.cached) || 0;
-              var mBuffered = Number(info.memory.buffered) || 0;
-              var mPct = Math.round((mUsed / mTotal) * 100);
-              liveState.memPct = mPct;
-              liveState.memDetail = formatBytes(mUsed) + ' / ' +
-                formatBytes(mTotal) + ' (' + mPct + '%)';
-              stRows.push({
-                key: isChinese ? '已使用内存' : 'Memory Used',
-                value: liveState.memDetail,
-                percent: mPct
-              });
-              if (mCached > 0) {
-                var cPct = Math.round((mCached / mTotal) * 100);
-                stRows.push({
-                  key: isChinese ? '已缓存内存' : 'Memory Cached',
-                  value: formatBytes(mCached) + ' / ' + formatBytes(mTotal) +
-                    ' (' + cPct + '%)',
-                  percent: cPct
-                });
-              }
-              if (mBuffered > 0) {
-                var bPct = Math.round((mBuffered / mTotal) * 100);
-                stRows.push({
-                  key: isChinese ? '已缓冲内存' : 'Memory Buffered',
-                  value: formatBytes(mBuffered) + ' / ' + formatBytes(mTotal) +
-                    ' (' + bPct + '%)',
-                  percent: bPct
-                });
-              }
-            }
-
-            if (info.root && info.root.total > 0) {
-              var rMult = info.root.total < 100 * 1024 * 1024 ? 1024 : 1;
-              var rTotal = Number(info.root.total) * rMult;
-              var rUsed = Number(info.root.used) * rMult;
-              var rPct = Math.round((rUsed / rTotal) * 100);
-              liveState.diskPct = rPct;
-              liveState.diskDetail = formatBytes(rUsed) + ' / ' +
-                formatBytes(rTotal) + ' (' + rPct + '%)';
-              stRows.push({
-                key: isChinese ? '根目录磁盘空间 (/)' : 'Root Disk Space (/)',
-                value: liveState.diskDetail,
-                percent: rPct
-              });
-            }
-
-            if (info.tmp && info.tmp.total > 0) {
-              var tMult = info.tmp.total < 100 * 1024 * 1024 ? 1024 : 1;
-              var tTotal = Number(info.tmp.total) * tMult;
-              var tUsed = Number(info.tmp.used) * tMult;
-              var tPct = Math.round((tUsed / tTotal) * 100);
-              stRows.push({
-                key: isChinese ? '临时空间 (/tmp)' : 'Temp Space (/tmp)',
-                value: formatBytes(tUsed) + ' / ' + formatBytes(tTotal) +
-                  ' (' + tPct + '%)',
-                percent: tPct
-              });
-            }
-
-            if (stRows.length)
-              liveState.rpcStorageRows = stRows;
-          }).catch(function() {})
-        );
+        if (!liveState.boardInfo) {
+          tasks.push(
+            callBoard().then(function(board) {
+              if (board && typeof board === 'object')
+                liveState.boardInfo = board;
+            }).catch(function() {})
+          );
+        }
 
         tasks.push(
           Promise.all([
@@ -890,8 +1011,8 @@
               });
             }
 
-            if (list.length)
-              liveState.rpcLeases = list;
+            liveState.rpcLeases = list;
+            liveState.clientSamplePending = true;
           }).catch(function() {})
         );
       }
@@ -900,7 +1021,9 @@
     }).then(function() {
       if (typeof callback === 'function')
         callback();
-    }).catch(function() {});
+    }).catch(function() {}).then(function() {
+      liveState.statsPollBusy = false;
+    });
   }
 
   function createDonutSvg(colorClass)
@@ -918,7 +1041,7 @@
     if (!cardEl)
       return;
 
-    var pct = Math.max(4, Math.min(100, Number(percent) || 0));
+    var pct = Math.max(0, Math.min(100, Number(percent) || 0));
     var circumference = 113.1;
     var offset = circumference - (circumference * pct) / 100;
     var arc = cardEl.querySelector('.donut-arc');
@@ -944,50 +1067,65 @@
 
     var coords = points.map(function(val, idx) {
       var x = plotLeft + (plotW * idx) / Math.max(1, count - 1);
-      var ratio = Math.max(0, Math.min(1, (Number(val) || 0) / safeMax));
+      if (val === null || val === undefined || !isFinite(Number(val)))
+        return null;
+      var ratio = Math.max(0, Math.min(1, Number(val) / safeMax));
       var y = padTop + plotH * (1 - ratio);
       return [x, y];
     });
+    var segments = [];
+    var segment = [];
+    coords.forEach(function(coord) {
+      if (coord)
+        segment.push(coord);
+      else if (segment.length) {
+        segments.push(segment);
+        segment = [];
+      }
+    });
+    if (segment.length)
+      segments.push(segment);
 
-    var d = 'M ' + coords[0][0].toFixed(1) + ' ' + coords[0][1].toFixed(1);
-    for (var i = 0; i < coords.length - 1; i++) {
-      var p0 = coords[i];
-      var p1 = coords[i + 1];
-      var cx = ((p0[0] + p1[0]) / 2).toFixed(1);
-      d += ' C ' + cx + ' ' + p0[1].toFixed(1) + ', ' +
-        cx + ' ' + p1[1].toFixed(1) + ', ' +
-        p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
-    }
-
+    var lines = [];
+    var areas = [];
     var baseLineY = (padTop + plotH).toFixed(1);
-    var area = d +
-      ' L ' + coords[coords.length - 1][0].toFixed(1) + ' ' + baseLineY +
-      ' L ' + coords[0][0].toFixed(1) + ' ' + baseLineY + ' Z';
+    segments.forEach(function(pointsInSegment) {
+      var first = pointsInSegment[0];
+      var d = 'M ' + first[0].toFixed(1) + ' ' + first[1].toFixed(1);
 
-    return { line: d, area: area, coords: coords };
+      for (var i = 0; i < pointsInSegment.length - 1; i++) {
+        var p0 = pointsInSegment[i];
+        var p1 = pointsInSegment[i + 1];
+        var cx = ((p0[0] + p1[0]) / 2).toFixed(1);
+        d += ' C ' + cx + ' ' + p0[1].toFixed(1) + ', ' +
+          cx + ' ' + p1[1].toFixed(1) + ', ' +
+          p1[0].toFixed(1) + ' ' + p1[1].toFixed(1);
+      }
+
+      lines.push(d);
+      if (pointsInSegment.length > 1) {
+        var last = pointsInSegment[pointsInSegment.length - 1];
+        areas.push(d + ' L ' + last[0].toFixed(1) + ' ' + baseLineY +
+          ' L ' + first[0].toFixed(1) + ' ' + baseLineY + ' Z');
+      }
+    });
+
+    return {
+      line: lines.join(' '),
+      area: areas.join(' '),
+      coords: coords
+    };
   }
 
   function getRateSeriesForSelection()
   {
-    var store = chartState.rateRange === '24h' ?
-      historyState.h24 : historyState.h1;
-    var isPeak = chartState.rateStat === 'peak';
-    var iface = chartState.rateIface || 'all';
-    var txArr = isPeak ? store.txPeak : store.txAvg;
-    var rxArr = isPeak ? store.rxPeak : store.rxAvg;
-
-    if (iface !== 'all' && store.ifaceSeries && store.ifaceSeries[iface]) {
-      var sub = store.ifaceSeries[iface];
-      txArr = isPeak ? sub.txPeak : sub.txAvg;
-      rxArr = isPeak ? sub.rxPeak : sub.rxAvg;
-    }
-
-    return {
-      times: getAxisLabels(chartState.rateRange),
-      tx: txArr,
-      rx: rxArr,
-      latency: store.latency
-    };
+    var state = liveState.interfaceStats[liveState.selectedWanKey];
+    return aggregateSamples(
+      state ? state.samples : [],
+      ['txKB', 'rxKB'],
+      chartState.rateStat,
+      Date.now()
+    );
   }
 
   function renderRateChartSvg(dash)
@@ -999,6 +1137,27 @@
       return;
 
     var data = getRateSeriesForSelection();
+    var state = liveState.interfaceStats[liveState.selectedWanKey];
+    var values = data.txKB.concat(data.rxKB).filter(function(value) {
+      return value !== null && isFinite(Number(value));
+    });
+    if (!values.length) {
+      container.innerHTML = '<div class="homeui-empty-hint">' +
+        (isChinese ? '正在采集实时速率…' :
+          'Collecting real-time throughput…') + '</div>';
+      setText(
+        dash,
+        '[data-leg-tx]',
+        state && state.rateReady ? formatRate(state.txBps) : '--'
+      );
+      setText(
+        dash,
+        '[data-leg-rx]',
+        state && state.rateReady ? formatRate(state.rxBps) : '--'
+      );
+      return;
+    }
+
     var w = 1120;
     var h = 152;
     var padTop = 14;
@@ -1006,27 +1165,20 @@
     var plotLeft = 40;
     var plotRight = w - 58;
     var plotH = h - padTop - padBottom;
-    var maxRate = Math.max.apply(
-      null,
-      data.tx.concat(data.rx, [100])
-    );
+    var maxRate = Math.max.apply(null, values.concat([100]));
     var stepUnit = maxRate > 2000 ? 500 : (maxRate > 500 ? 200 : 50);
     var niceMax = Math.max(100, Math.ceil(maxRate / stepUnit) * stepUnit);
 
     var txPath = buildSmoothPath(
-      data.tx, w, h, padTop, padBottom, niceMax, 58
+      data.txKB, w, h, padTop, padBottom, niceMax, 58
     );
     var rxPath = buildSmoothPath(
-      data.rx, w, h, padTop, padBottom, niceMax, 58
-    );
-    var latPath = buildSmoothPath(
-      data.latency, w, h, padTop, padBottom, 30, 58
+      data.rxKB, w, h, padTop, padBottom, niceMax, 58
     );
 
     var gridHtml = '';
     for (var g = 0; g <= 5; g++) {
       var gy = (padTop + (plotH * g) / 5).toFixed(1);
-      var leftVal = 30 - g * 6;
       var rightVal = Math.round(((5 - g) * niceMax) / 5);
       var rightLabel = rightVal === 0 ? '0 B' :
         (rightVal >= 1024 ? (rightVal / 1024).toFixed(1) + ' MB' :
@@ -1035,8 +1187,6 @@
       gridHtml +=
         '<line class="chart-grid-line" x1="' + plotLeft + '" y1="' + gy +
           '" x2="' + plotRight + '" y2="' + gy + '"></line>' +
-        '<text class="chart-axis-text" x="30" y="' + (Number(gy) + 3.5) +
-          '" text-anchor="end">' + leftVal + '</text>' +
         '<text class="chart-axis-text" x="' + (plotRight + 8) + '" y="' +
           (Number(gy) + 3.5) + '" text-anchor="start">' + rightLabel + '</text>';
     }
@@ -1051,8 +1201,8 @@
       if (txPath.coords[idx] && rxPath.coords[idx]) {
         var txY = txPath.coords[idx][1].toFixed(1);
         var rxY = rxPath.coords[idx][1].toFixed(1);
-        var tip = t + ' | ↑ ' + formatRateKB(data.tx[idx]) +
-          ' / ↓ ' + formatRateKB(data.rx[idx]);
+        var tip = t + ' | ↑ ' + formatRateKB(data.txKB[idx]) +
+          ' / ↓ ' + formatRateKB(data.rxKB[idx]);
         pointsHtml +=
           '<circle cx="' + x + '" cy="' + txY +
             '" r="2.6" fill="#ffffff" stroke="#7c89f8" stroke-width="1.3">' +
@@ -1078,8 +1228,6 @@
         gridHtml +
         '<path d="' + txPath.area + '" fill="url(#homeuiTxGrad)"></path>' +
         '<path d="' + rxPath.area + '" fill="url(#homeuiRxGrad)"></path>' +
-        '<path d="' + latPath.line + '" fill="none" stroke="#69b1ff" ' +
-          'stroke-width="1.2" stroke-dasharray="3 3"></path>' +
         '<path d="' + txPath.line + '" fill="none" stroke="#7c89f8" ' +
           'stroke-width="1.5"></path>' +
         '<path d="' + rxPath.line + '" fill="none" stroke="#5ad8a6" ' +
@@ -1088,10 +1236,8 @@
         xLabels +
       '</svg>';
 
-    var lastTx = data.tx[data.tx.length - 1] || 0;
-    var lastRx = data.rx[data.rx.length - 1] || 0;
-    setText(dash, '[data-leg-tx]', formatRateKB(lastTx));
-    setText(dash, '[data-leg-rx]', formatRateKB(lastRx));
+    setText(dash, '[data-leg-tx]', formatRate(state ? state.txBps : 0));
+    setText(dash, '[data-leg-rx]', formatRate(state ? state.rxBps : 0));
   }
 
   function renderClientBarSvg(dash)
@@ -1102,25 +1248,39 @@
     if (!container)
       return;
 
-    var store = chartState.clientRange === '24h' ?
-      historyState.h24 : historyState.h1;
-    var isPeak = chartState.clientStat === 'peak';
     var cType = chartState.clientType || 'wired';
+    var data = aggregateSamples(
+      liveState.clientSamples,
+      ['wired', 'wireless'],
+      chartState.clientStat,
+      Date.now()
+    );
     var series;
 
     if (cType === 'wireless') {
-      series = isPeak ? store.wirelessPeak : store.wirelessAvg;
+      series = data.wireless;
     } else if (cType === 'all') {
-      series = store.wiredAvg.map(function(w, idx) {
-        var wl = isPeak ? store.wirelessPeak[idx] : store.wirelessAvg[idx];
-        var wd = isPeak ? store.wiredPeak[idx] : w;
-        return (Number(wd) || 0) + (Number(wl) || 0);
+      series = data.wired.map(function(wired, idx) {
+        var wireless = data.wireless[idx];
+        if (wired === null && wireless === null)
+          return null;
+        return (Number(wired) || 0) + (Number(wireless) || 0);
       });
     } else {
-      series = isPeak ? store.wiredPeak : store.wiredAvg;
+      series = data.wired;
     }
 
-    var times = getAxisLabels(chartState.clientRange);
+    var values = series.filter(function(value) {
+      return value !== null && isFinite(Number(value));
+    });
+    if (!values.length) {
+      container.innerHTML = '<div class="homeui-empty-hint">' +
+        (isChinese ? '正在采集终端数量…' :
+          'Collecting client counts…') + '</div>';
+      return;
+    }
+
+    var times = data.times;
     var w = 1120;
     var h = 146;
     var padTop = 16;
@@ -1128,7 +1288,7 @@
     var plotLeft = 40;
     var plotRight = w - 24;
     var plotH = h - padTop - padBottom;
-    var maxVal = Math.max.apply(null, series.concat([10]));
+    var maxVal = Math.max.apply(null, values.concat([10]));
     var niceMax = Math.max(10, Math.ceil(maxVal / 5) * 5);
 
     var gridHtml = '';
@@ -1148,10 +1308,11 @@
       (cType === 'all' ? '#85a5ff' : '#cbc6f9');
 
     series.forEach(function(val, idx) {
+      if (val === null)
+        return;
       var numVal = Math.max(0, Math.round(Number(val) || 0));
       var cx = plotLeft + 24 + step * idx;
-      var ratio = numVal === 0 ? 0.02 :
-        Math.max(0.05, Math.min(1, numVal / niceMax));
+      var ratio = Math.max(0, Math.min(1, numVal / niceMax));
       var bh = plotH * ratio;
       var by = padTop + plotH - bh;
       var t = times[idx] || '';
@@ -1183,11 +1344,23 @@
     if (!container)
       return;
 
-    var store = chartState.memRange === '24h' ?
-      historyState.h24 : historyState.h1;
-    var series = chartState.memStat === 'peak' ?
-      store.memPeak : store.memAvg;
-    var times = getAxisLabels(chartState.memRange);
+    var data = aggregateSamples(
+      liveState.memorySamples,
+      ['percent'],
+      chartState.memStat,
+      Date.now()
+    );
+    var series = data.percent;
+    var values = series.filter(function(value) {
+      return value !== null && isFinite(Number(value));
+    });
+    if (!values.length) {
+      container.innerHTML = '<div class="homeui-empty-hint">' +
+        (isChinese ? '正在采集内存使用率…' :
+          'Collecting memory usage…') + '</div>';
+      return;
+    }
+    var times = data.times;
 
     var w = 1120;
     var h = 138;
@@ -1211,10 +1384,9 @@
 
     var dotsHtml = '';
     times.forEach(function(t, idx) {
-      var coord = pathObj.coords[idx] || [
-        plotLeft + ((plotRight - plotLeft) * idx) / 11,
-        padTop + plotH
-      ];
+      var coord = pathObj.coords[idx];
+      if (!coord)
+        return;
       var x = coord[0].toFixed(1);
       var y = coord[1].toFixed(1);
       var val = Math.round(Number(series[idx]) || 0);
@@ -1267,48 +1439,29 @@
     '</div>';
   }
 
-  function updateIfaceDropdownMenu(dash, ifaces)
+  function updateWanSelector(dash, ifaces)
   {
-    var dd = dash.querySelector('[data-dropdown="rate-iface"]');
-    if (!dd)
+    var select = dash.querySelector('[data-wan-switch]');
+    if (!select)
       return;
 
-    var menu = dd.querySelector('[data-dropdown-menu]');
-    var labelEl = dd.querySelector('[data-dropdown-label]');
-    if (!menu || !labelEl)
-      return;
-
-    var opts = [
-      { value: 'all', label: isChinese ? '全部' : 'All' }
-    ];
-    var seen = { all: true };
-
-    ifaces.forEach(function(iface) {
-      var key = iface.name || iface.title;
-      if (key && !seen[key]) {
-        seen[key] = true;
-        opts.push({
-          value: key,
-          label: key
-        });
-      }
+    var selected = liveState.selectedWanKey;
+    select.innerHTML = '';
+    (ifaces || []).forEach(function(iface) {
+      var option = document.createElement('option');
+      option.value = iface.devName;
+      option.textContent = iface.title;
+      option.selected = iface.devName === selected;
+      select.appendChild(option);
     });
 
-    if (!seen[chartState.rateIface])
-      chartState.rateIface = 'all';
-
-    var activeOpt = opts.find(function(o) {
-      return o.value === chartState.rateIface;
-    }) || opts[0];
-
-    labelEl.textContent = activeOpt.label;
-    menu.innerHTML = opts.map(function(opt) {
-      return '<li class="homeui-dropdown-item' +
-        (opt.value === chartState.rateIface ? ' is-active' : '') +
-        '" data-opt-val="' + opt.value + '">' +
-        '<span>' + opt.label + '</span>' +
-      '</li>';
-    }).join('');
+    if (!select.options.length) {
+      var emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = isChinese ? '暂无 WAN 接口' :
+        'No WAN interface';
+      select.appendChild(emptyOption);
+    }
   }
 
   function renderBottomRightPanel(dash, netBoxes)
@@ -1372,7 +1525,7 @@
           ((it.rxText || '--') + ' / ' + (it.txText || '--'));
         return '<tr>' +
           '<td><strong>' + (it.title || it.name) + '</strong></td>' +
-          '<td><span class="homeui-tag is-blue">' + (it.proto || 'STATIC') + '</span></td>' +
+          '<td><span class="homeui-tag is-blue">' + (it.proto || '--') + '</span></td>' +
           '<td>' + (it.addr || '--') + '</td>' +
           '<td>' + (it.gw || '--') + '</td>' +
           '<td>' + traffic + '</td>' +
@@ -1403,7 +1556,7 @@
 
       body.innerHTML = '<div class="homeui-res-bars">' +
         stRows.map(function(r) {
-          var pct = Math.max(3, Math.min(100, Number(r.percent) || 12));
+          var pct = Math.max(0, Math.min(100, Number(r.percent) || 0));
           return '<div class="homeui-res-item">' +
             '<div class="homeui-res-row">' +
               '<span>' + r.key + '</span>' +
@@ -1428,9 +1581,6 @@
     var statOpts = [
       { value: 'avg', label: avgLabel, active: true },
       { value: 'peak', label: peakLabel, active: false }
-    ];
-    var ifaceOpts = [
-      { value: 'all', label: isChinese ? '全部' : 'All', active: true }
     ];
     var clientTypeOpts = [
       { value: 'wired', label: isChinese ? '有线' : 'Wired', active: true },
@@ -1461,16 +1611,16 @@
             '</div>' +
             '<div class="homeui-device-meta">' +
               '<div class="homeui-device-line1">' +
-                '<strong class="homeui-device-title" data-ov-hostname>HomeWrt</strong>' +
-                '<span class="homeui-device-gwid" data-ov-gwid>x86_64</span>' +
-                '<span class="homeui-device-tip" data-ov-tip title="HomeWrt Gateway">?</span>' +
+                '<strong class="homeui-device-title" data-ov-hostname>--</strong>' +
+                '<span class="homeui-device-gwid" data-ov-gwid>--</span>' +
+                '<span class="homeui-device-tip" data-ov-tip>?</span>' +
               '</div>' +
               '<div class="homeui-device-line2">' +
-                '<span class="homeui-device-ver" data-ov-ver>25.12</span>' +
+                '<span class="homeui-device-ver" data-ov-ver>--</span>' +
                 '<em class="homeui-device-edition">' +
                   (isChinese ? '免费版' : 'Custom') +
                 '</em>' +
-                '<span class="homeui-device-ip">IP:<b data-ov-ip>10.10.10.2</b></span>' +
+                '<span class="homeui-device-ip">IP:<b data-ov-ip>--</b></span>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -1483,15 +1633,15 @@
           '<div class="homeui-ring-body">' +
             '<div class="homeui-donut-wrap">' +
               createDonutSvg('donut-blue') +
-              '<span class="homeui-donut-val">0%</span>' +
+              '<span class="homeui-donut-val">--</span>' +
             '</div>' +
             '<div class="homeui-ring-stats">' +
               '<div class="ring-stat-col">' +
-                '<strong data-ov-cpu-stat>0%</strong>' +
+                '<strong data-ov-cpu-stat>--</strong>' +
                 '<small>' + (isChinese ? 'CPU占用' : 'CPU') + '</small>' +
               '</div>' +
               '<div class="ring-stat-col">' +
-                '<strong data-ov-disk-stat>0%</strong>' +
+                '<strong data-ov-disk-stat>--</strong>' +
                 '<small>' + (isChinese ? '存储占用' : 'Storage') + '</small>' +
               '</div>' +
             '</div>' +
@@ -1553,10 +1703,14 @@
             '<div class="homeui-card-head">' +
               '<h3>' + (isChinese ? 'WAN信息' : 'Gateway Info') + '</h3>' +
             '</div>' +
-            '<button type="button" class="homeui-wan-pill" data-wan-switch ' +
-              'title="' + (isChinese ? '点击切换网络接口' : 'Click to switch interface') + '">' +
-              'wan / br-lan' +
-            '</button>' +
+            '<select class="homeui-wan-pill" data-wan-switch ' +
+              'title="' + (isChinese ? '选择 WAN 接口' :
+                'Select WAN interface') + '">' +
+              '<option value="">' +
+                (isChinese ? '正在读取 WAN 接口…' :
+                  'Loading WAN interfaces…') +
+              '</option>' +
+            '</select>' +
             '<ul class="homeui-wan-list">' +
               '<li>' +
                 '<span>' + (isChinese ? '网络角色' : 'Role') + '</span>' +
@@ -1569,15 +1723,15 @@
               '</li>' +
               '<li>' +
                 '<span>WAN IP</span>' +
-                '<strong data-wan-ip>10.10.10.2</strong>' +
+                '<strong data-wan-ip>--</strong>' +
               '</li>' +
               '<li>' +
                 '<span>' + (isChinese ? '接入方式' : 'Protocol') + '</span>' +
-                '<strong data-wan-proto>STATIC</strong>' +
+                '<strong data-wan-proto>--</strong>' +
               '</li>' +
               '<li>' +
                 '<span>' + (isChinese ? '上级网关' : 'Gateway') + '</span>' +
-                '<strong data-wan-gw>10.10.10.1</strong>' +
+                '<strong data-wan-gw>--</strong>' +
               '</li>' +
               '<li>' +
                 '<span>' + (isChinese ? '运行时间' : 'Uptime') + '</span>' +
@@ -1587,13 +1741,13 @@
                 '<span>' +
                   (isChinese ? '累计使用流量' : 'Traffic Used') +
                 '</span>' +
-                '<strong data-wan-total>0 B</strong>' +
+                '<strong data-wan-total>--</strong>' +
               '</li>' +
               '<li class="wan-rate-row">' +
                 '<span>' + (isChinese ? '上下行速率' : 'Throughput') + '</span>' +
                 '<strong class="homeui-wan-rates">' +
-                  '<em class="rate-up">↑ <b data-wan-tx>0 B/s</b></em>' +
-                  '<em class="rate-down">↓ <b data-wan-rx>0 B/s</b></em>' +
+                  '<em class="rate-up">↑ <b data-wan-tx>--</b></em>' +
+                  '<em class="rate-down">↓ <b data-wan-rx>--</b></em>' +
                 '</strong>' +
               '</li>' +
               '<li class="wan-wave-row" aria-hidden="true">' +
@@ -1610,7 +1764,7 @@
               '</li>' +
               '<li>' +
                 '<span>' + (isChinese ? '系统负载' : 'Load Avg') + '</span>' +
-                '<strong data-wan-load>0.00</strong>' +
+                '<strong data-wan-load>--</strong>' +
               '</li>' +
             '</ul>' +
           '</section>' +
@@ -1636,7 +1790,7 @@
                   '<strong data-res-mem-text>--</strong>' +
                 '</div>' +
                 '<div class="homeui-res-track">' +
-                  '<div class="homeui-res-fill" data-res-mem-bar style="width:25%"></div>' +
+                  '<div class="homeui-res-fill" data-res-mem-bar style="width:0"></div>' +
                 '</div>' +
               '</div>' +
               '<div class="homeui-res-item">' +
@@ -1645,7 +1799,7 @@
                   '<strong data-res-disk-text>--</strong>' +
                 '</div>' +
                 '<div class="homeui-res-track">' +
-                  '<div class="homeui-res-fill is-green" data-res-disk-bar style="width:10%"></div>' +
+                  '<div class="homeui-res-fill is-green" data-res-disk-bar style="width:0"></div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -1662,32 +1816,27 @@
               '<h4>' + (isChinese ? '上下行速率' : 'Throughput') + '</h4>' +
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('rate-stat', avgLabel, statOpts) +
-                createDropdownHtml('rate-iface', isChinese ? '全部' : 'All', ifaceOpts) +
-                '<div class="homeui-seg-pills" data-range-group="rate">' +
-                  '<button type="button" class="active" data-range="1h">' +
-                    (isChinese ? '1小时' : '1H') +
-                  '</button>' +
-                  '<button type="button" data-range="24h">' +
-                    (isChinese ? '24小时' : '24H') +
-                  '</button>' +
-                '</div>' +
+                '<span class="homeui-live-label">' +
+                  (isChinese ? '实时 · 3 秒更新' :
+                    'Live · 3 second updates') +
+                '</span>' +
               '</div>' +
             '</div>' +
             '<div class="homeui-chart-subaxis">' +
-              '<span>' + (isChinese ? '延迟ms' : 'Latency ms') + '</span>' +
+              '<span></span>' +
               '<span>' + (isChinese ? '速率' : 'Speed') + '</span>' +
             '</div>' +
             '<div class="homeui-svg-holder" data-chart-rate></div>' +
             '<div class="homeui-rate-legend">' +
               '<div class="homeui-rate-legend-left">' +
                 '<span class="isp-knot"></span>' +
-                '<strong data-rate-ifname>HomeWrt All</strong>' +
+                '<strong data-rate-ifname>--</strong>' +
               '</div>' +
               '<div class="homeui-rate-legend-metrics">' +
                 '<em class="leg-tx">↑ ' + (isChinese ? '上行: ' : 'TX: ') +
-                  '<b data-leg-tx>0 B/s</b></em>' +
+                  '<b data-leg-tx>--</b></em>' +
                 '<em class="leg-rx">↓ ' + (isChinese ? '下行: ' : 'RX: ') +
-                  '<b data-leg-rx>0 B/s</b></em>' +
+                  '<b data-leg-rx>--</b></em>' +
               '</div>' +
             '</div>' +
             '<div class="homeui-green-strip"></div>' +
@@ -1699,14 +1848,10 @@
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('client-stat', avgLabel, statOpts) +
                 createDropdownHtml('client-type', isChinese ? '有线' : 'Wired', clientTypeOpts) +
-                '<div class="homeui-seg-pills" data-range-group="client">' +
-                  '<button type="button" class="active" data-range="1h">' +
-                    (isChinese ? '1小时' : '1H') +
-                  '</button>' +
-                  '<button type="button" data-range="24h">' +
-                    (isChinese ? '24小时' : '24H') +
-                  '</button>' +
-                '</div>' +
+                '<span class="homeui-live-label">' +
+                  (isChinese ? '实时 · 15 秒更新' :
+                    'Live · 15 second updates') +
+                '</span>' +
               '</div>' +
             '</div>' +
             '<div class="homeui-svg-holder" data-chart-clients></div>' +
@@ -1717,14 +1862,10 @@
               '<h4>' + (isChinese ? '内存使用率' : 'Memory Usage') + '</h4>' +
               '<div class="homeui-chart-tools">' +
                 createDropdownHtml('mem-stat', avgLabel, statOpts) +
-                '<div class="homeui-seg-pills" data-range-group="mem">' +
-                  '<button type="button" class="active" data-range="1h">' +
-                    (isChinese ? '1小时' : '1H') +
-                  '</button>' +
-                  '<button type="button" data-range="24h">' +
-                    (isChinese ? '24小时' : '24H') +
-                  '</button>' +
-                '</div>' +
+                '<span class="homeui-live-label">' +
+                  (isChinese ? '实时 · 5 秒更新' :
+                    'Live · 5 second updates') +
+                '</span>' +
               '</div>' +
             '</div>' +
             '<div class="homeui-svg-holder" data-chart-memory></div>' +
@@ -1773,8 +1914,8 @@
 
     var wanSwitch = dash.querySelector('[data-wan-switch]');
     if (wanSwitch) {
-      wanSwitch.addEventListener('click', function() {
-        liveState.selectedWanIdx = liveState.selectedWanIdx + 1;
+      wanSwitch.addEventListener('change', function() {
+        liveState.selectedWanKey = wanSwitch.value;
         enhanceOverview();
       });
     }
@@ -1816,16 +1957,6 @@
         if (ddId === 'rate-stat') {
           chartState.rateStat = val;
           renderRateChartSvg(dash);
-        } else if (ddId === 'rate-iface') {
-          chartState.rateIface = val;
-          var host = dash.querySelector('[data-ov-hostname]');
-          var hName = host ? host.textContent : 'HomeWrt';
-          setText(
-            dash,
-            '[data-rate-ifname]',
-            hName + ' ' + (val === 'all' ? (isChinese ? '全部接口' : 'All') : val)
-          );
-          renderRateChartSvg(dash);
         } else if (ddId === 'client-stat') {
           chartState.clientStat = val;
           renderClientBarSvg(dash);
@@ -1834,30 +1965,6 @@
           renderClientBarSvg(dash);
         } else if (ddId === 'mem-stat') {
           chartState.memStat = val;
-          renderMemoryLineSvg(dash);
-        }
-        return;
-      }
-
-      var rangeBtn = ev.target.closest('[data-range]');
-      if (rangeBtn) {
-        var group = rangeBtn.closest('[data-range-group]');
-        var groupName = group ? group.dataset.rangeGroup : '';
-        var rng = rangeBtn.dataset.range;
-        if (group) {
-          Array.prototype.forEach.call(
-            group.querySelectorAll('button'),
-            function(b) { b.classList.toggle('active', b === rangeBtn); }
-          );
-        }
-        if (groupName === 'rate') {
-          chartState.rateRange = rng;
-          renderRateChartSvg(dash);
-        } else if (groupName === 'client') {
-          chartState.clientRange = rng;
-          renderClientBarSvg(dash);
-        } else if (groupName === 'mem') {
-          chartState.memRange = rng;
           renderMemoryLineSvg(dash);
         }
         return;
@@ -1894,22 +2001,25 @@
     if (!txSvg && !rxSvg)
       return;
 
-    var ifKey = (primaryBox && (primaryBox.name || primaryBox.title)) || '__total__';
-    var curTx = (primaryBox && primaryBox.txSpeed) || liveState.totalTxSpeed || 0;
-    var curRx = (primaryBox && primaryBox.rxSpeed) || liveState.totalRxSpeed || 0;
-
-    if (!liveState.wanWaves[ifKey] && !liveState.wanWaves.__total__) {
-      var initTxBps = !window.L ? 48 * 1024 : curTx;
-      var initRxBps = !window.L ? 136 * 1024 : curRx;
-      pushWanWaveSample(ifKey, initTxBps, initRxBps);
+    var deviceName = primaryBox && primaryBox.devName;
+    var state = deviceName ? liveState.interfaceStats[deviceName] : null;
+    var samples = state ? state.samples.slice(-MINI_SAMPLE_COUNT) : [];
+    if (!samples.length) {
+      if (txSvg)
+        txSvg.innerHTML = '';
+      if (rxSvg)
+        rxSvg.innerHTML = '';
+      return;
     }
 
-    var waveEntry = liveState.wanWaves[ifKey] || liveState.wanWaves.__total__;
-    var txArr = waveEntry ? waveEntry.tx.slice() : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    var rxArr = waveEntry ? waveEntry.rx.slice() : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    var waveTick = (waveEntry && waveEntry.tick) || 1;
+    var txArr = samples.map(function(sample) {
+      return Math.max(0, Number(sample.txKB) || 0);
+    });
+    var rxArr = samples.map(function(sample) {
+      return Math.max(0, Number(sample.rxKB) || 0);
+    });
 
-    function buildWaveSvgContent(series, gradId, color, phase)
+    function buildWaveSvgContent(series, gradId, color)
     {
       var w = 210;
       var h = 20;
@@ -1919,21 +2029,12 @@
       var plotRight = w - 3;
       var plotW = plotRight - plotLeft;
       var plotH = h - padTop - padBottom;
-      var maxV = Math.max.apply(null, series.concat([512]));
-      var minV = Math.min.apply(null, series);
-      var span = Math.max(256, maxV - minV * 0.45);
+      var maxV = Math.max.apply(null, series.concat([1]));
 
       var coords = series.map(function(rawVal, idx) {
         var val = Math.max(0, Number(rawVal) || 0);
-        var x = plotLeft + (plotW * idx) / Math.max(1, series.length - 1);
-        var norm;
-        if (val <= 0) {
-          norm = 0.08 + 0.03 * Math.sin((idx + waveTick) * 0.8 + phase);
-        } else {
-          var baseRatio = (val - minV * 0.35) / span;
-          var liveRipple = 0.05 * Math.sin((idx + waveTick) * 0.9 + phase);
-          norm = Math.max(0.16, Math.min(0.98, baseRatio + liveRipple));
-        }
+        var x = plotLeft + (plotW * idx) / (MINI_SAMPLE_COUNT - 1);
+        var norm = Math.max(0, Math.min(1, val / maxV));
         var y = padTop + plotH * (1 - norm);
         return [x, y];
       });
@@ -1967,116 +2068,40 @@
     }
 
     if (txSvg)
-      txSvg.innerHTML = buildWaveSvgContent(txArr, 'homeuiWanUpGrad', '#6d78f6', 0);
+      txSvg.innerHTML = buildWaveSvgContent(
+        txArr, 'homeuiWanUpGrad', '#6d78f6');
     if (rxSvg)
-      rxSvg.innerHTML = buildWaveSvgContent(rxArr, 'homeuiWanDownGrad', '#4cd4a0', 1.6);
+      rxSvg.innerHTML = buildWaveSvgContent(
+        rxArr, 'homeuiWanDownGrad', '#4cd4a0');
   }
 
-  function updateBucketSeries(store, slotDurationMs, sample)
+  function recordOverviewSamples(wired, wireless, memPct)
   {
-    var nowSlot = Math.floor(Date.now() / slotDurationMs);
-    var isLiveReady = !window.L || (liveState.pollTicks && liveState.pollTicks >= 1);
-
-    if (!store.seeded) {
-      for (var i = 0; i < 12; i++) {
-        var wave = 0.85 + ((i % 4) * 0.08);
-        var txV = sample.txKB > 0 ? Math.max(1, Math.round(sample.txKB * wave)) : 0;
-        var rxV = sample.rxKB > 0 ? Math.max(1, Math.round(sample.rxKB * wave)) : 0;
-        store.txAvg[i] = txV;
-        store.txPeak[i] = txV > 0 ? Math.max(txV + 4, Math.round(txV * 1.35)) : 0;
-        store.rxAvg[i] = rxV;
-        store.rxPeak[i] = rxV > 0 ? Math.max(rxV + 6, Math.round(rxV * 1.42)) : 0;
-
-        store.wiredAvg[i] = sample.wired;
-        store.wiredPeak[i] = sample.wired + (i % 3 === 0 && sample.wired > 0 ? 1 : 0);
-        store.wirelessAvg[i] = sample.wireless;
-        store.wirelessPeak[i] = sample.wireless + (i % 4 === 0 && sample.wireless > 0 ? 1 : 0);
-
-        store.memAvg[i] = sample.memPct;
-        store.memPeak[i] = Math.min(100, sample.memPct + (i % 3 === 0 ? 3 : 2));
-      }
-      store.bucketSlot = nowSlot;
-      if (isLiveReady)
-        store.seeded = true;
-    } else if (nowSlot > store.bucketSlot) {
-      var steps = Math.min(12, nowSlot - store.bucketSlot);
-      for (var s = 0; s < steps; s++) {
-        store.txAvg.shift();
-        store.txAvg.push(sample.txKB);
-        store.txPeak.shift();
-        store.txPeak.push(Math.max(sample.txKB, Math.round(sample.txKB * 1.25)));
-        store.rxAvg.shift();
-        store.rxAvg.push(sample.rxKB);
-        store.rxPeak.shift();
-        store.rxPeak.push(Math.max(sample.rxKB, Math.round(sample.rxKB * 1.25)));
-
-        store.wiredAvg.shift();
-        store.wiredAvg.push(sample.wired);
-        store.wiredPeak.shift();
-        store.wiredPeak.push(sample.wired);
-        store.wirelessAvg.shift();
-        store.wirelessAvg.push(sample.wireless);
-        store.wirelessPeak.shift();
-        store.wirelessPeak.push(sample.wireless);
-
-        store.memAvg.shift();
-        store.memAvg.push(sample.memPct);
-        store.memPeak.shift();
-        store.memPeak.push(sample.memPct);
-      }
-      store.bucketSlot = nowSlot;
-    } else if (isLiveReady) {
-      store.txAvg[11] = sample.txKB;
-      store.txPeak[11] = Math.max(store.txPeak[11], sample.txKB, store.txAvg[11]);
-      store.rxAvg[11] = sample.rxKB;
-      store.rxPeak[11] = Math.max(store.rxPeak[11], sample.rxKB, store.rxAvg[11]);
-
-      store.wiredAvg[11] = sample.wired;
-      store.wiredPeak[11] = Math.max(store.wiredPeak[11], sample.wired);
-      store.wirelessAvg[11] = sample.wireless;
-      store.wirelessPeak[11] = Math.max(store.wirelessPeak[11], sample.wireless);
-
-      store.memAvg[11] = sample.memPct;
-      store.memPeak[11] = Math.max(store.memPeak[11], sample.memPct);
+    var now = Date.now();
+    var lastClient = liveState.clientSamples.length ?
+      liveState.clientSamples[liveState.clientSamples.length - 1] : null;
+    if (liveState.clientSamplePending &&
+        (!lastClient || now - lastClient.time >= 10000)) {
+      appendLimitedSample(liveState.clientSamples, {
+        time: now,
+        wired: Math.max(0, Number(wired) || 0),
+        wireless: Math.max(0, Number(wireless) || 0)
+      }, MAX_REALTIME_SAMPLES);
     }
+    liveState.clientSamplePending = false;
 
-    if (!store.ifaceSeries)
-      store.ifaceSeries = {};
-
-    (sample.ifaces || []).forEach(function(iface) {
-      var key = iface.name || iface.title;
-      if (!key)
-        return;
-      var iTx = Math.max(0, Math.round((iface.txSpeed || 0) / 1024));
-      var iRx = Math.max(0, Math.round((iface.rxSpeed || 0) / 1024));
-      if (!store.ifaceSeries[key] || !isLiveReady) {
-        var initTxAvg = [];
-        var initTxPeak = [];
-        var initRxAvg = [];
-        var initRxPeak = [];
-        for (var k = 0; k < 12; k++) {
-          var w = 0.8 + ((k % 4) * 0.08);
-          var baseTx = iTx || Math.round(sample.txKB * w);
-          var baseRx = iRx || Math.round(sample.rxKB * w);
-          initTxAvg.push(baseTx);
-          initTxPeak.push(baseTx > 0 ? Math.max(baseTx + 4, Math.round(baseTx * 1.35)) : 0);
-          initRxAvg.push(baseRx);
-          initRxPeak.push(baseRx > 0 ? Math.max(baseRx + 6, Math.round(baseRx * 1.4)) : 0);
-        }
-        store.ifaceSeries[key] = {
-          txAvg: initTxAvg,
-          txPeak: initTxPeak,
-          rxAvg: initRxAvg,
-          rxPeak: initRxPeak
-        };
-      } else {
-        var sObj = store.ifaceSeries[key];
-        sObj.txAvg[11] = iTx;
-        sObj.txPeak[11] = Math.max(sObj.txPeak[11], iTx);
-        sObj.rxAvg[11] = iRx;
-        sObj.rxPeak[11] = Math.max(sObj.rxPeak[11], iRx);
-      }
-    });
+    var lastMemory = liveState.memorySamples.length ?
+      liveState.memorySamples[liveState.memorySamples.length - 1] : null;
+    if (liveState.memorySamplePending &&
+        memPct !== null && memPct !== undefined &&
+        (!lastMemory || now - lastMemory.time >= 4500) &&
+        isFinite(Number(memPct))) {
+      appendLimitedSample(liveState.memorySamples, {
+        time: now,
+        percent: Math.max(0, Math.min(100, Number(memPct)))
+      }, MAX_REALTIME_SAMPLES);
+    }
+    liveState.memorySamplePending = false;
   }
 
   function updateOverviewDashboard(view, sectionMap)
@@ -2152,10 +2177,11 @@
       uptimeObj.text = previewStats[0].textContent.trim();
       connObj.text = previewStats[1].textContent.trim();
       memUsedObj.text = previewStats[2].textContent.trim();
-      memUsedObj.percent = parseFloat(memUsedObj.text) || 26;
+      var previewMemPct = parseFloat(memUsedObj.text);
+      memUsedObj.percent = isNaN(previewMemPct) ? null : previewMemPct;
     }
 
-    var hostname = hostObj.text !== '--' ? hostObj.text : 'HomeWrt';
+    var hostname = hostObj.text !== '--' ? hostObj.text : '--';
     var uptimeFormatted = formatUptimeChinese(uptimeObj.text);
     setText(
       dash,
@@ -2165,7 +2191,7 @@
     setText(dash, '[data-ov-hostname]', hostname);
 
     var gwidText = archObj.text !== '--' ? archObj.text :
-      (modelObj.text !== '--' ? modelObj.text : 'x86_64 Gateway');
+      (modelObj.text !== '--' ? modelObj.text : '--');
     setText(dash, '[data-ov-gwid]', gwidText);
 
     var tipEl = dash.querySelector('[data-ov-tip]');
@@ -2178,31 +2204,31 @@
         setText(dash, '[data-ov-ver]', verMatch[0]);
     }
 
-    var cpuPct = cpuObj.percent !== null ? Math.round(cpuObj.percent) :
-      (Array.isArray(sysInfo.load) && sysInfo.load.length ?
-        Math.min(100, Math.max(2, Math.round((sysInfo.load[0] / 65536) * 25))) : 5);
+    var cpuPct = cpuObj.percent !== null ? Math.round(cpuObj.percent) : null;
     var diskPct = diskObj.percent !== null ? Math.round(diskObj.percent) :
-      (liveState.diskPct !== null ? liveState.diskPct : 8);
+      (liveState.diskPct !== null ? liveState.diskPct : null);
     var memPct = memUsedObj.percent !== null ?
       Math.round(memUsedObj.percent) :
-      (liveState.memPct !== null ? liveState.memPct : 25);
+      (liveState.memPct !== null ? liveState.memPct : null);
 
     setDonutProgress(
       dash.querySelector('[data-ring-card="cpu"]'),
-      cpuPct,
-      cpuPct + '%'
+      cpuPct || 0,
+      cpuPct === null ? '--' : cpuPct + '%'
     );
-    setText(dash, '[data-ov-cpu-stat]', cpuPct + '%');
-    setText(dash, '[data-ov-disk-stat]', diskPct + '%');
+    setText(dash, '[data-ov-cpu-stat]', cpuPct === null ? '--' : cpuPct + '%');
+    setText(dash, '[data-ov-disk-stat]', diskPct === null ? '--' : diskPct + '%');
 
-    setText(dash, '[data-res-mem-text]', memUsedObj.text !== '--' ? memUsedObj.text : (memPct + '%'));
-    setText(dash, '[data-res-disk-text]', diskObj.text !== '--' ? diskObj.text : (diskPct + '%'));
+    setText(dash, '[data-res-mem-text]', memUsedObj.text !== '--' ?
+      memUsedObj.text : (memPct === null ? '--' : memPct + '%'));
+    setText(dash, '[data-res-disk-text]', diskObj.text !== '--' ?
+      diskObj.text : (diskPct === null ? '--' : diskPct + '%'));
     var memBar = dash.querySelector('[data-res-mem-bar]');
     var diskBar = dash.querySelector('[data-res-disk-bar]');
     if (memBar)
-      memBar.style.width = Math.max(4, Math.min(100, memPct)) + '%';
+      memBar.style.width = Math.max(0, Math.min(100, memPct || 0)) + '%';
     if (diskBar)
-      diskBar.style.width = Math.max(4, Math.min(100, diskPct)) + '%';
+      diskBar.style.width = Math.max(0, Math.min(100, diskPct || 0)) + '%';
 
     var domLeases = extractLeaseRows([
       { el: dhcpSec, type: isChinese ? '有线 (DHCPv4)' : 'Wired (DHCPv4)' },
@@ -2224,8 +2250,8 @@
 
     var dhcpCount = mergedLeases.length;
     var onlineCount = parseInt(onlineObj.text, 10);
-    if (isNaN(onlineCount) || onlineCount <= 0)
-      onlineCount = dhcpCount > 0 ? dhcpCount : 6;
+    if (isNaN(onlineCount) || onlineCount < 0)
+      onlineCount = dhcpCount;
 
     var wirelessCount = liveState.wirelessClients || 0;
     var wiredCount = Math.max(0, onlineCount - wirelessCount);
@@ -2234,7 +2260,7 @@
 
     setDonutProgress(
       dash.querySelector('[data-ring-card="clients"]'),
-      Math.min(100, Math.max(10, onlineCount * 5)),
+      onlineCount > 0 ? Math.min(100, Math.max(10, onlineCount * 5)) : 0,
       onlineCount
     );
     setText(dash, '[data-ov-wifi-stat]', wirelessCount);
@@ -2247,9 +2273,6 @@
       if (connMatch)
         connCount = parseInt(connMatch[1], 10);
     }
-    if (!connCount)
-      connCount = 246;
-
     var tcpCount = liveState.connTotal ?
       liveState.tcpCount : Math.round(connCount * 0.80);
     var udpCount = liveState.connTotal ?
@@ -2259,7 +2282,8 @@
 
     setDonutProgress(
       dash.querySelector('[data-ring-card="conns"]'),
-      Math.min(100, Math.max(12, Math.round(connCount / 20))),
+      connCount > 0 ?
+        Math.min(100, Math.max(12, Math.round(connCount / 20))) : 0,
       connCount
     );
     setText(dash, '[data-ov-tcp-stat]', tcpCount);
@@ -2267,74 +2291,61 @@
     setText(dash, '[data-ov-icmp-stat]', icmpCount);
 
     var netBoxes = extractNetworkBoxes(netSec);
-    var allIfaces = liveState.ifaces.length ? liveState.ifaces : netBoxes;
-    updateIfaceDropdownMenu(dash, allIfaces);
+    var allIfaces = liveState.ifaces;
+    updateWanSelector(dash, allIfaces);
 
-    var primaryBox = allIfaces[liveState.selectedWanIdx % Math.max(1, allIfaces.length)] ||
-      allIfaces[0] || {
-        name: 'lan',
-        title: 'wan / br-lan',
-        proto: 'STATIC',
-        addr: '10.10.10.2',
-        gw: '10.10.10.1',
-        uptime: uptimeFormatted
-      };
+    var primaryBox = allIfaces.find(function(iface) {
+      return iface.devName === liveState.selectedWanKey;
+    }) || allIfaces[0] || {};
+    if (primaryBox.devName)
+      liveState.selectedWanKey = primaryBox.devName;
 
-    var cleanIp = (primaryBox.addr || '10.10.10.2').split('/')[0];
+    var wanSelect = dash.querySelector('[data-wan-switch]');
+    if (wanSelect && primaryBox.devName)
+      wanSelect.value = primaryBox.devName;
+
+    var cleanIp = primaryBox.addr ? primaryBox.addr.split('/')[0] : '--';
     setText(dash, '[data-ov-ip]', cleanIp);
-    setText(dash, '[data-wan-switch]', primaryBox.title || primaryBox.name || 'wan / br-lan');
-
-    var legendIfLabel = chartState.rateIface === 'all' ?
-      (isChinese ? '全部接口' : 'All') : chartState.rateIface;
-    setText(dash, '[data-rate-ifname]', hostname + ' ' + legendIfLabel);
+    setText(
+      dash,
+      '[data-rate-ifname]',
+      hostname + ' ' + (primaryBox.title || '--')
+    );
 
     setText(dash, '[data-wan-ip]', cleanIp);
-    setText(dash, '[data-wan-proto]', String(primaryBox.proto || 'STATIC').toUpperCase());
-    setText(dash, '[data-wan-gw]', primaryBox.gw || '10.10.10.1');
+    setText(dash, '[data-wan-proto]', String(primaryBox.proto || '--').toUpperCase());
+    setText(dash, '[data-wan-gw]', primaryBox.gw || '--');
     setText(
       dash,
       '[data-wan-uptime]',
-      formatUptimeChinese(primaryBox.uptime || uptimeObj.text)
+      primaryBox.uptime ? formatUptimeChinese(primaryBox.uptime) : '--'
     );
 
     if (loadObj.text !== '--')
       setText(dash, '[data-wan-load]', loadObj.text);
 
-    var curTxSpeed = primaryBox.txSpeed || liveState.totalTxSpeed || 0;
-    var curRxSpeed = primaryBox.rxSpeed || liveState.totalRxSpeed || 0;
-    var curTotalBytes = (primaryBox.rxBytes || 0) + (primaryBox.txBytes || 0) ||
-      liveState.totalBytes;
+    var curTxSpeed = Number(primaryBox.txSpeed) || 0;
+    var curRxSpeed = Number(primaryBox.rxSpeed) || 0;
+    var curTotalBytes = (Number(primaryBox.rxBytes) || 0) +
+      (Number(primaryBox.txBytes) || 0);
 
-    if (curTotalBytes > 0) {
-      setText(dash, '[data-wan-total]', formatBytes(curTotalBytes));
-      setText(dash, '[data-wan-tx]', formatRate(curTxSpeed));
-      setText(dash, '[data-wan-rx]', formatRate(curRxSpeed));
-    } else if (primaryBox.rxText || primaryBox.txText) {
-      setText(dash, '[data-wan-total]', '12.48 GB');
-      setText(dash, '[data-wan-tx]', primaryBox.txText || '48.20 KB/s');
-      setText(dash, '[data-wan-rx]', primaryBox.rxText || '136.50 KB/s');
-    }
+    setText(
+      dash,
+      '[data-wan-total]',
+      primaryBox.devName ? formatBytes(curTotalBytes) : '--'
+    );
+    setText(
+      dash,
+      '[data-wan-tx]',
+      primaryBox.rateReady ? formatRate(curTxSpeed) : '--'
+    );
+    setText(
+      dash,
+      '[data-wan-rx]',
+      primaryBox.rateReady ? formatRate(curRxSpeed) : '--'
+    );
 
-    var isMockPreview = !window.L;
-    var txKB = curTxSpeed > 0 ?
-      Math.max(1, Math.round(curTxSpeed / 1024)) :
-      (isMockPreview ? 48 : 0);
-    var rxKB = curRxSpeed > 0 ?
-      Math.max(1, Math.round(curRxSpeed / 1024)) :
-      (isMockPreview ? 136 : 0);
-
-    var sample = {
-      txKB: txKB,
-      rxKB: rxKB,
-      wired: wiredCount,
-      wireless: wirelessCount,
-      memPct: memPct,
-      ifaces: allIfaces
-    };
-
-    updateBucketSeries(historyState.h1, 5 * 60 * 1000, sample);
-    updateBucketSeries(historyState.h24, 2 * 3600 * 1000, sample);
-    saveHistoryState();
+    recordOverviewSamples(wiredCount, wirelessCount, memPct);
 
     renderWanMiniWaves(dash, primaryBox);
     renderRateChartSvg(dash);
@@ -2357,15 +2368,15 @@
         },
         {
           key: isChinese ? '设备型号' : 'Model',
-          value: modelObj.text !== '--' ? modelObj.text : 'x86_64 Generic'
+          value: modelObj.text !== '--' ? modelObj.text : '--'
         },
         {
           key: isChinese ? '目标平台' : 'Target Platform',
-          value: targetObj.text !== '--' ? targetObj.text : 'x86/64'
+          value: targetObj.text !== '--' ? targetObj.text : '--'
         },
         {
           key: isChinese ? '内核版本' : 'Kernel Version',
-          value: kernelObj.text !== '--' ? kernelObj.text : '6.6.x'
+          value: kernelObj.text !== '--' ? kernelObj.text : '--'
         },
         {
           key: isChinese ? '本地时间' : 'Local Time',
@@ -2377,19 +2388,20 @@
         },
         {
           key: isChinese ? '平均负载' : 'Load Average',
-          value: loadObj.text !== '--' ? loadObj.text : '0.08, 0.05, 0.01'
+          value: loadObj.text !== '--' ? loadObj.text : '--'
         },
         {
           key: isChinese ? 'CPU 状态' : 'CPU Usage',
-          value: cpuObj.text !== '--' ? cpuObj.text : (cpuPct + '%')
+          value: cpuObj.text !== '--' ? cpuObj.text :
+            (cpuPct === null ? '--' : cpuPct + '%')
         },
         {
           key: isChinese ? '处理器架构' : 'Architecture',
-          value: archObj.text !== '--' ? archObj.text : 'x86_64 Multi-Core Processor'
+          value: archObj.text !== '--' ? archObj.text : '--'
         },
         {
           key: isChinese ? '固件版本' : 'Firmware Version',
-          value: fwObj.text !== '--' ? fwObj.text : 'ImmortalWrt 25.12-SNAPSHOT'
+          value: fwObj.text !== '--' ? fwObj.text : '--'
         }
       ];
 
@@ -2450,6 +2462,8 @@
   }
 
   HomeUI.pollLiveRouterStats = pollLiveRouterStats;
+  HomeUI.pollLiveMemory = pollLiveMemory;
+  HomeUI.pollLiveThroughput = pollLiveThroughput;
   HomeUI.getOverviewSectionName = getOverviewSectionName;
   HomeUI.createIkuaiDashboard = createIkuaiDashboard;
   HomeUI.updateOverviewDashboard = updateOverviewDashboard;

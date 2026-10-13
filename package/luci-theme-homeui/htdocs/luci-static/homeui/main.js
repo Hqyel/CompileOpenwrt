@@ -25,6 +25,8 @@
   var labelIndicators = HomeUI.labelIndicators;
   var openSearchModal = HomeUI.openSearchModal;
   var pollLiveRouterStats = HomeUI.pollLiveRouterStats;
+  var pollLiveMemory = HomeUI.pollLiveMemory;
+  var pollLiveThroughput = HomeUI.pollLiveThroughput;
   var getOverviewSectionName = HomeUI.getOverviewSectionName;
   var createIkuaiDashboard = HomeUI.createIkuaiDashboard;
   var updateOverviewDashboard = HomeUI.updateOverviewDashboard;
@@ -224,13 +226,30 @@
   );
 
   if (isOverview) {
-    pollLiveRouterStats(enhanceOverview);
-    setTimeout(function() {
-      pollLiveRouterStats(enhanceOverview);
-    }, 1000);
+    pollLiveRouterStats(function() {
+      enhanceOverview();
+      pollLiveThroughput(enhanceOverview);
+    });
+    pollLiveMemory(enhanceOverview);
     setInterval(function() {
-      pollLiveRouterStats(enhanceOverview);
+      if (!document.hidden)
+        pollLiveThroughput(enhanceOverview);
     }, 3000);
+    setInterval(function() {
+      if (!document.hidden)
+        pollLiveMemory(enhanceOverview);
+    }, 5000);
+    setInterval(function() {
+      if (!document.hidden)
+        pollLiveRouterStats(enhanceOverview);
+    }, 15000);
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        pollLiveRouterStats(enhanceOverview);
+        pollLiveMemory(enhanceOverview);
+        pollLiveThroughput(enhanceOverview);
+      }
+    });
   } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage ||
              isWireguardPage || isSystemPage || isLogsPage || isProcessesPage ||
              isNetworkPage) {
