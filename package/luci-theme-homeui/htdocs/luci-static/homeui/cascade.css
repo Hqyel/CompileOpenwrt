@@ -1582,22 +1582,221 @@ button.cbi-button:active {
   background: rgba(238, 94, 104, .06) !important;
 }
 
-.modal {
-  border: 1px solid var(--homeui-border);
-  border-radius: 10px;
-  background: var(--homeui-surface);
-  box-shadow: 0 22px 70px rgba(20, 34, 53, .22);
-  overflow: hidden;
-}
-
-.modal h4 {
-  border-bottom: 1px solid var(--homeui-border);
-  background: var(--homeui-surface-soft);
-}
-
+/* ==========================================================================
+   Global Modal Dialogs & Popup Forms (.modal / .cbi-modal)
+   ========================================================================== */
+#modal_overlay,
 .modal-overlay {
-  background: rgba(20, 31, 46, .36);
-  backdrop-filter: blur(3px);
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px 16px !important;
+  background: rgba(15, 23, 42, .42) !important;
+  backdrop-filter: blur(3px) !important;
+  overflow-y: auto !important;
+}
+
+body:not(.modal-overlay-active) #modal_overlay {
+  display: none !important;
+}
+
+.modal,
+.cbi-modal {
+  position: relative !important;
+  width: min(880px, 94vw) !important;
+  max-width: 880px !important;
+  max-height: calc(100vh - 56px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: auto !important;
+  padding: 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 10px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 22px 64px rgba(15, 23, 42, .24) !important;
+  overflow: hidden !important;
+}
+
+.modal > h4,
+.modal > h3,
+.cbi-modal > h4,
+.cbi-modal > h3 {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin: 0 !important;
+  padding: 14px 48px 14px 22px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: #fafbfe !important;
+  color: var(--text-color-highest) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+:root[data-darkmode="true"] .modal > h4,
+:root[data-darkmode="true"] .modal > h3,
+:root[data-darkmode="true"] .cbi-modal > h4,
+:root[data-darkmode="true"] .cbi-modal > h3 {
+  background: var(--homeui-surface-soft) !important;
+}
+
+.homeui-modal-close-btn {
+  position: absolute !important;
+  top: 50% !important;
+  right: 14px !important;
+  transform: translateY(-50%) !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #86909c !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background-color .15s ease, color .15s ease !important;
+  z-index: 10 !important;
+}
+
+.modal > .homeui-modal-close-btn {
+  top: 10px !important;
+  transform: none !important;
+}
+
+.homeui-modal-close-btn:hover,
+.homeui-modal-close-btn:focus {
+  background: #eef1f6 !important;
+  color: var(--text-color-highest) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] .homeui-modal-close-btn:hover,
+:root[data-darkmode="true"] .homeui-modal-close-btn:focus {
+  background: rgba(255, 255, 255, .1) !important;
+  color: #ffffff !important;
+}
+
+.homeui-modal-close-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Modal scrollable body */
+.modal > :not(h4):not(h3):not(.right):not(.button-row):not(.cbi-page-actions):not(.homeui-modal-close-btn),
+.cbi-modal > :not(h4):not(h3):not(.right):not(.button-row):not(.cbi-page-actions):not(.homeui-modal-close-btn) {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding: 18px 22px !important;
+  margin: 0 !important;
+}
+
+.modal > p,
+.cbi-modal > p {
+  flex: 0 0 auto !important;
+  padding: 14px 22px 0 22px !important;
+  margin: 0 !important;
+  color: var(--text-color-medium) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+.modal .cbi-map,
+.cbi-modal .cbi-map {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modal .cbi-section,
+.cbi-modal .cbi-section {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.modal .cbi-section > h3:first-child,
+.cbi-modal .cbi-section > h3:first-child {
+  display: none !important;
+}
+
+.modal .cbi-tabmenu,
+.cbi-modal .cbi-tabmenu {
+  margin: -18px -22px 18px -22px !important;
+  padding: 0 22px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  border-radius: 0 !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: none !important;
+  gap: 20px !important;
+}
+
+/* Modal bottom action bar */
+.modal > .right,
+.modal > .button-row,
+.modal > .cbi-page-actions,
+.cbi-modal > .right,
+.cbi-modal > .button-row,
+.cbi-modal > .cbi-page-actions,
+.homeui-modal-actions {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 12px 22px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+  border-radius: 0 !important;
+  background: #fafbfe !important;
+  box-shadow: none !important;
+  text-align: right !important;
+}
+
+:root[data-darkmode="true"] .modal > .right,
+:root[data-darkmode="true"] .modal > .button-row,
+:root[data-darkmode="true"] .modal > .cbi-page-actions,
+:root[data-darkmode="true"] .homeui-modal-actions {
+  background: var(--homeui-surface-soft) !important;
+}
+
+.modal > .right .btn,
+.modal > .right .cbi-button,
+.modal > .button-row .btn,
+.modal > .button-row .cbi-button,
+.modal > .cbi-page-actions .btn,
+.modal > .cbi-page-actions .cbi-button,
+.homeui-modal-actions .btn,
+.homeui-modal-actions .cbi-button {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  flex: 0 0 auto !important;
 }
 
 .homeui-search-overlay {

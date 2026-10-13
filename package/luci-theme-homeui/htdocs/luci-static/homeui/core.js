@@ -50,6 +50,8 @@
     }
     else if (/admin-status-overview/.test(bodyPage))
       bodyPage = 'admin-status-overview';
+    else if (/admin-network-network/.test(bodyPage))
+      bodyPage = 'admin-network-network';
 
     if (bodyPage && document.body && document.body.dataset.page !== bodyPage)
       document.body.dataset.page = bodyPage;
@@ -68,6 +70,7 @@
   var isSystemPage = pageId === 'admin-system-system';
   var isLogsPage = /^admin-status-(?:logs|syslog|dmesg)/.test(pageId);
   var isProcessesPage = pageId === 'admin-status-processes';
+  var isNetworkPage = pageId === 'admin-network-network';
   var isStandalonePage =
     isOverview ||
     isProcessesPage ||
@@ -744,6 +747,82 @@
     return fallback;
   }
 
+  function enhanceModal(modal)
+  {
+    if (!modal)
+      return;
+
+    var head = modal.querySelector('h4, h3, .modal-header');
+    if (!modal.querySelector('.homeui-modal-close-btn')) {
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'homeui-modal-close-btn';
+      closeBtn.title = isChinese ? '关闭' : 'Close';
+      closeBtn.setAttribute('aria-label', closeBtn.title);
+      closeBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M18 6 6 18M6 6l12 12"/>' +
+        '</svg>';
+
+      closeBtn.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        var cancelBtn = modal.querySelector(
+          '.right button:not(.cbi-button-positive):not(.cbi-button-action):not(.cbi-button-save):not(.important), ' +
+          '.button-row button:not(.important):not(.cbi-button-positive), ' +
+          '.cbi-page-actions button:not(.cbi-button-positive):not(.cbi-button-save)'
+        );
+        if (cancelBtn) {
+          cancelBtn.click();
+        } else if (window.L && window.L.ui && typeof window.L.ui.hideModal === 'function') {
+          window.L.ui.hideModal();
+        } else {
+          var ov = modal.closest('#modal_overlay') || modal;
+          ov.remove();
+        }
+      });
+
+      if (head) {
+        head.style.position = 'relative';
+        head.appendChild(closeBtn);
+      } else {
+        modal.insertBefore(closeBtn, modal.firstChild);
+      }
+    }
+
+    var btnBar = modal.querySelector('.right, .button-row, .cbi-page-actions');
+    if (btnBar)
+      btnBar.classList.add('homeui-modal-actions');
+  }
+
+  function observeModals()
+  {
+    var scan = function() {
+      var list = document.querySelectorAll('.modal, .cbi-modal, #modal_overlay > div');
+      Array.prototype.forEach.call(list, enhanceModal);
+    };
+
+    new MutationObserver(function() {
+      scan();
+    }).observe(document.body, { childList: true, subtree: true });
+
+    document.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Escape' || ev.keyCode === 27) {
+        var activeModal = document.querySelector('.modal, .cbi-modal, #modal_overlay');
+        if (activeModal) {
+          var btn = activeModal.querySelector('.homeui-modal-close-btn');
+          if (btn)
+            btn.click();
+        }
+      }
+    });
+
+    scan();
+  }
+
+  observeModals();
+
   window.HomeUI = {
     root: root,
     collapseButton: collapseButton,
@@ -764,6 +843,7 @@
     isSystemPage: isSystemPage,
     isLogsPage: isLogsPage,
     isProcessesPage: isProcessesPage,
+    isNetworkPage: isNetworkPage,
     chartState: chartState,
     subpageState: subpageState,
     liveState: liveState,
@@ -790,6 +870,8 @@
     applySubpageFilter: applySubpageFilter,
     getCellText: getCellText,
     parseSizeStringToBytes: parseSizeStringToBytes,
-    readFormFieldText: readFormFieldText
+    readFormFieldText: readFormFieldText,
+    enhanceModal: enhanceModal,
+    observeModals: observeModals
   };
 })(window);

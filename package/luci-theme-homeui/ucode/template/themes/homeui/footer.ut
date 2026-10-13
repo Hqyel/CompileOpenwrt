@@ -14,6 +14,7 @@
       <script src="{{ media }}/page-overview.js?v=@HOMEUI_VERSION@"></script>
       <script src="{{ media }}/page-status.js?v=@HOMEUI_VERSION@"></script>
       <script src="{{ media }}/page-system.js?v=@HOMEUI_VERSION@"></script>
+      <script src="{{ media }}/page-network.js?v=@HOMEUI_VERSION@"></script>
       <script src="{{ media }}/main.js?v=@HOMEUI_VERSION@"></script>
     {% endif %}
   </body>

@@ -38,7 +38,11 @@ body[data-page="admin-status-dmesg"] #maincontent > h2:first-of-type,
 body[data-page="admin-status-dmesg"] #view > h2:first-of-type,
 body[data-page="admin-status-processes"] #maincontent > h2:first-of-type,
 body[data-page="admin-status-processes"] #view > h2:first-of-type,
-body[data-page="admin-status-processes"] #view > .cbi-map-descr {
+body[data-page="admin-status-processes"] #view > .cbi-map-descr,
+body[data-page="admin-network-network"] #maincontent > h2:first-of-type,
+body[data-page="admin-network-network"] #view > h2:first-of-type,
+body[data-page="admin-network-network"] .cbi-map > h2:first-of-type,
+body[data-page="admin-network-network"] .cbi-map-descr {
   display: none !important;
 }
 
@@ -1527,6 +1531,231 @@ body[data-page="admin-status-processes"] .table .td:nth-child(6) .cbi-button {
   min-height: 28px !important;
   padding: 0 12px !important;
   font-size: 12px !important;
+}
+
+/* ==========================================================================
+   Network Interfaces Page (admin-network-network)
+   ========================================================================== */
+body[data-page="admin-network-network"] #view > .cbi-map > .cbi-tabmenu,
+body[data-page="admin-network-network"] #view > .cbi-map > .tabs,
+body[data-page="admin-network-network"] #maincontent > .tabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 28px !important;
+  margin: 0 0 14px 0 !important;
+  padding: 0 20px !important;
+  min-height: 46px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+}
+
+body[data-page="admin-network-network"] #view > .cbi-map > .cbi-tabmenu > li > a,
+body[data-page="admin-network-network"] #view > .cbi-map > .tabs > li > a,
+body[data-page="admin-network-network"] #maincontent > .tabs > li > a {
+  min-height: 46px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section {
+  padding: 0 !important;
+  margin: 0 0 16px 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 8px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 2px 10px rgba(27, 46, 75, .03) !important;
+  overflow: hidden;
+}
+
+body[data-page="admin-network-network"] .cbi-section > h3:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 12px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: #fafbfe !important;
+  color: var(--text-color-highest) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+:root[data-darkmode="true"] body[data-page="admin-network-network"] .cbi-section > h3:first-child {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section > h3:first-child .homeui-sec-count {
+  margin-left: auto !important;
+}
+
+.homeui-sec-cat.is-iface {
+  background: rgba(47, 137, 255, .12);
+  color: #2f89ff;
+}
+
+.homeui-sec-cat.is-device {
+  background: rgba(40, 199, 111, .12);
+  color: #20a55a;
+}
+
+.homeui-sec-cat.is-global {
+  background: rgba(124, 58, 237, .12);
+  color: #7c3aed;
+}
+
+/* Tab 1: Interfaces Table */
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table,
+body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table {
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th,
+body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .th {
+  padding: 10px 18px !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--text-color-medium) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td,
+body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .td {
+  padding: 12px 18px !important;
+  font-size: 12.5px !important;
+  vertical-align: middle !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th:nth-child(1),
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(1) {
+  width: 146px !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .th:nth-child(3),
+body[data-page="admin-network-network"] .cbi-section[data-tab="interface"] .table .td:nth-child(3) {
+  width: 270px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+body[data-page="admin-network-network"] .ifacebox {
+  width: 126px !important;
+  margin: 0 !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 6px !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .03) !important;
+  overflow: hidden !important;
+}
+
+body[data-page="admin-network-network"] .ifacebox .ifacebox-head {
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+}
+
+body[data-page="admin-network-network"] .ifacebox .ifacebox-body {
+  padding: 8px 6px !important;
+  background: var(--homeui-surface) !important;
+  text-align: center !important;
+  color: var(--text-color-medium) !important;
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+
+body[data-page="admin-network-network"] [data-name="_ifacestat"] > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+body[data-page="admin-network-network"] [data-name="_ifacestat"] > div > span.nowrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body[data-page="admin-network-network"] [data-name="_ifacestat"] strong {
+  color: var(--text-color-medium);
+  font-weight: 500;
+}
+
+/* Tab 2: Devices Table */
+body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .ifacebadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 4px 10px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 5px !important;
+  background: var(--homeui-surface-soft) !important;
+  font-family: "JetBrains Mono", Consolas, monospace !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #2f89ff !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="device"] .table .td:nth-child(3) {
+  font-family: "JetBrains Mono", Consolas, monospace !important;
+  font-size: 12px !important;
+}
+
+/* Section bottom Add buttons */
+body[data-page="admin-network-network"] .cbi-section > .cbi-section-create,
+body[data-page="admin-network-network"] .cbi-tblsection > .cbi-section-create {
+  padding: 14px 18px !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+  background: #fafbfe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+}
+
+:root[data-darkmode="true"] body[data-page="admin-network-network"] .cbi-section > .cbi-section-create {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section-create .cbi-button-add,
+body[data-page="admin-network-network"] .cbi-section-create > button,
+body[data-page="admin-network-network"] .cbi-section-create > input[type="button"] {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 16px !important;
+  border: 1px solid #2f89ff !important;
+  border-radius: 4px !important;
+  background: #2f89ff !important;
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+}
+
+/* Tab 3: Globals Form */
+body[data-page="admin-network-network"] .cbi-section[data-tab="globals"] .cbi-value {
+  padding: 14px 22px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f0f2f5 !important;
+}
+
+:root[data-darkmode="true"] body[data-page="admin-network-network"] .cbi-section[data-tab="globals"] .cbi-value {
+  border-bottom-color: var(--homeui-border) !important;
+}
+
+body[data-page="admin-network-network"] .cbi-section[data-tab="globals"] .cbi-value:last-child {
+  border-bottom: 0 !important;
 }
 
 .homeui-sec-hidden,

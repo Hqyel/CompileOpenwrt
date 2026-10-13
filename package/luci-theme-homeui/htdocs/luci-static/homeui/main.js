@@ -18,6 +18,7 @@
   var isSystemPage = HomeUI.isSystemPage;
   var isLogsPage = HomeUI.isLogsPage;
   var isProcessesPage = HomeUI.isProcessesPage;
+  var isNetworkPage = HomeUI.isNetworkPage;
   var applyColorMode = HomeUI.applyColorMode;
   var toggleSidebar = HomeUI.toggleSidebar;
   var expandSidebarOnMenuClick = HomeUI.expandSidebarOnMenuClick;
@@ -34,6 +35,7 @@
   var enhanceSystemSettingsPage = HomeUI.enhanceSystemSettingsPage;
   var enhanceLogsPage = HomeUI.enhanceLogsPage;
   var enhanceProcessesPage = HomeUI.enhanceProcessesPage;
+  var enhanceNetworkInterfacesPage = HomeUI.enhanceNetworkInterfacesPage;
   var isEnhancing = false;
 
   function enhanceOverview()
@@ -111,6 +113,16 @@
       isEnhancing = true;
       try {
         enhanceProcessesPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (page === 'admin-network-network') {
+      isEnhancing = true;
+      try {
+        enhanceNetworkInterfacesPage(view);
       } finally {
         isEnhancing = false;
       }
@@ -220,7 +232,8 @@
       pollLiveRouterStats(enhanceOverview);
     }, 3000);
   } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage ||
-             isWireguardPage || isSystemPage || isLogsPage || isProcessesPage) {
+             isWireguardPage || isSystemPage || isLogsPage || isProcessesPage ||
+             isNetworkPage) {
     setInterval(enhanceOverview, 1000);
   }
 

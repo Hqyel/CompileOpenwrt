@@ -7,6 +7,7 @@
   var escapeHtml = HomeUI.escapeHtml;
   var setText = HomeUI.setText;
   var readFormFieldText = HomeUI.readFormFieldText;
+  var formatUnixLocalTime = HomeUI.formatUnixLocalTime;
 
   function enhanceSystemSettingsPage(view)
   {
