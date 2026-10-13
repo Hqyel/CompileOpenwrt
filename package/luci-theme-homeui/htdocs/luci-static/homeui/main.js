@@ -121,7 +121,7 @@
       return;
     }
 
-    if (page === 'admin-network-network') {
+    if (page === 'admin-network-network' || page === 'admin-network') {
       isEnhancing = true;
       try {
         enhanceNetworkInterfacesPage(view);
@@ -209,14 +209,21 @@
 
   new MutationObserver(function(mutations) {
     var shouldUpdate = mutations.some(function(m) {
-      return !m.target.closest ||
-        (!m.target.closest('.homeui-ikuai-dashboard') &&
-         !m.target.closest('.homeui-subpage-shell') &&
-         !m.target.closest('.homeui-rt-card-head') &&
-         !m.target.closest('.homeui-log-card-head') &&
-         !m.target.closest('.homeui-proc-card-head') &&
-         !m.target.classList.contains('homeui-sec-count') &&
-         !m.target.classList.contains('homeui-sec-cat'));
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (!el || !el.closest)
+        return false;
+      return !el.closest('.homeui-ikuai-dashboard') &&
+        !el.closest('.homeui-subpage-shell') &&
+        !el.closest('.homeui-rt-card-head') &&
+        !el.closest('.homeui-log-card-head') &&
+        !el.closest('.homeui-proc-card-head') &&
+        !el.closest('.homeui-iface-card-meta') &&
+        !el.closest('.homeui-net-card') &&
+        !el.closest('.homeui-net-shell') &&
+        !el.closest('.homeui-modal-close-btn') &&
+        !el.closest('#modal_overlay') &&
+        !el.classList.contains('homeui-sec-count') &&
+        !el.classList.contains('homeui-sec-cat');
     });
     if (shouldUpdate)
       enhanceOverview();

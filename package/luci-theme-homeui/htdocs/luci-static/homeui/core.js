@@ -50,7 +50,7 @@
     }
     else if (/admin-status-overview/.test(bodyPage))
       bodyPage = 'admin-status-overview';
-    else if (/admin-network-network/.test(bodyPage))
+    else if (/admin-network(?:-network)?$/.test(bodyPage))
       bodyPage = 'admin-network-network';
 
     if (bodyPage && document.body && document.body.dataset.page !== bodyPage)
@@ -70,7 +70,10 @@
   var isSystemPage = pageId === 'admin-system-system';
   var isLogsPage = /^admin-status-(?:logs|syslog|dmesg)/.test(pageId);
   var isProcessesPage = pageId === 'admin-status-processes';
-  var isNetworkPage = pageId === 'admin-network-network';
+  var isNetworkPage =
+    pageId === 'admin-network-network' ||
+    pageId === 'admin-network' ||
+    /admin-network/.test(pageId);
   var isStandalonePage =
     isOverview ||
     isProcessesPage ||
@@ -800,8 +803,21 @@
       Array.prototype.forEach.call(list, enhanceModal);
     };
 
-    new MutationObserver(function() {
-      scan();
+    new MutationObserver(function(mutations) {
+      var hasModal = mutations.some(function(m) {
+        return m.target.id === 'modal_overlay' ||
+          (m.target.closest && m.target.closest('#modal_overlay, .modal, .cbi-modal')) ||
+          Array.prototype.some.call(m.addedNodes || [], function(n) {
+            return n.nodeType === 1 && (
+              n.id === 'modal_overlay' ||
+              n.classList.contains('modal') ||
+              n.classList.contains('cbi-modal') ||
+              (n.querySelector && n.querySelector('.modal, .cbi-modal, #modal_overlay'))
+            );
+          });
+      });
+      if (hasModal)
+        scan();
     }).observe(document.body, { childList: true, subtree: true });
 
     document.addEventListener('keydown', function(ev) {
