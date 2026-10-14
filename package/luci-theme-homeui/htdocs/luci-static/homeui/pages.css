@@ -2947,6 +2947,290 @@ body[data-page^="admin-network-routing"] .cbi-section {
 }
 
 /* ========================================================================
+   Compact system forms
+   ======================================================================== */
+#maincontent.homeui-system-settings-page,
+#maincontent.homeui-system-management-page {
+  --homeui-system-control-width: 420px;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-section-node > .cbi-value,
+#maincontent.homeui-system-management-page
+  .cbi-section-node > .cbi-value {
+  display: block !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: var(--homeui-surface) !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-section-node > .cbi-value:last-child,
+#maincontent.homeui-system-management-page
+  .cbi-section-node > .cbi-value:last-child {
+  border-bottom: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page .cbi-value-title,
+#maincontent.homeui-system-management-page .cbi-value-title {
+  display: block !important;
+  width: auto !important;
+  min-height: 0 !important;
+  margin: 0 0 7px !important;
+  padding: 0 !important;
+  color: var(--text-color-highest) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+#maincontent.homeui-system-settings-page .cbi-value-field,
+#maincontent.homeui-system-management-page .cbi-value-field {
+  display: flex !important;
+  align-items: center !important;
+  flex: none !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 34px !important;
+  margin: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ),
+#maincontent.homeui-system-management-page
+  .cbi-value-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ),
+#maincontent.homeui-system-settings-page
+  .cbi-value-field > select,
+#maincontent.homeui-system-management-page
+  .cbi-value-field > select,
+#maincontent.homeui-system-settings-page
+  .cbi-value-field > .cbi-select,
+#maincontent.homeui-system-management-page
+  .cbi-value-field > .cbi-select,
+#maincontent.homeui-system-settings-page
+  .cbi-value-field > .cbi-dropdown:not(.btn):not(.cbi-button),
+#maincontent.homeui-system-management-page
+  .cbi-value-field > .cbi-dropdown:not(.btn):not(.cbi-button) {
+  flex: 0 1 var(--homeui-system-control-width) !important;
+  width: min(var(--homeui-system-control-width), 100%) !important;
+  max-width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-field > div:has(> .control-group),
+#maincontent.homeui-system-management-page
+  .cbi-value-field > div:has(> .control-group) {
+  width: min(460px, 100%) !important;
+  min-width: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-field .control-group,
+#maincontent.homeui-system-management-page
+  .cbi-value-field .control-group {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-field .control-group
+    > input:not([type="checkbox"]):not([type="radio"]),
+#maincontent.homeui-system-management-page
+  .cbi-value-field .control-group
+    > input:not([type="checkbox"]):not([type="radio"]) {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-field .control-group > .cbi-button,
+#maincontent.homeui-system-management-page
+  .cbi-value-field .control-group > .cbi-button {
+  min-width: 38px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding-right: 10px !important;
+  padding-left: 10px !important;
+}
+
+#maincontent.homeui-system-settings-page .cbi-dynlist,
+#maincontent.homeui-system-management-page .cbi-dynlist {
+  width: min(var(--homeui-system-control-width), 100%) !important;
+}
+
+#maincontent.homeui-system-settings-page .cbi-value-field > textarea,
+#maincontent.homeui-system-management-page .cbi-value-field > textarea {
+  width: min(620px, 100%) !important;
+  max-width: 100% !important;
+  min-height: 104px !important;
+  padding: 10px 12px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-settings-page .cbi-value-description,
+#maincontent.homeui-system-management-page .cbi-value-description {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 6px 0 0 !important;
+  padding: 0 !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value-description:not(:empty)::before,
+#maincontent.homeui-system-management-page
+  .cbi-value-description:not(:empty)::before {
+  display: none !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"] .cbi-checkbox,
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"] .cbi-checkbox {
+  display: inline-block !important;
+  width: 36px !important;
+  min-height: 20px !important;
+  margin: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"] input[type="checkbox"],
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"] input[type="checkbox"] {
+  width: 36px !important;
+  height: 20px !important;
+  margin: 0 !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]::before,
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]::before {
+  width: 36px !important;
+  height: 20px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #cfd5de !important;
+  box-shadow: none !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]:checked::before,
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]:checked::before {
+  background: var(--homeui-accent) !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]::after,
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]::after {
+  top: 3px !important;
+  left: 3px !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .24) !important;
+  transform: none !important;
+  transition: left .15s ease !important;
+}
+
+#maincontent.homeui-system-settings-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]:checked::after,
+#maincontent.homeui-system-management-page
+  .cbi-value[data-widget^="CBI.Flag"]
+    input[type="checkbox"]:checked::after {
+  left: 19px !important;
+  transform: none !important;
+}
+
+body[data-page^="admin-system-flash"]
+  #maincontent.homeui-system-management-page .cbi-value-field,
+body[data-page^="admin-system-mounts"]
+  #maincontent.homeui-system-management-page
+    .cbi-value[data-widget="CBI.ButtonValue"] .cbi-value-field {
+  min-height: 30px !important;
+}
+
+body[data-page^="admin-system-flash"]
+  #maincontent.homeui-system-management-page
+    .cbi-value-field > div:not(.cbi-value-description),
+body[data-page^="admin-system-mounts"]
+  #maincontent.homeui-system-management-page
+    .cbi-value[data-widget="CBI.ButtonValue"]
+      .cbi-value-field > div:not(.cbi-value-description) {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+@media screen and (max-width: 700px) {
+  #maincontent.homeui-system-settings-page,
+  #maincontent.homeui-system-management-page {
+    --homeui-system-control-width: 100%;
+  }
+
+  #maincontent.homeui-system-settings-page
+    .cbi-section-node > .cbi-value,
+  #maincontent.homeui-system-management-page
+    .cbi-section-node > .cbi-value {
+    padding: 11px 12px !important;
+  }
+}
+
+/* ========================================================================
    Ordered iKuai-like form system
    ======================================================================== */
 #maincontent.homeui-system-form-page {
@@ -4283,5 +4567,44 @@ body[data-page^="admin-system-ttyd"]
     #maincontent.homeui-system-management-page .homeui-crontab-editor {
     height: 240px !important;
     min-height: 220px !important;
+  }
+}
+
+/* Keep the vertical form rhythm above the legacy management layout. */
+#maincontent.homeui-system-management-page.homeui-system-management-page
+  .cbi-section-node > .cbi-value {
+  display: block !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 12px 16px !important;
+}
+
+#maincontent.homeui-system-management-page.homeui-system-management-page
+  .cbi-value-title {
+  display: block !important;
+  width: auto !important;
+  min-height: 0 !important;
+  margin: 0 0 7px !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+#maincontent.homeui-system-management-page.homeui-system-management-page
+  .cbi-value-field {
+  display: flex !important;
+  align-items: center !important;
+  flex: none !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 34px !important;
+  margin: 0 !important;
+}
+
+@media screen and (max-width: 700px) {
+  #maincontent.homeui-system-management-page.homeui-system-management-page
+    .cbi-section-node > .cbi-value {
+    padding: 11px 12px !important;
   }
 }

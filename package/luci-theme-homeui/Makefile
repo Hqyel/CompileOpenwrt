@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-homeui
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=28
+PKG_RELEASE:=29
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=HomeWrt
 
