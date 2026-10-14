@@ -1049,6 +1049,24 @@
     return nested;
   }
 
+  function getPageTabSignature(tabs)
+  {
+    if (!tabs)
+      return '';
+
+    var labels = [];
+    var controls = tabs.querySelectorAll(
+      ':scope > li > a, :scope > li > button'
+    );
+    Array.prototype.forEach.call(controls, function(control) {
+      var label = control.textContent.replace(/\s+/g, ' ').trim();
+      if (label)
+        labels.push(label);
+    });
+
+    return labels.join('|');
+  }
+
   function isPageTabActive(item, control)
   {
     if (item.classList.contains('active') ||
@@ -1170,6 +1188,32 @@
     });
   }
 
+  function removePageChrome(main)
+  {
+    var chrome = main.querySelector(':scope > .homeui-page-chrome');
+    if (chrome)
+      chrome.remove();
+  }
+
+  function isSpecializedPage(pageId)
+  {
+    var prefixes = [
+      'admin-status-routes',
+      'admin-status-nftables',
+      'admin-status-iptables',
+      'admin-status-realtime',
+      'admin-status-wireguard',
+      'admin-status-logs',
+      'admin-status-syslog',
+      'admin-status-dmesg',
+      'admin-status-processes'
+    ];
+
+    return prefixes.some(function(prefix) {
+      return (pageId || '').indexOf(prefix) === 0;
+    });
+  }
+
   function normalizePageLayout(view, pageId)
   {
     var main = document.querySelector('#maincontent');
@@ -1179,10 +1223,15 @@
     }
 
     main.classList.add('homeui-unified-page');
+    main.classList.toggle(
+      'homeui-specialized-page',
+      isSpecializedPage(pageId)
+    );
     var title = getPageTitle(main);
     var source = getPageTabSource(main);
     if (source) {
       source.classList.add('homeui-page-tabs-source');
+      source.classList.remove('homeui-page-tabs-duplicate');
       source.classList.remove('homeui-section-tabs');
     }
 
@@ -1197,27 +1246,42 @@
       heading.classList.add('homeui-page-title-source');
     });
 
+    var sourceSignature = getPageTabSignature(source);
     var tabLists = main.querySelectorAll('.tabs, .cbi-tabmenu');
     Array.prototype.forEach.call(tabLists, function(tabs) {
-      if (tabs !== source &&
-          !tabs.closest('.modal, .cbi-modal, #modal_overlay')) {
-        tabs.classList.add('homeui-section-tabs');
+      if (tabs === source ||
+          tabs.closest('.modal, .cbi-modal, #modal_overlay'))
+        return;
+
+      tabs.classList.remove('homeui-page-tabs-duplicate');
+      if (sourceSignature &&
+          getPageTabSignature(tabs) === sourceSignature) {
+        tabs.classList.add('homeui-page-tabs-duplicate');
+        tabs.classList.remove('homeui-section-tabs');
+        return;
       }
+
+      tabs.classList.add('homeui-section-tabs');
     });
 
     var descriptions = main.querySelectorAll(
       ':scope > .cbi-map-descr, ' +
       ':scope > #view > .cbi-map-descr, ' +
       ':scope > .cbi-map > .cbi-map-descr, ' +
-      ':scope > #view > .cbi-map > .cbi-map-descr, ' +
-      ':scope > #view > p:first-of-type, ' +
-      ':scope > #view > div > p:first-of-type'
+      ':scope > #view > .cbi-map > .cbi-map-descr'
     );
     Array.prototype.forEach.call(descriptions, function(description) {
       description.classList.add('homeui-page-description');
+      description.classList.toggle(
+        'homeui-empty-description',
+        !description.textContent.trim()
+      );
     });
 
-    buildPageChrome(main, source, title, pageId);
+    if (!source && main.querySelector('.homeui-subpage-tabs'))
+      removePageChrome(main);
+    else
+      buildPageChrome(main, source, title, pageId);
   }
 
   function observeModals()

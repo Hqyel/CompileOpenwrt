@@ -2514,7 +2514,8 @@ body[data-page="admin-network-diagnostics"] input[type="text"]:focus {
 
 body[data-page="admin-network-diagnostics"] .cbi-button,
 body[data-page="admin-network-diagnostics"] input[type="button"],
-body[data-page="admin-network-diagnostics"] button:not(.homeui-terminal-btn) {
+body[data-page="admin-network-diagnostics"]
+  button:not(.homeui-terminal-btn):not(.homeui-page-tab) {
   height: 36px !important;
   min-height: 36px !important;
   padding: 0 18px !important;
@@ -2534,7 +2535,8 @@ body[data-page="admin-network-diagnostics"] button:not(.homeui-terminal-btn) {
 
 body[data-page="admin-network-diagnostics"] .cbi-button:hover,
 body[data-page="admin-network-diagnostics"] input[type="button"]:hover,
-body[data-page="admin-network-diagnostics"] button:not(.homeui-terminal-btn):hover {
+body[data-page="admin-network-diagnostics"]
+  button:not(.homeui-terminal-btn):not(.homeui-page-tab):hover {
   background: #1d76eb !important;
   box-shadow: 0 4px 10px rgba(47, 137, 255, .35) !important;
 }
@@ -2952,10 +2954,12 @@ body[data-page^="admin-network-routing"] .cbi-section {
   padding-top: 16px;
 }
 
-#maincontent.homeui-unified-page.homeui-unified-page
+body[data-page] #maincontent.homeui-unified-page.homeui-unified-page
   .homeui-page-title-source,
-#maincontent.homeui-unified-page.homeui-unified-page
-  .homeui-page-tabs-source {
+body[data-page] #maincontent.homeui-unified-page.homeui-unified-page
+  .homeui-page-tabs-source,
+body[data-page] #maincontent.homeui-unified-page.homeui-unified-page
+  .homeui-page-tabs-duplicate {
   display: none !important;
 }
 
@@ -3036,6 +3040,10 @@ body[data-page^="admin-network-routing"] .cbi-section {
   color: var(--homeui-muted) !important;
   font-size: 12px !important;
   line-height: 1.55 !important;
+}
+
+.homeui-unified-page .homeui-empty-description {
+  display: none !important;
 }
 
 .homeui-unified-page .homeui-subpage-metrics {
@@ -3130,9 +3138,52 @@ body[data-page^="admin-network-routing"] .cbi-section {
   font-weight: 500 !important;
 }
 
-.homeui-unified-page
+#maincontent.homeui-specialized-page .homeui-subpage-bar {
+  min-height: 46px;
+  padding: 7px 14px !important;
+}
+
+#maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tabs {
+  align-self: center !important;
+  gap: 6px !important;
+  min-height: 30px !important;
+}
+
+#maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab {
+  min-height: 30px !important;
+  padding: 5px 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  line-height: 18px !important;
+}
+
+#maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab:hover,
+#maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab.is-active,
+#maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab.active {
+  border-color: #b8d5ff !important;
+  background: #edf5ff !important;
+  color: #2f89ff !important;
+}
+
+:root[data-darkmode="true"] #maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab:hover,
+:root[data-darkmode="true"] #maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab.is-active,
+:root[data-darkmode="true"] #maincontent.homeui-specialized-page
+  .homeui-subpage-bar .homeui-subpage-tab.active {
+  border-color: #315c88 !important;
+  background: #1a3354 !important;
+}
+
+.homeui-unified-page:not(.homeui-specialized-page)
   .cbi-section:not(.cbi-section-node):not(.cbi-section-node-tabbed),
-.homeui-unified-page .homeui-subpage-card {
+.homeui-unified-page:not(.homeui-specialized-page) .homeui-subpage-card {
   margin: 0 0 14px !important;
   padding: 14px 16px !important;
   overflow: visible !important;
@@ -3142,19 +3193,24 @@ body[data-page^="admin-network-routing"] .cbi-section {
   box-shadow: none !important;
 }
 
-.homeui-unified-page
+.homeui-unified-page:not(.homeui-specialized-page)
   .cbi-section:not(.cbi-section-node):has(> .table),
-.homeui-unified-page
+.homeui-unified-page:not(.homeui-specialized-page)
   .cbi-section:not(.cbi-section-node):has(> .cbi-section-table),
-.homeui-unified-page .homeui-subpage-card:has(> .table) {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .homeui-subpage-card:has(> .table) {
   padding: 0 !important;
   overflow: visible !important;
 }
 
-.homeui-unified-page .cbi-section > h3:first-child,
-.homeui-unified-page .cbi-section > legend:first-child,
-.homeui-unified-page .homeui-subpage-card > h3:first-child,
-.homeui-unified-page .homeui-subpage-card > h4:first-child {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section > h3:first-child,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section > legend:first-child,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .homeui-subpage-card > h3:first-child,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .homeui-subpage-card > h4:first-child {
   display: flex !important;
   align-items: center !important;
   min-height: 38px !important;
@@ -3170,20 +3226,20 @@ body[data-page^="admin-network-routing"] .cbi-section {
   box-sizing: border-box !important;
 }
 
-.homeui-unified-page
+.homeui-unified-page:not(.homeui-specialized-page)
   .cbi-section:has(> .table) > h3:first-child,
-.homeui-unified-page
+.homeui-unified-page:not(.homeui-specialized-page)
   .cbi-section:has(> .cbi-section-table) > h3:first-child,
-.homeui-unified-page
+.homeui-unified-page:not(.homeui-specialized-page)
   .homeui-subpage-card:has(> .table) > h3:first-child {
   margin: 0 !important;
 }
 
-.homeui-unified-page .homeui-sec-cat {
+.homeui-unified-page:not(.homeui-specialized-page) .homeui-sec-cat {
   display: none !important;
 }
 
-.homeui-unified-page .homeui-sec-count {
+.homeui-unified-page:not(.homeui-specialized-page) .homeui-sec-count {
   margin-left: auto !important;
   padding: 0 !important;
   border-radius: 0 !important;
@@ -3193,7 +3249,7 @@ body[data-page^="admin-network-routing"] .cbi-section {
   font-weight: 400 !important;
 }
 
-.homeui-unified-page .cbi-section-descr {
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-section-descr {
   margin: 0 !important;
   padding: 9px 14px !important;
   border-bottom: 1px solid var(--homeui-border) !important;
@@ -3202,8 +3258,8 @@ body[data-page^="admin-network-routing"] .cbi-section {
   line-height: 1.55 !important;
 }
 
-.homeui-unified-page .table,
-.homeui-unified-page .cbi-section-table {
+.homeui-unified-page:not(.homeui-specialized-page) .table,
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-section-table {
   width: 100% !important;
   margin: 0 !important;
   border: 0 !important;
@@ -3213,16 +3269,20 @@ body[data-page^="admin-network-routing"] .cbi-section {
   background: var(--homeui-surface) !important;
 }
 
-.homeui-unified-page .table .tr.cbi-section-table-titles,
-.homeui-unified-page .cbi-section-table-titles,
-.homeui-unified-page .table thead tr {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .table .tr.cbi-section-table-titles,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-table-titles,
+.homeui-unified-page:not(.homeui-specialized-page) .table thead tr {
   background: var(--homeui-surface-soft) !important;
 }
 
-.homeui-unified-page .table .th,
-.homeui-unified-page .cbi-section-table-titles .th,
-.homeui-unified-page .cbi-section-table-titles th,
-.homeui-unified-page .table th {
+.homeui-unified-page:not(.homeui-specialized-page) .table .th,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-table-titles .th,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-table-titles th,
+.homeui-unified-page:not(.homeui-specialized-page) .table th {
   padding: 9px 12px !important;
   border-bottom: 1px solid var(--homeui-border) !important;
   background: var(--homeui-surface-soft) !important;
@@ -3232,9 +3292,10 @@ body[data-page^="admin-network-routing"] .cbi-section {
   vertical-align: middle !important;
 }
 
-.homeui-unified-page .table .td,
-.homeui-unified-page .cbi-section-table-cell,
-.homeui-unified-page .table td {
+.homeui-unified-page:not(.homeui-specialized-page) .table .td,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-table-cell,
+.homeui-unified-page:not(.homeui-specialized-page) .table td {
   padding: 9px 12px !important;
   border-bottom: 1px solid var(--homeui-border) !important;
   color: var(--homeui-text) !important;
@@ -3242,12 +3303,15 @@ body[data-page^="admin-network-routing"] .cbi-section {
   vertical-align: middle !important;
 }
 
-.homeui-unified-page .table .tr:last-child .td,
-.homeui-unified-page .table tbody tr:last-child td {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .table .tr:last-child .td,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .table tbody tr:last-child td {
   border-bottom: 0 !important;
 }
 
-.homeui-unified-page .cbi-section-node > .cbi-value {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-node > .cbi-value {
   min-height: 44px !important;
   margin: 0 !important;
   padding: 10px 16px !important;
@@ -3255,18 +3319,19 @@ body[data-page^="admin-network-routing"] .cbi-section {
   box-sizing: border-box !important;
 }
 
-.homeui-unified-page .cbi-section-node > .cbi-value:last-child {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-node > .cbi-value:last-child {
   border-bottom: 0 !important;
 }
 
-.homeui-unified-page .cbi-value-title {
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-value-title {
   color: var(--text-color-highest) !important;
   font-size: 12.5px !important;
   font-weight: 400 !important;
 }
 
-.homeui-unified-page .cbi-section-create,
-.homeui-unified-page .cbi-section-remove {
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-section-create,
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-section-remove {
   justify-content: flex-start !important;
   gap: 8px !important;
   margin: 0 !important;
@@ -3275,9 +3340,12 @@ body[data-page^="admin-network-routing"] .cbi-section {
   background: var(--homeui-surface-soft) !important;
 }
 
-.homeui-unified-page .cbi-section-create .cbi-button,
-.homeui-unified-page .cbi-section-create button,
-.homeui-unified-page .cbi-section-create input {
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-create .cbi-button,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-create button,
+.homeui-unified-page:not(.homeui-specialized-page)
+  .cbi-section-create input {
   flex: 0 0 auto !important;
   width: auto !important;
   min-width: 76px !important;
@@ -3287,8 +3355,8 @@ body[data-page^="admin-network-routing"] .cbi-section {
   box-shadow: none !important;
 }
 
-.homeui-unified-page .actions,
-.homeui-unified-page .cbi-page-actions {
+.homeui-unified-page:not(.homeui-specialized-page) .actions,
+.homeui-unified-page:not(.homeui-specialized-page) .cbi-page-actions {
   gap: 8px !important;
   margin: 10px 0 0 !important;
   padding: 10px 0 0 !important;
@@ -3299,10 +3367,7 @@ body[data-page^="admin-network-routing"] .cbi-section {
   box-shadow: none !important;
 }
 
-.homeui-unified-page .homeui-rt-card-head,
-.homeui-unified-page .homeui-log-card-head,
-.homeui-unified-page .homeui-proc-card-head,
-.homeui-unified-page .homeui-iface-head {
+.homeui-unified-page:not(.homeui-specialized-page) .homeui-iface-head {
   min-height: 40px !important;
   margin: 0 0 12px !important;
   padding: 0 0 10px !important;
