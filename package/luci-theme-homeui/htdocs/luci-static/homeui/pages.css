@@ -2514,7 +2514,7 @@ body[data-page="admin-network-diagnostics"] input[type="text"]:focus {
 
 body[data-page="admin-network-diagnostics"] .cbi-button,
 body[data-page="admin-network-diagnostics"] input[type="button"],
-body[data-page="admin-network-diagnostics"] button {
+body[data-page="admin-network-diagnostics"] button:not(.homeui-terminal-btn) {
   height: 36px !important;
   min-height: 36px !important;
   padding: 0 18px !important;
@@ -2534,9 +2534,18 @@ body[data-page="admin-network-diagnostics"] button {
 
 body[data-page="admin-network-diagnostics"] .cbi-button:hover,
 body[data-page="admin-network-diagnostics"] input[type="button"]:hover,
-body[data-page="admin-network-diagnostics"] button:hover {
+body[data-page="admin-network-diagnostics"] button:not(.homeui-terminal-btn):hover {
   background: #1d76eb !important;
   box-shadow: 0 4px 10px rgba(47, 137, 255, .35) !important;
+}
+
+body[data-page="admin-network-diagnostics"] .cbi-button-action svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 
 /* Modern Diagnostic Terminal Console */

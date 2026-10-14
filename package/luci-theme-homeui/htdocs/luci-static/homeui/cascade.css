@@ -1750,6 +1750,131 @@ input[type="radio"]:checked::after {
   padding: 0 14px !important;
 }
 
+/* Shared controls used by system, package and third-party LuCI pages. */
+input[type="file"] {
+  max-width: min(520px, 100%);
+  padding: 5px 8px;
+  border: 1px dashed #cbd3df;
+  border-radius: 6px;
+  background: var(--homeui-surface-soft);
+  color: var(--text-color-medium);
+  font-size: 12px;
+}
+
+input[type="file"]::file-selector-button {
+  height: 28px;
+  margin-right: 10px;
+  padding: 0 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: var(--homeui-surface);
+  color: var(--homeui-text);
+  cursor: pointer;
+}
+
+input[type="range"] {
+  accent-color: var(--homeui-accent);
+}
+
+.cbi-progressbar,
+.progressbar {
+  height: 8px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #e9edf3 !important;
+  box-shadow: none !important;
+}
+
+:root[data-darkmode="true"] .cbi-progressbar,
+:root[data-darkmode="true"] .progressbar {
+  background: #263449 !important;
+}
+
+.cbi-progressbar > div,
+.progressbar > div {
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #2f89ff, #59a8ff) !important;
+  box-shadow: none !important;
+}
+
+.cbi-section-create,
+.cbi-section-remove {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 12px 0 0 !important;
+  padding: 12px 0 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+}
+
+.pagination,
+.pager {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 14px 0 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.pagination a,
+.pagination span,
+.pager a,
+.pager span {
+  min-width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 4px;
+  background: var(--homeui-surface);
+  color: var(--text-color-medium);
+  text-decoration: none;
+}
+
+.pagination .active,
+.pagination a:hover,
+.pager .active,
+.pager a:hover {
+  border-color: var(--homeui-accent);
+  color: var(--homeui-accent);
+}
+
+.cbi-tooltip {
+  z-index: 1200 !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: 6px !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .14) !important;
+  font-size: 12px !important;
+}
+
+pre:not(.homeui-terminal-window pre),
+.command-output {
+  max-width: 100%;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--homeui-border);
+  border-radius: 6px;
+  background: #111827;
+  color: #d1fae5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .control-group {
   display: inline-flex !important;
   align-items: center !important;
@@ -2134,7 +2259,14 @@ body:not(.modal-overlay-active) #modal_overlay {
   border-radius: 10px !important;
   background: var(--homeui-surface) !important;
   box-shadow: 0 22px 64px rgba(15, 23, 42, .24) !important;
-  overflow: hidden !important;
+  overflow: visible !important;
+}
+
+.modal > h4:first-child,
+.modal > h3:first-child,
+.cbi-modal > h4:first-child,
+.cbi-modal > h3:first-child {
+  border-radius: 10px 10px 0 0 !important;
 }
 
 .modal > h4,
@@ -2250,6 +2382,10 @@ td.cbi-dropdown-open,
   position: relative !important;
   z-index: 500 !important;
   overflow: visible !important;
+}
+
+.cbi-dropdown.homeui-dropdown-floating[open] > ul.dropdown {
+  z-index: 2200 !important;
 }
 
 .modal > p,

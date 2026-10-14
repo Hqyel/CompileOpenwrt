@@ -364,21 +364,46 @@
         head = document.createElement('h3');
         diagForm.insertBefore(head, diagForm.firstChild);
       }
-      head.innerHTML = '<span class="homeui-sec-cat is-diag">DIAG</span>' +
-        (isChinese ? '网络链路连通性与域名诊断工具' : 'Network Connectivity & DNS Diagnostics');
+      if (!head.dataset.homeuiEnhanced) {
+        head.innerHTML =
+          '<span class="homeui-sec-cat is-diag">DIAG</span>' +
+          (isChinese ? '网络链路连通性与域名诊断工具' :
+            'Network Connectivity & DNS Diagnostics');
+        head.dataset.homeuiEnhanced = 'true';
+      }
 
       // 3. Style action buttons with icons
-      var btns = diagForm.querySelectorAll('.cbi-button, input[type="button"], button');
+      var btns = diagForm.querySelectorAll(
+        '.cbi-button, input[type="button"], button'
+      );
       Array.prototype.forEach.call(btns, function(b) {
+        if (b.closest('.homeui-terminal-window') ||
+            b.dataset.homeuiEnhanced)
+          return;
+
         b.classList.add('cbi-button-action');
         var txt = (b.value || b.textContent || '').trim();
+        var html = '';
         if (/ping/i.test(txt)) {
-          b.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' + (isChinese ? '测试 Ping' : 'Ping');
+          html = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' +
+            (isChinese ? '测试 Ping' : 'Ping');
         } else if (/traceroute/i.test(txt)) {
-          b.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>' + (isChinese ? '跟踪路由' : 'Traceroute');
+          html = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+            '<circle cx="12" cy="12" r="10"/>' +
+            '<path d="M12 2a14.5 14.5 0 0 0 0 20 ' +
+              '14.5 14.5 0 0 0 0-20M2 12h20"/></svg>' +
+            (isChinese ? '跟踪路由' : 'Traceroute');
         } else if (/nslookup/i.test(txt)) {
-          b.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' + (isChinese ? '解析域名' : 'Nslookup');
+          html = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+            '<circle cx="11" cy="11" r="8"/>' +
+            '<path d="m21 21-4.35-4.35"/></svg>' +
+            (isChinese ? '解析域名' : 'Nslookup');
         }
+
+        if (html && b.tagName !== 'INPUT')
+          b.innerHTML = html;
+        b.dataset.homeuiEnhanced = 'true';
       });
 
       // 4. Transform output textarea into modern terminal console

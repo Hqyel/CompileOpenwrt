@@ -227,6 +227,69 @@
     border-color: var(--homeui-border);
   }
 
+  .cbi-value label.cbi-value-title,
+  .modal .cbi-value-title,
+  .cbi-modal .cbi-value-title {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+    padding: 0 0 7px !important;
+    text-align: left !important;
+  }
+
+  .cbi-value > .cbi-value-field,
+  .modal .cbi-value-field,
+  .cbi-modal .cbi-value-field {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  .cbi-value > .cbi-value-field
+    input:not([type="checkbox"]):not([type="radio"]),
+  .cbi-value > .cbi-value-field textarea,
+  .cbi-value > .cbi-value-field select,
+  .cbi-value > .cbi-value-field .cbi-select,
+  .cbi-value > .cbi-value-field .cbi-dropdown {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #modal_overlay,
+  .modal-overlay {
+    align-items: flex-start !important;
+    padding: 12px 8px !important;
+  }
+
+  .modal,
+  .cbi-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    max-height: calc(100vh - 24px) !important;
+  }
+
+  .modal > :not(
+    h4,
+    h3,
+    .right,
+    .button-row,
+    .cbi-page-actions,
+    .homeui-modal-close-btn
+  ),
+  .cbi-modal > :not(
+    h4,
+    h3,
+    .right,
+    .button-row,
+    .cbi-page-actions,
+    .homeui-modal-close-btn
+  ) {
+    min-height: 0 !important;
+    padding: 14px 14px 24px !important;
+  }
+
   .homeui-footer {
     display: block;
     padding: 10px 2px;

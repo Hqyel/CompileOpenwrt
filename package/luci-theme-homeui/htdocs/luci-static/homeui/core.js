@@ -988,6 +988,114 @@
 
   function observeModals()
   {
+    var activeDropdown = null;
+    var dropdownFrame = 0;
+
+    function clearDropdownPosition(dropdown)
+    {
+      if (!dropdown)
+        return;
+
+      var list = dropdown.querySelector('ul.dropdown');
+      dropdown.classList.remove('homeui-dropdown-floating');
+      if (!list)
+        return;
+
+      list.classList.remove('is-dropup');
+      [
+        'position',
+        'left',
+        'right',
+        'top',
+        'bottom',
+        'width',
+        'min-width',
+        'max-width',
+        'max-height',
+        'margin-top',
+        'margin-bottom'
+      ].forEach(function(name) {
+        list.style.removeProperty(name);
+      });
+    }
+
+    function positionDropdown(dropdown)
+    {
+      if (!dropdown)
+        return;
+      if (!dropdown.isConnected) {
+        if (activeDropdown === dropdown)
+          activeDropdown = null;
+        return;
+      }
+      if (!dropdown.hasAttribute('open'))
+        return;
+
+      var list = dropdown.querySelector('ul.dropdown');
+      if (!list)
+        return;
+
+      var rect = dropdown.getBoundingClientRect();
+      var viewportWidth = document.documentElement.clientWidth;
+      var viewportHeight = document.documentElement.clientHeight;
+      var margin = 8;
+      var gap = 4;
+      var availableWidth = Math.max(160, viewportWidth - margin * 2);
+      var desiredWidth = Math.max(rect.width, list.scrollWidth);
+      var listWidth = Math.min(560, availableWidth, desiredWidth);
+      var left = Math.min(
+        Math.max(margin, rect.left),
+        Math.max(margin, viewportWidth - listWidth - margin)
+      );
+      var spaceBelow = viewportHeight - rect.bottom - margin - gap;
+      var spaceAbove = rect.top - margin - gap;
+      var dropUp = spaceBelow < 180 && spaceAbove > spaceBelow;
+      var availableHeight = dropUp ? spaceAbove : spaceBelow;
+      var maxHeight = Math.max(96, Math.min(240, availableHeight));
+
+      dropdown.classList.add('homeui-dropdown-floating');
+      dropdown.classList.toggle('is-dropup', dropUp);
+      list.classList.toggle('is-dropup', dropUp);
+      list.style.setProperty('position', 'fixed', 'important');
+      list.style.setProperty('left', left + 'px', 'important');
+      list.style.setProperty('right', 'auto', 'important');
+      list.style.setProperty('width', listWidth + 'px', 'important');
+      list.style.setProperty('min-width', rect.width + 'px', 'important');
+      list.style.setProperty('max-width', availableWidth + 'px', 'important');
+      list.style.setProperty('max-height', maxHeight + 'px', 'important');
+      list.style.setProperty('margin-top', '0', 'important');
+      list.style.setProperty('margin-bottom', '0', 'important');
+
+      if (dropUp) {
+        list.style.setProperty('top', 'auto', 'important');
+        list.style.setProperty(
+          'bottom',
+          viewportHeight - rect.top + gap + 'px',
+          'important'
+        );
+      } else {
+        list.style.setProperty(
+          'top',
+          rect.bottom + gap + 'px',
+          'important'
+        );
+        list.style.setProperty('bottom', 'auto', 'important');
+      }
+
+      activeDropdown = dropdown;
+    }
+
+    function scheduleDropdownPosition()
+    {
+      if (!activeDropdown || dropdownFrame)
+        return;
+
+      dropdownFrame = window.requestAnimationFrame(function() {
+        dropdownFrame = 0;
+        positionDropdown(activeDropdown);
+      });
+    }
+
     var scan = function() {
       var list = document.querySelectorAll('.modal, .cbi-modal, #modal_overlay > div');
       Array.prototype.forEach.call(list, function(m) {
@@ -1041,30 +1149,35 @@
       }
     });
 
-    function syncDropdown(sb) {
-      if (!sb || !sb.classList || !sb.classList.contains('cbi-dropdown')) return;
-      var ul = sb.querySelector('ul.dropdown');
-      if (ul) {
-        ul.style.left = '0px';
-        ul.style.right = '0px';
-        ul.style.width = '100%';
-        if (ul.style.bottom && ul.style.bottom !== '') {
-          ul.style.top = 'auto';
-        }
-      }
-    }
-
     var ddObserver = new MutationObserver(function(mutations) {
       for (var i = 0; i < mutations.length; i++) {
         var m = mutations[i];
         if (m.type === 'attributes' && m.attributeName === 'open' && m.target) {
           if (m.target.hasAttribute('open')) {
-            syncDropdown(m.target);
+            if (activeDropdown && activeDropdown !== m.target)
+              clearDropdownPosition(activeDropdown);
+            positionDropdown(m.target);
+          } else {
+            clearDropdownPosition(m.target);
+            if (activeDropdown === m.target)
+              activeDropdown = null;
           }
         }
       }
     });
-    ddObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['open'] });
+    ddObserver.observe(document.body, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['open']
+    });
+
+    window.addEventListener('resize', function() {
+      scheduleDropdownPosition();
+    });
+
+    document.addEventListener('scroll', function() {
+      scheduleDropdownPosition();
+    }, true);
 
     scan();
   }

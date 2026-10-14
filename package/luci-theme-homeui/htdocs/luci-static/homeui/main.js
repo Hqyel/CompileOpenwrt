@@ -45,6 +45,7 @@
   var enhanceDhcpPage = HomeUI.enhanceDhcpPage;
   var enhanceFirewallPage = HomeUI.enhanceFirewallPage;
   var isEnhancing = false;
+  var enhanceFrame = 0;
 
   function enhanceOverview()
   {
@@ -259,6 +260,17 @@
     });
   }
 
+  function scheduleEnhanceOverview()
+  {
+    if (enhanceFrame)
+      return;
+
+    enhanceFrame = window.requestAnimationFrame(function() {
+      enhanceFrame = 0;
+      enhanceOverview();
+    });
+  }
+
   new MutationObserver(function(mutations) {
     var shouldUpdate = mutations.some(function(m) {
       var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
@@ -266,6 +278,7 @@
         return false;
       return !el.closest('.homeui-ikuai-dashboard') &&
         !el.closest('.homeui-subpage-shell') &&
+        !el.closest('.homeui-terminal-window') &&
         !el.closest('.homeui-rt-card-head') &&
         !el.closest('.homeui-log-card-head') &&
         !el.closest('.homeui-proc-card-head') &&
@@ -278,7 +291,7 @@
         !el.classList.contains('homeui-sec-cat');
     });
     if (shouldUpdate)
-      enhanceOverview();
+      scheduleEnhanceOverview();
   }).observe(
     document.querySelector('#maincontent') || document.body,
     { childList: true, subtree: true, characterData: true }
