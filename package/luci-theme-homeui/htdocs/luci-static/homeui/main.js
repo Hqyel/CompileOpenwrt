@@ -44,6 +44,7 @@
   var enhanceDnsPage = HomeUI.enhanceDnsPage;
   var enhanceDhcpPage = HomeUI.enhanceDhcpPage;
   var enhanceFirewallPage = HomeUI.enhanceFirewallPage;
+  var normalizePageLayout = HomeUI.normalizePageLayout;
   var isEnhancing = false;
   var enhanceFrame = 0;
 
@@ -57,6 +58,8 @@
       document.querySelector('#maincontent');
     if (!view)
       return;
+
+    normalizePageLayout(view, page);
 
     if (page === 'admin-status-routes') {
       isEnhancing = true;
@@ -277,6 +280,7 @@
       if (!el || !el.closest)
         return false;
       return !el.closest('.homeui-ikuai-dashboard') &&
+        !el.closest('.homeui-page-chrome') &&
         !el.closest('.homeui-subpage-shell') &&
         !el.closest('.homeui-terminal-window') &&
         !el.closest('.homeui-rt-card-head') &&

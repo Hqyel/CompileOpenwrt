@@ -378,3 +378,79 @@
     height: 21px;
   }
 }
+
+@media screen and (max-width: 900px) {
+  #maincontent.homeui-unified-page {
+    padding-top: 0 !important;
+  }
+
+  .homeui-page-chrome {
+    min-height: 42px;
+    margin-bottom: 12px;
+    padding: 0 12px;
+  }
+
+  .homeui-page-tabs {
+    gap: 22px;
+  }
+
+  .homeui-page-tab {
+    height: 40px !important;
+    min-height: 40px !important;
+    line-height: 40px !important;
+  }
+
+  #maincontent.homeui-unified-page .homeui-section-tabs,
+  .homeui-unified-page .homeui-subpage-tabs {
+    gap: 18px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+
+  .homeui-unified-page
+    .cbi-section:not(.cbi-section-node):not(.cbi-section-node-tabbed),
+  .homeui-unified-page .homeui-subpage-card {
+    padding: 12px !important;
+  }
+
+  .homeui-unified-page
+    .cbi-section:not(.cbi-section-node):has(> .table),
+  .homeui-unified-page
+    .cbi-section:not(.cbi-section-node):has(> .cbi-section-table),
+  .homeui-unified-page .homeui-subpage-card:has(> .table) {
+    padding: 0 !important;
+  }
+
+  .homeui-unified-page .cbi-section > h3:first-child,
+  .homeui-unified-page .cbi-section > legend:first-child,
+  .homeui-unified-page .homeui-subpage-card > h3:first-child,
+  .homeui-unified-page .homeui-subpage-card > h4:first-child {
+    margin: -12px -12px 12px !important;
+    padding: 9px 12px !important;
+  }
+
+  .homeui-unified-page
+    .cbi-section:has(> .table) > h3:first-child,
+  .homeui-unified-page
+    .cbi-section:has(> .cbi-section-table) > h3:first-child,
+  .homeui-unified-page
+    .homeui-subpage-card:has(> .table) > h3:first-child {
+    margin: 0 !important;
+  }
+
+  .homeui-unified-page .table .th,
+  .homeui-unified-page .table .td,
+  .homeui-unified-page .table th,
+  .homeui-unified-page .table td {
+    padding: 7px !important;
+  }
+
+  .homeui-unified-page .cbi-section-node > .cbi-value {
+    padding: 10px 12px !important;
+  }
+
+  .homeui-unified-page .homeui-subpage-bar {
+    align-items: stretch !important;
+    padding: 0 12px 10px !important;
+  }
+}

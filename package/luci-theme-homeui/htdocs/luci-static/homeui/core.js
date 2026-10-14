@@ -986,6 +986,240 @@
     }
   }
 
+  function getPageTitle(main)
+  {
+    var selectors = [
+      ':scope > h2',
+      ':scope > #view > h2',
+      ':scope > .cbi-map > h2:first-child',
+      ':scope > #view > .cbi-map > h2:first-child',
+      ':scope > #view > div > h2:first-child',
+      ':scope > #view h2:first-of-type'
+    ];
+
+    for (var i = 0; i < selectors.length; i++) {
+      var heading = main.querySelector(selectors[i]);
+      var text = heading ? heading.textContent.trim() : '';
+      if (text)
+        return text;
+    }
+
+    var activeMenu = document.querySelector(
+      '#sidemenu li.active > a, #sidemenu li.selected > a, ' +
+      '#topmenu li.active > a, #topmenu li.selected > a'
+    );
+    if (activeMenu && activeMenu.textContent.trim())
+      return activeMenu.textContent.trim();
+
+    return document.title
+      .replace(/\s*[-|]\s*(?:LuCI|HomeUI).*$/i, '')
+      .trim();
+  }
+
+  function getPageTabSource(main)
+  {
+    var current = main._homeuiPageTabSource;
+    if (current && current.isConnected)
+      return current;
+
+    var candidates = main.querySelectorAll('.tabs, .cbi-tabmenu');
+    var nested = null;
+
+    for (var i = 0; i < candidates.length; i++) {
+      var tabs = candidates[i];
+      if (tabs.classList.contains('homeui-page-tabs-source') ||
+          tabs.closest('.modal, .cbi-modal, #modal_overlay') ||
+          !tabs.querySelector('li > a, li > button')) {
+        continue;
+      }
+
+      if (window.getComputedStyle(tabs).display === 'none')
+        continue;
+
+      if (!tabs.closest('.cbi-section')) {
+        main._homeuiPageTabSource = tabs;
+        return tabs;
+      }
+
+      if (!nested)
+        nested = tabs;
+    }
+
+    main._homeuiPageTabSource = nested;
+    return nested;
+  }
+
+  function isPageTabActive(item, control)
+  {
+    if (item.classList.contains('active') ||
+        item.classList.contains('cbi-tab-active') ||
+        (item.classList.contains('cbi-tab') &&
+         !item.classList.contains('cbi-tab-disabled')) ||
+        control.getAttribute('aria-current') === 'page' ||
+        control.getAttribute('aria-selected') === 'true') {
+      return true;
+    }
+
+    var href = control.getAttribute('href');
+    if (!href || href.charAt(0) === '#' ||
+        href.toLowerCase().indexOf('javascript:') === 0) {
+      return false;
+    }
+
+    try {
+      var target = new URL(href, window.location.href);
+      return target.pathname === window.location.pathname &&
+        target.search === window.location.search;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function bindPageTab(button, control, main, pageId)
+  {
+    button.addEventListener('click', function() {
+      var buttons = button.parentNode.querySelectorAll(
+        '.homeui-page-tab'
+      );
+      Array.prototype.forEach.call(buttons, function(tab) {
+        tab.classList.remove('is-active');
+        tab.setAttribute('aria-selected', 'false');
+      });
+      button.classList.add('is-active');
+      button.setAttribute('aria-selected', 'true');
+      control.click();
+      window.requestAnimationFrame(function() {
+        normalizePageLayout(main, pageId);
+      });
+    });
+  }
+
+  function buildPageChrome(main, source, title, pageId)
+  {
+    var items = [];
+    if (source) {
+      var sourceItems = source.querySelectorAll(':scope > li');
+      Array.prototype.forEach.call(sourceItems, function(item) {
+        var control = item.querySelector(
+          ':scope > a, :scope > button'
+        );
+        var label = control ?
+          control.textContent.replace(/\s+/g, ' ').trim() : '';
+        if (control && label) {
+          items.push({
+            control: control,
+            label: label,
+            active: isPageTabActive(item, control)
+          });
+        }
+      });
+    }
+
+    if (!items.length && title)
+      items.push({ control: null, label: title, active: true });
+    if (!items.length)
+      return;
+
+    var signature = items.map(function(item) {
+      return item.label + ':' + (item.active ? '1' : '0');
+    }).join('|');
+    var chrome = main.querySelector(':scope > .homeui-page-chrome');
+
+    if (!chrome) {
+      chrome = document.createElement('nav');
+      chrome.className = 'homeui-page-chrome';
+      chrome.setAttribute(
+        'aria-label',
+        isChinese ? '页面导航' : 'Page navigation'
+      );
+      main.insertBefore(chrome, main.firstChild);
+    } else if (main.firstElementChild !== chrome) {
+      main.insertBefore(chrome, main.firstChild);
+    }
+
+    if (chrome.dataset.signature === signature &&
+        chrome._homeuiSource === source) {
+      return;
+    }
+
+    chrome.dataset.signature = signature;
+    chrome._homeuiSource = source;
+    chrome.textContent = '';
+    var rail = document.createElement('div');
+    rail.className = 'homeui-page-tabs';
+    rail.setAttribute('role', 'tablist');
+    chrome.appendChild(rail);
+
+    items.forEach(function(item) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'homeui-page-tab';
+      button.textContent = item.label;
+      button.setAttribute('role', 'tab');
+      button.setAttribute(
+        'aria-selected',
+        item.active ? 'true' : 'false'
+      );
+      if (item.active)
+        button.classList.add('is-active');
+      if (!item.control)
+        button.disabled = true;
+      else
+        bindPageTab(button, item.control, main, pageId);
+      rail.appendChild(button);
+    });
+  }
+
+  function normalizePageLayout(view, pageId)
+  {
+    var main = document.querySelector('#maincontent');
+    if (!main || pageId === 'admin-status-overview' ||
+        main.querySelector('.homeui-login-shell')) {
+      return;
+    }
+
+    main.classList.add('homeui-unified-page');
+    var title = getPageTitle(main);
+    var source = getPageTabSource(main);
+    if (source) {
+      source.classList.add('homeui-page-tabs-source');
+      source.classList.remove('homeui-section-tabs');
+    }
+
+    var titleSources = main.querySelectorAll(
+      ':scope > h2, :scope > #view > h2, ' +
+      ':scope > .cbi-map > h2:first-child, ' +
+      ':scope > #view > .cbi-map > h2:first-child, ' +
+      ':scope > #view > div > h2:first-child, ' +
+      ':scope > #view h2:first-of-type'
+    );
+    Array.prototype.forEach.call(titleSources, function(heading) {
+      heading.classList.add('homeui-page-title-source');
+    });
+
+    var tabLists = main.querySelectorAll('.tabs, .cbi-tabmenu');
+    Array.prototype.forEach.call(tabLists, function(tabs) {
+      if (tabs !== source &&
+          !tabs.closest('.modal, .cbi-modal, #modal_overlay')) {
+        tabs.classList.add('homeui-section-tabs');
+      }
+    });
+
+    var descriptions = main.querySelectorAll(
+      ':scope > .cbi-map-descr, ' +
+      ':scope > #view > .cbi-map-descr, ' +
+      ':scope > .cbi-map > .cbi-map-descr, ' +
+      ':scope > #view > .cbi-map > .cbi-map-descr, ' +
+      ':scope > #view > p:first-of-type, ' +
+      ':scope > #view > div > p:first-of-type'
+    );
+    Array.prototype.forEach.call(descriptions, function(description) {
+      description.classList.add('homeui-page-description');
+    });
+
+    buildPageChrome(main, source, title, pageId);
+  }
+
   function observeModals()
   {
     var activeDropdown = null;
@@ -1235,6 +1469,7 @@
     enhanceModal: enhanceModal,
     observeModals: observeModals,
     enhanceSelect: enhanceSelect,
-    enhanceAllSelects: enhanceAllSelects
+    enhanceAllSelects: enhanceAllSelects,
+    normalizePageLayout: normalizePageLayout
   };
 })(window);
