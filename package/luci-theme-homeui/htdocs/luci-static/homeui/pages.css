@@ -2949,6 +2949,10 @@ body[data-page^="admin-network-routing"] .cbi-section {
 /* ==========================================================================
    Unified page design system
    ========================================================================== */
+body[data-page] #maincontent [data-tab-active="false"] {
+  display: none !important;
+}
+
 #maincontent.homeui-unified-page {
   --homeui-page-radius: 4px;
   padding-top: 16px;
@@ -3235,7 +3239,7 @@ body[data-page] #maincontent.homeui-unified-page.homeui-unified-page
   margin: 0 !important;
 }
 
-.homeui-unified-page:not(.homeui-specialized-page) .homeui-sec-cat {
+.homeui-unified-page .homeui-sec-cat {
   display: none !important;
 }
 
@@ -3372,4 +3376,11 @@ body[data-page] #maincontent.homeui-unified-page.homeui-unified-page
   margin: 0 0 12px !important;
   padding: 0 0 10px !important;
   border-bottom: 1px solid var(--homeui-border) !important;
+}
+
+body:is([data-page="admin-network-network"], [data-page="admin-network"])
+  #maincontent.homeui-unified-page .cbi-section > h3:first-child,
+body[data-page^="admin-network-firewall"]
+  #maincontent.homeui-unified-page .cbi-section > h3:first-child {
+  margin: 0 !important;
 }

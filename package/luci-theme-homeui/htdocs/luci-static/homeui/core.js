@@ -1278,7 +1278,8 @@
       );
     });
 
-    if (!source && main.querySelector('.homeui-subpage-tabs'))
+    if (pageId === 'admin-status-routes' ||
+        (!source && main.querySelector('.homeui-subpage-tabs')))
       removePageChrome(main);
     else
       buildPageChrome(main, source, title, pageId);
