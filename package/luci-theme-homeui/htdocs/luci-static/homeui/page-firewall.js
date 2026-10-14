@@ -8,6 +8,7 @@
   var enhanceAllSelects = HomeUI.enhanceAllSelects;
 
   var isEnhancingFirewall = false;
+  var showConfigMetrics = false;
 
   function enhanceFirewallPage(view, pageId)
   {
@@ -21,7 +22,11 @@
 
       // 1. Insert or reuse top Metric Overview Shell
       var shell = mainEl ? mainEl.querySelector('.homeui-fw-shell') : null;
-      if (!shell && mainEl) {
+      if (shell && !showConfigMetrics) {
+        shell.remove();
+        shell = null;
+      }
+      if (!shell && mainEl && showConfigMetrics) {
         shell = document.createElement('div');
         shell.className = 'homeui-subpage-shell homeui-fw-shell';
         shell.innerHTML =
@@ -114,7 +119,10 @@
       var sections = view.querySelectorAll('.cbi-section');
       Array.prototype.forEach.call(sections, function(sec) {
         var h3 = sec.querySelector(':scope > h3:first-child');
-        var headTxt = (h3 ? h3.textContent : sec.textContent || '').trim();
+        if (!h3)
+          return;
+
+        var headTxt = h3.textContent.trim();
         var rows = sec.querySelectorAll('.cbi-section-table-row:not(.cbi-section-table-titles)');
 
         if (/常规设置|General Settings/i.test(headTxt)) {

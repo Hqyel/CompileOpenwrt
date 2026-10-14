@@ -2725,3 +2725,221 @@ body[data-page="admin-network-dhcp"] .table .td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   iKuai configuration-page density pass
+   ========================================================================== */
+body[data-page^="admin-network-firewall"] .homeui-fw-shell,
+body[data-page="admin-network-diagnostics"] .homeui-diag-shell,
+body[data-page="admin-network-dns"] .homeui-dns-shell,
+body[data-page="admin-network-dhcp"] .homeui-dhcp-shell {
+  display: none !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-tabmenu,
+body[data-page="admin-network-dns"] .cbi-tabmenu,
+body[data-page="admin-network-dhcp"] .cbi-tabmenu {
+  gap: 22px !important;
+  min-height: 40px !important;
+  margin-bottom: 12px !important;
+  padding: 0 14px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin-network-dns"] .cbi-tabmenu > li > a,
+body[data-page="admin-network-dhcp"] .cbi-tabmenu > li > a,
+body[data-page="admin-network-dns"] .cbi-tabmenu > .cbi-tab > a,
+body[data-page="admin-network-dhcp"] .cbi-tabmenu > .cbi-tab > a {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 2px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--text-color-medium) !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin-network-dns"]
+  .cbi-tabmenu > li.cbi-tab-active > a,
+body[data-page="admin-network-dhcp"]
+  .cbi-tabmenu > li.cbi-tab-active > a,
+body[data-page="admin-network-dns"]
+  .cbi-tabmenu > .cbi-tab-active > a,
+body[data-page="admin-network-dhcp"]
+  .cbi-tabmenu > .cbi-tab-active > a {
+  border-bottom-color: #2f89ff !important;
+  background: transparent !important;
+  color: #2f89ff !important;
+  box-shadow: none !important;
+}
+
+body[data-page^="admin-network-firewall"]
+  .cbi-section:not(.modal .cbi-section),
+body[data-page="admin-network-dns"]
+  .cbi-section:not(.modal .cbi-section),
+body[data-page="admin-network-dhcp"]
+  .cbi-section:not(.modal .cbi-section),
+body[data-page="admin-network-diagnostics"] .homeui-diag-card {
+  margin-bottom: 12px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+body[data-page^="admin-network-firewall"]
+  .cbi-section > h3:first-child,
+body[data-page="admin-network-dns"]
+  .homeui-subpage-card > h3:first-child,
+body[data-page="admin-network-dhcp"]
+  .homeui-subpage-card > h3:first-child,
+body[data-page="admin-network-diagnostics"]
+  .homeui-diag-card > h3:first-child {
+  min-height: 38px !important;
+  padding: 9px 14px !important;
+  border-radius: 3px 3px 0 0 !important;
+  background: var(--homeui-surface) !important;
+}
+
+body[data-page^="admin-network-firewall"] .homeui-sec-cat,
+body[data-page="admin-network-dns"] .homeui-sec-cat,
+body[data-page="admin-network-dhcp"] .homeui-sec-cat,
+body[data-page="admin-network-diagnostics"] .homeui-sec-cat {
+  display: none !important;
+}
+
+body[data-page^="admin-network-firewall"] .homeui-sec-count,
+body[data-page="admin-network-dns"] .homeui-sec-count,
+body[data-page="admin-network-dhcp"] .homeui-sec-count {
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--homeui-muted) !important;
+  font-weight: 400 !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-map-descr {
+  margin-bottom: 12px !important;
+  padding: 9px 12px !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-network-firewall"]
+  .cbi-section-table-titles .th,
+body[data-page^="admin-network-firewall"]
+  .cbi-section-table-titles th,
+body[data-page^="admin-network-firewall"] .table .th,
+body[data-page="admin-network-dhcp"] .table .th {
+  padding: 8px 12px !important;
+  background: #f7f8fa !important;
+}
+
+:root[data-darkmode="true"]
+  body[data-page^="admin-network-firewall"] .table .th,
+:root[data-darkmode="true"]
+  body[data-page="admin-network-dhcp"] .table .th {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-network-firewall"]
+  .cbi-section-table-cell,
+body[data-page^="admin-network-firewall"] .table .td,
+body[data-page="admin-network-dhcp"] .table .td {
+  padding: 9px 12px !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-section-create,
+body[data-page="admin-network-dns"] .cbi-section-create,
+body[data-page="admin-network-dhcp"] .cbi-section-create,
+body[data-page^="admin-network-routes"] .cbi-section-create {
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 9px 12px !important;
+  background: #fafbfc !important;
+}
+
+:root[data-darkmode="true"]
+  body[data-page^="admin-network-firewall"] .cbi-section-create,
+:root[data-darkmode="true"]
+  body[data-page="admin-network-dns"] .cbi-section-create,
+:root[data-darkmode="true"]
+  body[data-page="admin-network-dhcp"] .cbi-section-create {
+  background: var(--homeui-surface-soft) !important;
+}
+
+body[data-page^="admin-network-firewall"]
+  .cbi-section-create .cbi-button,
+body[data-page="admin-network-dns"]
+  .cbi-section-create .cbi-button,
+body[data-page="admin-network-dhcp"]
+  .cbi-section-create .cbi-button,
+body[data-page^="admin-network-routes"]
+  .cbi-section-create .cbi-button {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 13px !important;
+  box-shadow: none !important;
+}
+
+body[data-page^="admin-network-firewall"] .cbi-page-actions,
+body[data-page="admin-network-dns"] .cbi-page-actions,
+body[data-page="admin-network-dhcp"] .cbi-page-actions,
+body[data-page^="admin-network-routes"] .cbi-page-actions {
+  margin-top: 10px !important;
+  padding: 10px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin-network-diagnostics"] .homeui-diag-card {
+  padding: 0 16px 16px !important;
+}
+
+body[data-page="admin-network-diagnostics"]
+  .homeui-diag-card > h3:first-child {
+  margin: 0 -16px 14px !important;
+}
+
+body[data-page="admin-network-diagnostics"] .homeui-terminal-window {
+  margin-top: 12px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin-network-diagnostics"] textarea,
+body[data-page="admin-network-diagnostics"] pre,
+body[data-page="admin-network-diagnostics"]
+  .homeui-terminal-window textarea,
+body[data-page="admin-network-diagnostics"]
+  .homeui-terminal-window pre {
+  height: 240px !important;
+  min-height: 220px !important;
+  max-height: 50vh !important;
+}
+
+body[data-page^="admin-network-routes"] .cbi-section,
+body[data-page^="admin-network-routing"] .cbi-section {
+  min-height: 0 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+@media screen and (max-width: 700px) {
+  body[data-page="admin-network-diagnostics"] textarea,
+  body[data-page="admin-network-diagnostics"] pre,
+  body[data-page="admin-network-diagnostics"]
+    .homeui-terminal-window textarea,
+  body[data-page="admin-network-diagnostics"]
+    .homeui-terminal-window pre {
+    height: 200px !important;
+    min-height: 180px !important;
+  }
+}

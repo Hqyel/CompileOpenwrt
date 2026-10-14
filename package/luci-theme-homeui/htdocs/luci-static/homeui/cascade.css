@@ -1170,13 +1170,13 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
   margin-top: 4px !important;
   margin-bottom: 0 !important;
   min-width: 100% !important;
-  width: max-content !important;
+  width: 100% !important;
   max-width: min(560px, 92vw) !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  margin: 0 !important;
+  margin: 4px 0 0 !important;
   padding: 4px 0 !important;
   border: 1px solid #e4e7ed !important;
   border-radius: 4px !important;
@@ -1286,12 +1286,11 @@ select:not([data-homeui-enhanced]):not(.cbi-select select):focus {
 /* Rich item list styling when containing description cards */
 .cbi-dropdown[open] > ul.dropdown > li:has(.hide-close),
 .cbi-dropdown[open] > ul.dropdown > li.has-rich-content {
-  min-height: 52px !important;
+  min-height: 44px !important;
   white-space: normal !important;
   align-items: flex-start !important;
-  flex-direction: column !important;
   text-overflow: clip !important;
-  padding: 8px 16px !important;
+  padding: 6px 12px !important;
 }
 
 .cbi-dropdown[open] > ul.dropdown > li img {

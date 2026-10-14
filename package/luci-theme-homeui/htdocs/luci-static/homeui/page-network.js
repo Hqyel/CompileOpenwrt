@@ -6,6 +6,7 @@
   var escapeHtml = HomeUI.escapeHtml;
   var setText = HomeUI.setText;
   var enhanceAllSelects = HomeUI.enhanceAllSelects;
+  var showConfigMetrics = false;
 
   function enhanceSectionHead(sec, cat, titleText, countText) {
     if (!sec)
@@ -303,7 +304,11 @@
 
       // 1. Metric Overview Shell
       var shell = mainEl ? mainEl.querySelector('.homeui-diag-shell') : null;
-      if (!shell && mainEl) {
+      if (shell && !showConfigMetrics) {
+        shell.remove();
+        shell = null;
+      }
+      if (!shell && mainEl && showConfigMetrics) {
         shell = document.createElement('div');
         shell.className = 'homeui-subpage-shell homeui-diag-shell';
         shell.innerHTML =
@@ -470,7 +475,11 @@
 
       // 1. Metric Overview Shell
       var shell = mainEl ? mainEl.querySelector('.homeui-dns-shell') : null;
-      if (!shell && mainEl) {
+      if (shell && !showConfigMetrics) {
+        shell.remove();
+        shell = null;
+      }
+      if (!shell && mainEl && showConfigMetrics) {
         shell = document.createElement('div');
         shell.className = 'homeui-subpage-shell homeui-dns-shell';
         shell.innerHTML =
@@ -528,7 +537,10 @@
       var sections = view.querySelectorAll('.cbi-section');
       Array.prototype.forEach.call(sections, function(sec) {
         var h3 = sec.querySelector(':scope > h3:first-child');
-        var headTxt = (h3 ? h3.textContent : sec.textContent || '').trim();
+        if (!h3)
+          return;
+
+        var headTxt = h3.textContent.trim();
 
         if (/常规|General/i.test(headTxt)) {
           enhanceSectionHead(sec, 'SETTING', isChinese ? 'DNS 常规参数配置' : 'General DNS Settings', isChinese ? '全局解析' : 'Global');
@@ -574,7 +586,11 @@
 
       // 1. Metric Overview Shell
       var shell = mainEl ? mainEl.querySelector('.homeui-dhcp-shell') : null;
-      if (!shell && mainEl) {
+      if (shell && !showConfigMetrics) {
+        shell.remove();
+        shell = null;
+      }
+      if (!shell && mainEl && showConfigMetrics) {
         shell = document.createElement('div');
         shell.className = 'homeui-subpage-shell homeui-dhcp-shell';
         shell.innerHTML =
@@ -636,7 +652,10 @@
 
       Array.prototype.forEach.call(sections, function(sec) {
         var h3 = sec.querySelector(':scope > h3:first-child');
-        var headTxt = (h3 ? h3.textContent : sec.textContent || '').trim();
+        if (!h3)
+          return;
+
+        var headTxt = h3.textContent.trim();
         var rows = sec.querySelectorAll('.cbi-section-table-row:not(.cbi-section-table-titles)');
 
         if (/静态租约|Static Leases/i.test(headTxt)) {

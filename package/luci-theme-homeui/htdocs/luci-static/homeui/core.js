@@ -1041,8 +1041,7 @@
       var margin = 8;
       var gap = 4;
       var availableWidth = Math.max(160, viewportWidth - margin * 2);
-      var desiredWidth = Math.max(rect.width, list.scrollWidth);
-      var listWidth = Math.min(560, availableWidth, desiredWidth);
+      var listWidth = Math.min(availableWidth, Math.max(160, rect.width));
       var left = Math.min(
         Math.max(margin, rect.left),
         Math.max(margin, viewportWidth - listWidth - margin)
