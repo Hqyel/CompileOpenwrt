@@ -16,6 +16,7 @@
   var isRealtimePage = HomeUI.isRealtimePage;
   var isWireguardPage = HomeUI.isWireguardPage;
   var isSystemPage = HomeUI.isSystemPage;
+  var isSystemManagementPage = HomeUI.isSystemManagementPage;
   var isLogsPage = HomeUI.isLogsPage;
   var isProcessesPage = HomeUI.isProcessesPage;
   var isNetworkPage = HomeUI.isNetworkPage;
@@ -37,6 +38,7 @@
   var enhanceRealtimePage = HomeUI.enhanceRealtimePage;
   var enhanceWireguardPage = HomeUI.enhanceWireguardPage;
   var enhanceSystemSettingsPage = HomeUI.enhanceSystemSettingsPage;
+  var enhanceSystemManagementPage = HomeUI.enhanceSystemManagementPage;
   var enhanceLogsPage = HomeUI.enhanceLogsPage;
   var enhanceProcessesPage = HomeUI.enhanceProcessesPage;
   var enhanceNetworkInterfacesPage = HomeUI.enhanceNetworkInterfacesPage;
@@ -105,6 +107,16 @@
       isEnhancing = true;
       try {
         enhanceSystemSettingsPage(view);
+      } finally {
+        isEnhancing = false;
+      }
+      return;
+    }
+
+    if (isSystemManagementPage) {
+      isEnhancing = true;
+      try {
+        enhanceSystemManagementPage(view, page);
       } finally {
         isEnhancing = false;
       }
@@ -338,7 +350,8 @@
       }
     });
   } else if (isRoutesPage || isFirewallStatusPage || isRealtimePage ||
-             isWireguardPage || isSystemPage || isLogsPage || isProcessesPage ||
+             isWireguardPage || isSystemPage || isSystemManagementPage ||
+             isLogsPage || isProcessesPage ||
              isNetworkPage) {
     setInterval(enhanceOverview, 1000);
   }

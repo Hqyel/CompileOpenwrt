@@ -140,6 +140,46 @@
     );
   }
 
+  function enhanceSystemManagementPage(view, page)
+  {
+    var main = document.querySelector('#maincontent') || view.parentNode;
+    if (!main)
+      return;
+
+    main.classList.add('homeui-system-management-page');
+    view.classList.add('homeui-system-management-view');
+
+    var sections = view.querySelectorAll('.cbi-section');
+    Array.prototype.forEach.call(sections, function(section) {
+      section.classList.add('homeui-system-card');
+    });
+
+    if (/admin-system-crontab/.test(page)) {
+      var editor = view.querySelector('textarea');
+      if (editor)
+        editor.classList.add('homeui-crontab-editor');
+    }
+
+    if (/admin-system-diskman/.test(page)) {
+      var diskTables = view.querySelectorAll('.table');
+      Array.prototype.forEach.call(diskTables, function(table) {
+        table.classList.add('homeui-disk-table');
+      });
+    }
+
+    if (/admin-system-reboot/.test(page)) {
+      var rebootMap = view.querySelector('.cbi-map') || view.firstElementChild;
+      if (rebootMap)
+        rebootMap.classList.add('homeui-reboot-panel');
+    }
+
+    if (/admin-system-ttyd/.test(page)) {
+      var terminal = view.querySelector('iframe, .terminal, .xterm');
+      if (terminal)
+        terminal.classList.add('homeui-system-terminal');
+    }
+  }
+
   function enhanceLogsPage(view, page)
   {
     var contentSyslog = view.querySelector('#content_syslog');
@@ -655,6 +695,7 @@
 
 
   HomeUI.enhanceSystemSettingsPage = enhanceSystemSettingsPage;
+  HomeUI.enhanceSystemManagementPage = enhanceSystemManagementPage;
   HomeUI.enhanceLogsPage = enhanceLogsPage;
   HomeUI.enhanceProcessesPage = enhanceProcessesPage;
 })(window);

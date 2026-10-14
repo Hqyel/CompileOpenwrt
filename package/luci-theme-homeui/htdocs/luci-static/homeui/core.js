@@ -68,6 +68,10 @@
   var isRealtimePage = /^admin-status-realtime/.test(pageId);
   var isWireguardPage = pageId === 'admin-status-wireguard';
   var isSystemPage = pageId === 'admin-system-system';
+  var isSystemManagementPage =
+    /^admin-system-(?:admin|package-manager|crontab|mounts|diskman)/
+      .test(pageId) ||
+    /^admin-system-(?:flash|startup|reboot|ttyd)/.test(pageId);
   var isLogsPage = /^admin-status-(?:logs|syslog|dmesg)/.test(pageId);
   var isProcessesPage = pageId === 'admin-status-processes';
   var isNetworkPage =
@@ -1229,8 +1233,10 @@
     );
     var title = getPageTitle(main);
     var source = getPageTabSource(main);
+    var nativeDiskTabs = /^admin-system-diskman/.test(pageId || '');
     if (source) {
-      source.classList.add('homeui-page-tabs-source');
+      source.classList.toggle('homeui-page-tabs-source', !nativeDiskTabs);
+      source.classList.toggle('homeui-native-page-tabs', nativeDiskTabs);
       source.classList.remove('homeui-page-tabs-duplicate');
       source.classList.remove('homeui-section-tabs');
     }
@@ -1278,7 +1284,7 @@
       );
     });
 
-    if (pageId === 'admin-status-routes' ||
+    if (nativeDiskTabs || pageId === 'admin-status-routes' ||
         (!source && main.querySelector('.homeui-subpage-tabs')))
       removePageChrome(main);
     else
@@ -1500,6 +1506,7 @@
     isRealtimePage: isRealtimePage,
     isWireguardPage: isWireguardPage,
     isSystemPage: isSystemPage,
+    isSystemManagementPage: isSystemManagementPage,
     isLogsPage: isLogsPage,
     isProcessesPage: isProcessesPage,
     isNetworkPage: isNetworkPage,

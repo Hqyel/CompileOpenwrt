@@ -3384,3 +3384,275 @@ body[data-page^="admin-network-firewall"]
   #maincontent.homeui-unified-page .cbi-section > h3:first-child {
   margin: 0 !important;
 }
+
+/* ========================================================================
+   System management pages
+   ======================================================================== */
+#maincontent.homeui-system-management-page {
+  --homeui-system-label-width: 172px;
+}
+
+#maincontent.homeui-system-management-page
+  .homeui-system-management-view,
+#maincontent.homeui-system-management-page
+  .homeui-system-management-view > .cbi-map {
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#maincontent.homeui-system-management-page
+  .homeui-system-management-view > .cbi-map-descr,
+#maincontent.homeui-system-management-page
+  .homeui-system-management-view > .cbi-map > .cbi-map-descr {
+  margin: 0 0 14px !important;
+  padding: 9px 12px !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+#maincontent.homeui-system-management-page .homeui-system-card {
+  min-height: 0 !important;
+  margin-bottom: 14px !important;
+  border-radius: var(--homeui-page-radius) !important;
+  box-shadow: none !important;
+}
+
+#maincontent.homeui-system-management-page
+  .cbi-section-node > .cbi-value {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
+  min-height: 46px !important;
+  padding: 10px 16px !important;
+}
+
+#maincontent.homeui-system-management-page .cbi-value-title {
+  flex: 0 0 var(--homeui-system-label-width) !important;
+  width: var(--homeui-system-label-width) !important;
+  padding-top: 6px !important;
+  text-align: right !important;
+}
+
+#maincontent.homeui-system-management-page .cbi-value-field {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#maincontent.homeui-system-management-page .cbi-value-description {
+  margin-top: 6px !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+#maincontent.homeui-system-management-page .cbi-page-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  min-height: 44px !important;
+}
+
+#maincontent.homeui-system-management-page .table {
+  table-layout: auto !important;
+}
+
+#maincontent.homeui-system-management-page .table .th,
+#maincontent.homeui-system-management-page .table .td {
+  min-height: 40px !important;
+}
+
+#maincontent.homeui-system-management-page
+  .table .td .cbi-button {
+  min-width: 54px !important;
+  min-height: 28px !important;
+  padding: 4px 11px !important;
+  box-shadow: none !important;
+}
+
+#maincontent.homeui-unified-page .homeui-native-page-tabs {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 30px !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  margin: 0 0 14px !important;
+  padding: 0 18px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: var(--homeui-page-radius) !important;
+  background: var(--homeui-surface) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li > a,
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li > button {
+  display: block !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 0 1px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--text-color-medium) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 44px !important;
+  white-space: nowrap !important;
+}
+
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li > :is(a, button):hover,
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li.active > :is(a, button),
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li.cbi-tab-active > :is(a, button),
+#maincontent.homeui-unified-page
+  .homeui-native-page-tabs > li.cbi-tab:not(.cbi-tab-disabled)
+    > :is(a, button) {
+  border-bottom-color: #2f89ff !important;
+  color: #2f89ff !important;
+  font-weight: 500 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-management-page .cbi-section {
+  overflow: visible !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-management-page input[type="text"],
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-management-page input[type="search"] {
+  min-width: 190px !important;
+}
+
+body[data-page^="admin-system-crontab"]
+  #maincontent.homeui-system-management-page .homeui-crontab-editor {
+  width: 100% !important;
+  height: 320px !important;
+  min-height: 260px !important;
+  max-height: 55vh !important;
+  padding: 12px 14px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: var(--homeui-page-radius) !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  box-sizing: border-box !important;
+  font-family: ui-monospace, SFMono-Regular, Consolas,
+    monospace !important;
+  font-size: 12.5px !important;
+  line-height: 1.65 !important;
+  resize: vertical !important;
+}
+
+body[data-page^="admin-system-diskman"]
+  #maincontent.homeui-system-management-page .cbi-section {
+  overflow-x: auto !important;
+}
+
+body[data-page^="admin-system-diskman"]
+  #maincontent.homeui-system-management-page .homeui-disk-table {
+  min-width: 760px !important;
+}
+
+body[data-page^="admin-system-flash"]
+  #maincontent.homeui-system-management-page .cbi-section {
+  margin-bottom: 14px !important;
+}
+
+body[data-page^="admin-system-startup"]
+  #maincontent.homeui-system-management-page .table .td:last-child {
+  white-space: nowrap !important;
+}
+
+body[data-page^="admin-system-reboot"]
+  #maincontent.homeui-system-management-page
+    .homeui-system-management-view {
+  min-height: 150px !important;
+  padding: 16px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: var(--homeui-page-radius) !important;
+  background: var(--homeui-surface) !important;
+  box-sizing: border-box !important;
+}
+
+body[data-page^="admin-system-reboot"]
+  #maincontent.homeui-system-management-page hr {
+  margin: 14px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+}
+
+body[data-page^="admin-system-ttyd"]
+  #maincontent.homeui-system-management-page iframe,
+body[data-page^="admin-system-ttyd"]
+  #maincontent.homeui-system-management-page .terminal,
+body[data-page^="admin-system-ttyd"]
+  #maincontent.homeui-system-management-page .xterm {
+  width: 100% !important;
+  min-height: 440px !important;
+  border: 1px solid var(--homeui-border) !important;
+  border-radius: var(--homeui-page-radius) !important;
+  box-sizing: border-box !important;
+}
+
+@media screen and (max-width: 700px) {
+  #maincontent.homeui-system-management-page {
+    --homeui-system-label-width: auto;
+  }
+
+  #maincontent.homeui-system-management-page
+    .cbi-section-node > .cbi-value {
+    display: block !important;
+  }
+
+  #maincontent.homeui-system-management-page .cbi-value-title {
+    width: auto !important;
+    margin-bottom: 6px !important;
+    padding-top: 0 !important;
+    text-align: left !important;
+  }
+
+  #maincontent.homeui-unified-page .homeui-native-page-tabs {
+    gap: 22px !important;
+    min-height: 42px !important;
+    padding: 0 12px !important;
+  }
+
+  #maincontent.homeui-unified-page
+    .homeui-native-page-tabs > li > :is(a, button) {
+    height: 40px !important;
+    min-height: 40px !important;
+    line-height: 40px !important;
+  }
+
+  body[data-page^="admin-system-crontab"]
+    #maincontent.homeui-system-management-page .homeui-crontab-editor {
+    height: 240px !important;
+    min-height: 220px !important;
+  }
+}

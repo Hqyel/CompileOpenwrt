@@ -34,6 +34,11 @@ const STANDALONE_SYSTEM_CHILDREN = {
   system: true
 };
 
+const HIDDEN_SYSTEM_NESTED_MENUS = {
+  admin: true,
+  ttyd: true
+};
+
 const SIDE_ICONS = {
   overview: '<path d="M4 13h6V4H4zm10-9v6h6V4zM4 20h6v-4H4zm10 0h6v-7h-6z"/>',
   routes: '<path d="M4 8h13l-3-3m6 11H7l3 3"/>',
@@ -349,7 +354,12 @@ return baseclass.extend({
         E('span', {}, [_(child.title)])
       ]));
 
-      if (active && nested.length) {
+      const showNested = !(
+        sectionName === 'system' &&
+        HIDDEN_SYSTEM_NESTED_MENUS[child.name]
+      );
+
+      if (active && nested.length && showNested) {
         const nestedList = E('ul', { 'class': 'homeui-nested-menu' });
 
         nested.forEach((nestedChild) => {
