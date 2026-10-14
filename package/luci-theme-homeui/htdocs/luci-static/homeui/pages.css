@@ -2946,6 +2946,635 @@ body[data-page^="admin-network-routing"] .cbi-section {
   }
 }
 
+/* ========================================================================
+   Ordered iKuai-like form system
+   ======================================================================== */
+#maincontent.homeui-system-form-page {
+  --homeui-form-label-width: 188px;
+  --homeui-form-control-width: 420px;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-section > .cbi-section-node {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-row.homeui-form-row {
+  display: grid !important;
+  grid-template-columns: var(--homeui-form-label-width) minmax(0, 1fr);
+  align-items: start !important;
+  gap: 0 24px !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+  padding: 12px 18px !important;
+  border-bottom: 1px solid var(--homeui-border) !important;
+  background: var(--homeui-surface) !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-row.homeui-form-row:last-child {
+  border-bottom: 0 !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-row > .cbi-value-title,
+#maincontent.homeui-system-form-page
+  .homeui-form-row > label.cbi-value-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--text-color-highest) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  text-align: right !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field.homeui-form-field {
+  display: flex !important;
+  align-items: center !important;
+  align-content: flex-start !important;
+  flex: none !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ),
+#maincontent.homeui-system-form-page
+  .homeui-form-field > select,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-select,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-dropdown:not(.btn):not(.cbi-button) {
+  flex: 0 1 var(--homeui-form-control-width) !important;
+  width: min(var(--homeui-form-control-width), 100%) !important;
+  max-width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  border-color: #d8dee8 !important;
+  border-radius: 4px !important;
+  background-color: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  font-size: 13px !important;
+  line-height: 34px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ):hover,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > select:hover,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-select:hover,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-dropdown:hover {
+  border-color: #aeb9c9 !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ):focus,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > select:focus,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-select:focus-within,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-dropdown:focus,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-dropdown[open] {
+  border-color: var(--homeui-accent) !important;
+  box-shadow: 0 0 0 2px rgba(47, 137, 255, .1) !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > textarea {
+  flex: 0 1 620px !important;
+  width: min(620px, 100%) !important;
+  max-width: 100% !important;
+  min-height: 108px !important;
+  padding: 10px 12px !important;
+  border-color: #d8dee8 !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-value-description,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > small,
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .description {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--homeui-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .cbi-value-description:not(:empty)::before {
+  display: none !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-boolean-row .homeui-form-field,
+#maincontent.homeui-system-form-page
+  .homeui-choice-row .homeui-form-field {
+  min-height: 36px !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-boolean-row .cbi-checkbox,
+#maincontent.homeui-system-form-page
+  .homeui-choice-row .cbi-radio,
+#maincontent.homeui-system-form-page
+  .homeui-choice-row .homeui-form-field > label,
+#maincontent.homeui-system-form-page
+  .homeui-form-field label:has(> input[type="checkbox"]),
+#maincontent.homeui-system-form-page
+  .homeui-form-field label:has(> input[type="radio"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-height: 30px !important;
+  margin: 0 14px 0 0 !important;
+  color: var(--homeui-text) !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+#maincontent.homeui-system-form-page input[type="checkbox"],
+#maincontent.homeui-system-form-page input[type="radio"] {
+  flex: 0 0 16px !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-inline-action-row .homeui-form-field {
+  align-items: center !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-inline-action-row .homeui-form-field > br {
+  display: none !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .control-group {
+  display: flex !important;
+  align-items: center !important;
+  flex: 0 1 var(--homeui-form-control-width) !important;
+  gap: 8px !important;
+  width: min(var(--homeui-form-control-width), 100%) !important;
+  min-width: 0 !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-form-field > .control-group
+    > input:not(:is([type="checkbox"], [type="radio"])) {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  border-color: #d8dee8 !important;
+  border-radius: 4px !important;
+}
+
+#maincontent.homeui-system-form-page #view .btn,
+#maincontent.homeui-system-form-page #view .cbi-button,
+#maincontent.homeui-system-form-page #view button:not(.homeui-page-tab),
+#maincontent.homeui-system-form-page #view input[type="button"],
+#maincontent.homeui-system-form-page #view input[type="reset"],
+#maincontent.homeui-system-form-page #view input[type="submit"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 68px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  border: 1px solid #d8dee8 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 32px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: border-color .15s ease, background-color .15s ease,
+    color .15s ease !important;
+}
+
+#maincontent.homeui-system-form-page #view .btn:hover,
+#maincontent.homeui-system-form-page #view .cbi-button:hover,
+#maincontent.homeui-system-form-page
+  #view button:not(.homeui-page-tab):hover {
+  border-color: #8fbeff !important;
+  background: #f2f7ff !important;
+  color: var(--homeui-accent) !important;
+}
+
+#maincontent.homeui-system-form-page #view .cbi-button-positive,
+#maincontent.homeui-system-form-page #view .cbi-button-save,
+#maincontent.homeui-system-form-page #view .cbi-button-apply,
+#maincontent.homeui-system-form-page #view .cbi-button-add,
+#maincontent.homeui-system-form-page #view .cbi-button-action {
+  border-color: var(--homeui-accent) !important;
+  background: var(--homeui-accent) !important;
+  color: #fff !important;
+}
+
+#maincontent.homeui-system-form-page #view .cbi-button-positive:hover,
+#maincontent.homeui-system-form-page #view .cbi-button-save:hover,
+#maincontent.homeui-system-form-page #view .cbi-button-apply:hover,
+#maincontent.homeui-system-form-page #view .cbi-button-add:hover,
+#maincontent.homeui-system-form-page #view .cbi-button-action:hover {
+  border-color: var(--homeui-accent-hover) !important;
+  background: var(--homeui-accent-hover) !important;
+  color: #fff !important;
+}
+
+#maincontent.homeui-system-form-page #view .cbi-button-negative,
+#maincontent.homeui-system-form-page #view .cbi-button-remove,
+#maincontent.homeui-system-form-page #view .cbi-button-reset {
+  border-color: #f2c2c6 !important;
+  background: #fff8f8 !important;
+  color: var(--homeui-danger) !important;
+}
+
+#maincontent.homeui-system-form-page #view [disabled],
+#maincontent.homeui-system-form-page #view .btn[disabled] {
+  border-color: var(--homeui-border) !important;
+  background: var(--homeui-surface-soft) !important;
+  color: var(--homeui-muted) !important;
+  opacity: .7 !important;
+  cursor: not-allowed !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-compact-action-row .homeui-form-field > button,
+#maincontent.homeui-system-form-page
+  .homeui-compact-action-row .homeui-form-field > .btn,
+#maincontent.homeui-system-form-page
+  .homeui-compact-action-row .homeui-form-field > .cbi-button {
+  min-width: 38px !important;
+  padding-right: 11px !important;
+  padding-left: 11px !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-file-row input[type="file"] {
+  flex: 0 1 620px !important;
+  width: min(620px, 100%) !important;
+  max-width: 100% !important;
+  min-height: 42px !important;
+  padding: 5px 7px !important;
+  border: 1px dashed #bfc9d8 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface-soft) !important;
+  box-sizing: border-box !important;
+}
+
+#maincontent.homeui-system-form-page
+  .homeui-file-row input[type="file"]::file-selector-button {
+  height: 30px !important;
+  margin-right: 10px !important;
+  padding: 0 13px !important;
+  border: 1px solid #d8dee8 !important;
+  border-radius: 4px !important;
+  background: var(--homeui-surface) !important;
+  color: var(--homeui-text) !important;
+}
+
+#maincontent.homeui-system-form-page .cbi-page-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-height: 50px !important;
+  margin-top: 14px !important;
+  padding: 10px 0 0 !important;
+  border-top: 1px solid var(--homeui-border) !important;
+  background: transparent !important;
+}
+
+/* Package manager: replace its legacy space-around control grid. */
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-controls.homeui-package-controls {
+  display: grid !important;
+  grid-template-columns: minmax(170px, .8fr) minmax(230px, 1.15fr)
+    minmax(300px, 1.55fr) !important;
+  align-items: end !important;
+  justify-content: stretch !important;
+  gap: 16px 20px !important;
+  margin: 0 !important;
+  padding: 2px !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control.homeui-package-control {
+  display: flex !important;
+  align-items: stretch !important;
+  flex: none !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  white-space: normal !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control:first-child,
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control:last-child {
+  grid-column: 1 / -1 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control > label {
+  flex: none !important;
+  min-width: 0 !important;
+  color: var(--text-color-highest) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control > .control-group {
+  display: flex !important;
+  align-items: center !important;
+  flex: none !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control > .control-group > input {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 34px !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control:nth-child(4) > .control-group {
+  flex-wrap: wrap !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control:last-child > div {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px 22px !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control:last-child > div > label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  .homeui-package-control .cbi-progressbar {
+  width: 100% !important;
+  height: 8px !important;
+  margin: 3px 0 0 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-form-page #packages .td:nth-child(1) {
+  min-width: 150px !important;
+  font-weight: 500 !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-form-page #packages .td:nth-child(4) {
+  min-width: 280px !important;
+  line-height: 1.55 !important;
+  white-space: normal !important;
+}
+
+body[data-page^="admin-system-package-manager"]
+  #maincontent.homeui-system-form-page #packages .td:last-child {
+  width: 88px !important;
+  text-align: right !important;
+}
+
+/* Startup action clusters stay aligned instead of looking like loose inputs. */
+body[data-page^="admin-system-startup"]
+  #maincontent.homeui-system-form-page .table .td:last-child > * {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: nowrap !important;
+  gap: 7px !important;
+}
+
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-negative,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-remove,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-reset {
+  border-color: #623a43 !important;
+  background: #2b2028 !important;
+}
+
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page .homeui-form-field > :is(
+    input:not([type]),
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"]
+  ),
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page .homeui-form-field > select,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page .homeui-form-field > .cbi-select,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > .cbi-dropdown,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page .homeui-form-field > textarea,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > .control-group > input {
+  border-color: var(--homeui-border) !important;
+}
+
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .btn:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button:hover {
+  background: var(--homeui-accent-soft) !important;
+}
+
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-positive:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-save:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-apply:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-add:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-action:hover {
+  border-color: var(--homeui-accent-hover) !important;
+  background: var(--homeui-accent-hover) !important;
+  color: #fff !important;
+}
+
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-negative:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-remove:hover,
+:root[data-darkmode="true"]
+  #maincontent.homeui-system-form-page #view .cbi-button-reset:hover {
+  border-color: #7b4651 !important;
+  background: #3a242d !important;
+  color: var(--homeui-danger) !important;
+}
+
+@media screen and (max-width: 1120px) {
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-controls.homeui-package-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-control:first-child,
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-control:nth-child(4),
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-control:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  #maincontent.homeui-system-form-page {
+    --homeui-form-label-width: auto;
+  }
+
+  #maincontent.homeui-system-form-page
+    .homeui-form-row.homeui-form-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 7px !important;
+    padding: 12px !important;
+  }
+
+  #maincontent.homeui-system-form-page
+    .homeui-form-row > .cbi-value-title,
+  #maincontent.homeui-system-form-page
+    .homeui-form-row > label.cbi-value-title {
+    justify-content: flex-start !important;
+    min-height: 22px !important;
+    text-align: left !important;
+  }
+
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > :is(
+      input:not([type]),
+      input[type="text"],
+      input[type="password"],
+      input[type="number"],
+      input[type="email"],
+      input[type="url"],
+      input[type="search"],
+      input[type="date"],
+      input[type="time"]
+    ),
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > select,
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > .cbi-select,
+  #maincontent.homeui-system-form-page
+    .homeui-form-field > .cbi-dropdown:not(.btn):not(.cbi-button) {
+    flex-basis: 100% !important;
+    width: 100% !important;
+  }
+
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-controls.homeui-package-controls {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body[data-page^="admin-system-package-manager"]
+    .homeui-package-control {
+    grid-column: 1 !important;
+  }
+}
+
 /* ==========================================================================
    Unified page design system
    ========================================================================== */

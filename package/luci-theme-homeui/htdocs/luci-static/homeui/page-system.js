@@ -9,8 +9,65 @@
   var readFormFieldText = HomeUI.readFormFieldText;
   var formatUnixLocalTime = HomeUI.formatUnixLocalTime;
 
+  function decorateSystemForms(view)
+  {
+    var main = document.querySelector('#maincontent') || view.parentNode;
+    if (!main)
+      return;
+
+    main.classList.add('homeui-system-form-page');
+
+    var values = view.querySelectorAll('.cbi-value');
+    Array.prototype.forEach.call(values, function(value) {
+      if (value.closest('.modal, .cbi-modal, #modal_overlay'))
+        return;
+
+      value.classList.add('homeui-form-row');
+      var field = value.querySelector(':scope > .cbi-value-field');
+      if (!field)
+        return;
+
+      field.classList.add('homeui-form-field');
+      if (field.querySelector('input[type="checkbox"]'))
+        value.classList.add('homeui-boolean-row');
+      if (field.querySelector('input[type="radio"]'))
+        value.classList.add('homeui-choice-row');
+      if (field.querySelector('input[type="file"]'))
+        value.classList.add('homeui-file-row');
+
+      var action = field.querySelector('button, .btn, .cbi-button');
+      if (action)
+        value.classList.add('homeui-inline-action-row');
+      if (action && field.querySelector(
+        'input:not([type="button"]):not([type="submit"]), select'
+      )) {
+        value.classList.add('homeui-compact-action-row');
+      }
+
+      var section = value.closest('.cbi-section');
+      if (section)
+        section.classList.add('homeui-form-section');
+    });
+  }
+
+  function decoratePackageManager(view)
+  {
+    var controls = view.querySelectorAll('.cbi-section > .controls');
+    Array.prototype.forEach.call(controls, function(group) {
+      if (group.querySelector('.pager'))
+        return;
+
+      group.classList.add('homeui-package-controls');
+      Array.prototype.forEach.call(group.children, function(control) {
+        control.classList.add('homeui-package-control');
+      });
+    });
+  }
+
   function enhanceSystemSettingsPage(view)
   {
+    decorateSystemForms(view);
+
     var sections = view.querySelectorAll('.cbi-section');
     if (!sections.length)
       return;
@@ -148,6 +205,10 @@
 
     main.classList.add('homeui-system-management-page');
     view.classList.add('homeui-system-management-view');
+    decorateSystemForms(view);
+
+    if (/admin-system-package-manager/.test(page))
+      decoratePackageManager(view);
 
     var sections = view.querySelectorAll('.cbi-section');
     Array.prototype.forEach.call(sections, function(section) {
